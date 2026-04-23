@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reportes — LEARNSCAPE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --blue:      #4a69bd;
+      --blue-dark: #364fc7;
+      --green:     #10b981;
+      --yellow:    #f59e0b;
+      --red:       #ef4444;
+      --gray-50:   #f9fafb;
+      --gray-100:  #f3f4f6;
+      --gray-200:  #e5e7eb;
+      --gray-500:  #6b7280;
+      --gray-700:  #374151;
+      --gray-900:  #111827;
+      --shadow:    0 2px 12px rgba(0,0,0,.09);
+      --radius:    10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; background: var(--gray-50); color: var(--gray-900); min-height: 100vh; }
+
+    header { background: var(--blue); color: #fff; padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+    .header-logo { font-size: 20px; font-weight: 800; letter-spacing: 1px; }
+    .header-back { background: rgba(255,255,255,.18); border: none; color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .2s; }
+    .header-back:hover { background: rgba(255,255,255,.3); }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+    .page-title { font-size: 26px; font-weight: 800; color: var(--blue); margin-bottom: 4px; }
+    .page-subtitle { font-size: 14px; color: var(--gray-500); margin-bottom: 28px; }
+
+    /* ─── Report cards grid ─── */
+    .report-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 36px; }
+    .report-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; cursor: pointer; border: 2px solid transparent; transition: all .2s; }
+    .report-card:hover { border-color: var(--blue); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74,105,189,.15); }
+    .report-card.active { border-color: var(--blue); background: #eef2ff; }
+    .report-icon { font-size: 36px; margin-bottom: 12px; }
+    .report-title { font-size: 16px; font-weight: 800; color: var(--gray-900); margin-bottom: 6px; }
+    .report-desc { font-size: 13px; color: var(--gray-500); line-height: 1.5; }
+    .report-badges { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+    .report-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+    .badge-xlsx { background: #dcfce7; color: #166534; }
+    .badge-csv  { background: #dbeafe; color: #1e40af; }
+
+    /* ─── Config panel ─── */
+    .config-panel { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 24px; display: none; }
+    .config-panel.show { display: block; }
+    .config-title { font-size: 18px; font-weight: 800; color: var(--blue); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+    .form-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 13px; font-weight: 700; color: var(--gray-700); }
+    .form-group select, .form-group input { padding: 9px 12px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 14px; background: #fff; }
+    .form-group select:focus, .form-group input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(74,105,189,.15); }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn { padding: 10px 20px; border: none; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all .2s; }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-primary:hover { background: var(--blue-dark); }
+    .btn-primary:disabled { background: var(--gray-200); color: var(--gray-500); cursor: not-allowed; }
+    .btn-secondary { background: var(--gray-100); color: var(--gray-700); }
+    .btn-secondary:hover { background: var(--gray-200); }
+    .btn-green { background: #dcfce7; color: #166534; }
+    .btn-green:hover { background: #bbf7d0; }
+    .btn-blue { background: #dbeafe; color: #1e40af; }
+    .btn-blue:hover { background: #bfdbfe; }
+
+    /* ─── Preview table ─── */
+    .preview-wrap { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .preview-header { padding: 16px 20px; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: space-between; }
+    .preview-header h3 { font-size: 16px; font-weight: 800; }
+    .preview-meta { font-size: 12px; opacity: .8; }
+    .preview-scroll { overflow-x: auto; }
+    .preview-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .preview-table thead { background: var(--gray-100); position: sticky; top: 0; }
+    .preview-table th { padding: 10px 14px; text-align: left; font-weight: 700; color: var(--gray-700); border-bottom: 2px solid var(--gray-200); white-space: nowrap; }
+    .preview-table td { padding: 9px 14px; border-bottom: 1px solid var(--gray-100); color: var(--gray-900); }
+    .preview-table tbody tr:hover { background: var(--gray-50); }
+    .preview-table tbody tr:last-child td { border-bottom: none; }
+    .nota-alta  { color: #166534; font-weight: 700; }
+    .nota-media { color: #92400e; font-weight: 700; }
+    .nota-baja  { color: #9f1239; font-weight: 700; }
+    .export-actions { padding: 16px 20px; background: var(--gray-50); border-top: 1px solid var(--gray-200); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .export-count { font-size: 13px; color: var(--gray-500); margin-left: auto; }
+
+    /* Toast */
+    #toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 9999; opacity: 0; transform: translateY(12px); transition: all .3s; pointer-events: none; }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    .spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 40px; }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--gray-200); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 600px) { .btn-row { flex-direction: column; } }
+  </style>
+<script src="../assets/config.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">🎒 LEARNSCAPE</div>
+  <button class="header-back" onclick="history.back()">← Volver</button>
+</header>
+
+<div class="container">
+  <div class="page-title">📊 Reportes y Exportaciones</div>
+  <div class="page-subtitle">Genera reportes en Excel (.xlsx) o CSV listos para imprimir o compartir</div>
+
+  <!-- ─── Selector de reporte ─── -->
+  <div class="report-grid">
+
+    <div class="report-card" id="card-calificaciones" onclick="seleccionarReporte('calificaciones')">
+      <div class="report-icon">📝</div>
+      <div class="report-title">Calificaciones por Asignatura</div>
+      <div class="report-desc">Todas las notas de un asignatura en un período, agrupadas por corte y tipo de actividad.</div>
+      <div class="report-badges">
+        <span class="report-badge badge-xlsx">Excel</span>
+        <span class="report-badge badge-csv">CSV</span>
+      </div>
+    </div>
+
+    <div class="report-card" id="card-estudiantes" onclick="seleccionarReporte('estudiantes')">
+      <div class="report-icon">🎓</div>
+      <div class="report-title">Listado de Estudiantes</div>
+      <div class="report-desc">Directorio completo de estudiantes del sistema con datos de contacto y estado de matrícula.</div>
+      <div class="report-badges">
+        <span class="report-badge badge-xlsx">Excel</span>
+        <span class="report-badge badge-csv">CSV</span>
+      </div>
+    </div>
+
+    <div class="report-card" id="card-asistencia" onclick="seleccionarReporte('asistencia')">
+      <div class="report-icon">✅</div>
+      <div class="report-title">Asistencia por Asignatura</div>
+      <div class="report-desc">Resumen de asistencias por estudiante en una asignatura y período. Incluye porcentaje de presencia.</div>
+      <div class="report-badges">
+        <span class="report-badge badge-xlsx">Excel</span>
+        <span class="report-badge badge-csv">CSV</span>
+      </div>
+    </div>
+
+    <div class="report-card" id="card-promedios" onclick="seleccionarReporte('promedios')">
+      <div class="report-icon">📈</div>
+      <div class="report-title">Promedios por Curso</div>
+      <div class="report-desc">Promedio general de cada estudiante en un curso, con estado (aprobado/reprobado) para el período.</div>
+      <div class="report-badges">
+        <span class="report-badge badge-xlsx">Excel</span>
+        <span class="report-badge badge-csv">CSV</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Panel de configuración (dinámico) ─── -->
+  <div class="config-panel" id="configPanel">
+    <div class="config-title" id="configTitle">⚙️ Configurar reporte</div>
+    <div class="form-row" id="formCampos"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnGenerar" onclick="generarReporte()">🔄 Generar vista previa</button>
+      <button class="btn btn-secondary" onclick="cerrarConfig()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- ─── Vista previa ─── -->
+  <div id="previewSection" style="display:none;">
+    <div class="preview-wrap">
+      <div class="preview-header">
+        <h3 id="previewTitle">Vista previa</h3>
+        <span class="preview-meta" id="previewMeta"></span>
+      </div>
+      <div class="preview-scroll" id="previewBody">
+        <div class="spinner-wrap"><div class="spinner"></div></div>
+      </div>
+      <div class="export-actions">
+        <button class="btn btn-green" onclick="exportarExcel()">⬇ Descargar Excel (.xlsx)</button>
+        <button class="btn btn-blue"  onclick="exportarCSV()">⬇ Descargar CSV</button>
+        <span class="export-count" id="exportCount"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const API = window.LEARNSCAPE_API;
+  let reporteActual = null;
+  let datosExport = [];      // array de objetos para la tabla
+  let headersExport = [];    // array de strings con los nombres de columnas
+
+  function getToken() { return sessionStorage.getItem('token'); }
+
+  function toast(msg, dur = 3500) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), dur);
+  }
+
+  async function gql(query, variables = {}) {
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+      body: JSON.stringify({ query, variables }),
+    });
+    const json = await res.json();
+    if (json.errors) throw new Error(json.errors[0].message);
+    return json.data;
+  }
+
+  // Bug 3 fix: Helper para generar <select> de periodos dinámicamente
+  async function buildPeriodoSelect(selectId) {
+    const anio = new Date().getFullYear();
+    try {
+      const dp = await gql(`query { periodosConfig(anio: ${anio}) { numeroPeriodo abierto } }`);
+      const periodos = dp.periodosConfig || [];
+      if (periodos.length) {
+        return `<select id="${selectId}">` +
+          periodos.map(p => `<option value="${anio}-${p.numeroPeriodo}">Periodo ${p.numeroPeriodo} — ${anio}${p.abierto ? '' : ' (cerrado)'}</option>`).join('') +
+          '</select>';
+      }
+    } catch {}
+    // Fallback si no hay periodos configurados
+    return `<select id="${selectId}">` +
+      ['1','2','3'].map(n => `<option value="${anio}-${n}">Periodo ${n} — ${anio}</option>`).join('') +
+      '</select>';
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  SELECCIONAR TIPO DE REPORTE
+  // ══════════════════════════════════════════════════════════
+  async function seleccionarReporte(tipo) {
+    reporteActual = tipo;
+    document.querySelectorAll('.report-card').forEach(c => c.classList.remove('active'));
+    document.getElementById(`card-${tipo}`).classList.add('active');
+    document.getElementById('previewSection').style.display = 'none';
+    datosExport = [];
+    headersExport = [];
+
+    const panel = document.getElementById('configPanel');
+    panel.classList.add('show');
+    const titles = {
+      calificaciones: '📝 Reporte de Calificaciones por Asignatura',
+      estudiantes:    '🎓 Reporte de Estudiantes',
+      asistencia:     '✅ Reporte de Asistencia',
+      promedios:      '📈 Reporte de Promedios por Curso',
+    };
+    document.getElementById('configTitle').textContent = titles[tipo];
+
+    // Construir campos según tipo
+    const campos = document.getElementById('formCampos');
+    campos.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+
+    try {
+      if (tipo === 'calificaciones' || tipo === 'asistencia') {
+        const [dA] = await Promise.all([
+          gql(`query { asignaturas { id nombre curso { nombre } } }`),
+        ]);
+        const opts = (dA.asignaturas || []).map(a =>
+          `<option value="${a.id}">${a.nombre}${a.curso ? ' — ' + a.curso.nombre : ''}</option>`
+        ).join('');
+        campos.innerHTML = `
+          <div class="form-group">
+            <label>Asignatura *</label>
+            <select id="campo-asignatura"><option value="">Seleccionar...</option>${opts}</select>
+          </div>
+          <div class="form-group">
+            <label>Período *</label>
+            <select id="campo-periodo"><option value="">Cargando...</option></select>
+          </div>`;
+        // Cargar periodos dinamicamente
+        buildPeriodoSelect('campo-periodo').then(html => {
+          const div = document.querySelector('#campo-periodo').parentElement;
+          div.innerHTML = '<label>Período *</label>' + html;
+        });
+      } else if (tipo === 'promedios') {
+        const dC = await gql(`query { cursos { id nombre } }`);
+        const opts = (dC.cursos || []).map(c =>
+          `<option value="${c.id}">${c.nombre}</option>`
+        ).join('');
+        campos.innerHTML = `
+          <div class="form-group">
+            <label>Curso *</label>
+            <select id="campo-curso"><option value="">Seleccionar...</option>${opts}</select>
+          </div>
+          <div class="form-group">
+            <label>Período *</label>
+            <select id="campo-periodo"><option value="">Cargando...</option></select>
+          </div>`;
+        // Cargar periodos dinámicamente
+        buildPeriodoSelect('campo-periodo').then(html => {
+          const div = document.querySelector('#campo-periodo').parentElement;
+          div.innerHTML = '<label>Período *</label>' + html;
+        });
+      } else if (tipo === 'estudiantes') {
+        campos.innerHTML = `
+          <div class="form-group">
+            <label>Filtro (opcional)</label>
+            <select id="campo-estado">
+              <option value="">Todos los estudiantes</option>
+            </select>
+          </div>`;
+      }
+    } catch (err) {
+      campos.innerHTML = `<p style="color:var(--red);">Error al cargar opciones: ${err.message}</p>`;
+    }
+  }
+
+  function cerrarConfig() {
+    document.getElementById('configPanel').classList.remove('show');
+    document.querySelectorAll('.report-card').forEach(c => c.classList.remove('active'));
+    reporteActual = null;
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  GENERAR REPORTE
+  // ══════════════════════════════════════════════════════════
+  async function generarReporte() {
+    document.getElementById('previewSection').style.display = 'block';
+    document.getElementById('previewBody').innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+
+    try {
+      if (reporteActual === 'calificaciones') await generarCalificaciones();
+      else if (reporteActual === 'estudiantes')  await generarEstudiantes();
+      else if (reporteActual === 'asistencia')   await generarAsistencia();
+      else if (reporteActual === 'promedios')    await generarPromedios();
+      document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth' });
+    } catch (err) {
+      document.getElementById('previewBody').innerHTML =
+        `<div style="padding:20px;color:var(--red);">Error: ${err.message}</div>`;
+    }
+  }
+
+  // ── Calificaciones ──────────────────────────────────────
+  async function generarCalificaciones() {
+    const asigId  = document.getElementById('campo-asignatura')?.value;
+    const periodo = document.getElementById('campo-periodo')?.value?.trim();
+    if (!asigId || !periodo) { toast('Selecciona asignatura y período'); return; }
+
+    const data = await gql(`
+      query($asignaturaId: ID!, $periodo: String!) {
+        calificacionesPorAsignaturaYPeriodo(asignaturaId: $asignaturaId, periodo: $periodo) {
+          id estudianteId asignaturaId nota periodo corte tipoActividad nombreActividad observaciones fecha
+        }
+        asignatura(id: $asignaturaId) { nombre curso { nombre } profesor { nombre primerApellido } }
+      }
+    `, { asignaturaId: asigId, periodo });
+
+    const cals = data.calificacionesPorAsignaturaYPeriodo || [];
+    const asig = data.asignatura;
+
+    // Enriquecer con nombres de estudiantes
+    const estIds = [...new Set(cals.map(c => c.estudianteId))];
+    let estMap = {};
+    if (estIds.length) {
+      const dE = await gql(`query($ids:[String!]!) { estudiantesPorIds(ids:$ids) { cedula nombre primerApellido segundoApellido } }`, { ids: estIds });
+      (dE.estudiantesPorIds || []).forEach(e => {
+        estMap[e.cedula] = `${e.nombre} ${e.primerApellido} ${e.segundoApellido || ''}`.trim();
+      });
+    }
+
+    const tipoLabel = { TRABAJO:'Trabajo', EXAMEN:'Examen', QUIZ:'Quiz', PARTICIPACION:'Participación', TALLER:'Taller' };
+    const corteLabel = { 1:'1er Corte', 2:'2do Corte', 3:'3er Corte' };
+
+    headersExport = ['Estudiante', 'Actividad', 'Tipo', 'Corte', 'Nota', 'Período', 'Observaciones', 'Fecha'];
+    datosExport = cals.map(c => ({
+      'Estudiante':    estMap[c.estudianteId] || c.estudianteId,
+      'Actividad':     c.nombreActividad || '—',
+      'Tipo':          tipoLabel[c.tipoActividad] || c.tipoActividad || '—',
+      'Corte':         corteLabel[c.corte] || `Corte ${c.corte}`,
+      'Nota':          Number(c.nota),
+      'Período':       c.periodo,
+      'Observaciones': c.observaciones || '',
+      'Fecha':         c.fecha ? new Date(c.fecha).toLocaleDateString('es-ES') : '',
+    }));
+
+    const prof = asig?.profesor ? `${asig.profesor.nombre} ${asig.profesor.primerApellido}` : '—';
+    document.getElementById('previewTitle').textContent = `Calificaciones — ${asig?.nombre || ''} (${periodo})`;
+    document.getElementById('previewMeta').textContent = `Curso: ${asig?.curso?.nombre || '—'} · Docente: ${prof} · ${datosExport.length} registros`;
+
+    renderTabla(headersExport, datosExport, 'Nota');
+  }
+
+  // ── Estudiantes ─────────────────────────────────────────
+  async function generarEstudiantes() {
+    const data = await gql(`query {
+      estudiantes {
+        cedula nombre primerApellido segundoApellido email telefono direccion acudiente
+      }
+    }`);
+
+    headersExport = ['Cédula', 'Nombre', 'Primer Apellido', 'Segundo Apellido', 'Email', 'Teléfono', 'Dirección', 'Acudiente'];
+    datosExport = (data.estudiantes || []).map(e => ({
+      'Cédula':          e.cedula,
+      'Nombre':          e.nombre,
+      'Primer Apellido': e.primerApellido,
+      'Segundo Apellido':e.segundoApellido || '',
+      'Email':           e.email,
+      'Teléfono':        e.telefono || '',
+      'Dirección':       e.direccion || '',
+      'Acudiente':       e.acudiente || '',
+    }));
+
+    document.getElementById('previewTitle').textContent = `Listado de Estudiantes`;
+    document.getElementById('previewMeta').textContent = `${datosExport.length} estudiantes registrados`;
+    renderTabla(headersExport, datosExport);
+  }
+
+  // ── Asistencia ──────────────────────────────────────────
+  async function generarAsistencia() {
+    const asigId  = document.getElementById('campo-asignatura')?.value;
+    const periodo = document.getElementById('campo-periodo')?.value?.trim();
+    if (!asigId || !periodo) { toast('Selecciona asignatura y período'); return; }
+
+    const data = await gql(`
+      query($asignaturaId: ID!, $periodo: String!) {
+        resumenAsistencia(asignaturaId: $asignaturaId, periodo: $periodo) {
+          estudianteId totalClases presentes ausentes tardes excusas porcentajeAsistencia
+        }
+        asignatura(id: $asignaturaId) { nombre curso { nombre } }
+      }
+    `, { asignaturaId: asigId, periodo });
+
+    const resumen = data.resumenAsistencia || [];
+    const asig    = data.asignatura;
+
+    // Enriquecer con nombres
+    const estIds = resumen.map(r => r.estudianteId);
+    let estMap = {};
+    if (estIds.length) {
+      const dE = await gql(`query($ids:[String!]!) { estudiantesPorIds(ids:$ids) { cedula nombre primerApellido } }`, { ids: estIds });
+      (dE.estudiantesPorIds || []).forEach(e => { estMap[e.cedula] = `${e.nombre} ${e.primerApellido}`; });
+    }
+
+    headersExport = ['Estudiante', 'Total Clases', 'Presentes', 'Ausentes', 'Tardes', 'Excusas', '% Asistencia', 'Estado'];
+    datosExport = resumen.map(r => ({
+      'Estudiante':    estMap[r.estudianteId] || r.estudianteId,
+      'Total Clases':  r.totalClases,
+      'Presentes':     r.presentes,
+      'Ausentes':      r.ausentes,
+      'Tardes':        r.tardes,
+      'Excusas':       r.excusas,
+      '% Asistencia':  Number(r.porcentajeAsistencia.toFixed(1)),
+      'Estado':        r.porcentajeAsistencia >= 80 ? 'Habilitado' : 'En riesgo',
+    }));
+
+    document.getElementById('previewTitle').textContent = `Asistencia — ${asig?.nombre || ''} (${periodo})`;
+    document.getElementById('previewMeta').textContent = `Curso: ${asig?.curso?.nombre || '—'} · ${datosExport.length} estudiantes`;
+    renderTabla(headersExport, datosExport, '% Asistencia');
+  }
+
+  // ── Promedios por curso ─────────────────────────────────
+  async function generarPromedios() {
+    const cursoId = document.getElementById('campo-curso')?.value;
+    const periodo = document.getElementById('campo-periodo')?.value?.trim();
+    if (!cursoId || !periodo) { toast('Selecciona curso y período'); return; }
+
+    // Obtener matrículas del curso para el período
+    const dM = await gql(`
+      query($cursoId: ID!, $periodo: String!) {
+        boletinesPorCursoPeriodo(cursoId: $cursoId, periodo: $periodo) {
+          promedio periodo
+          estudiante { cedula nombre primerApellido segundoApellido }
+          curso { nombre }
+        }
+      }
+    `, { cursoId, periodo });
+
+    const boletines = dM.boletinesPorCursoPeriodo || [];
+
+    if (!boletines.length) {
+      // Fallback: obtener calificaciones directo
+      const dC = await gql(`query { cursos { id nombre } }`);
+      const curso = (dC.cursos || []).find(c => c.id === cursoId);
+
+      headersExport = ['Estudiante', 'Promedio', 'Estado'];
+      datosExport = [];
+
+      document.getElementById('previewTitle').textContent = `Promedios — ${curso?.nombre || ''} (${periodo})`;
+      document.getElementById('previewMeta').textContent = 'Sin boletines generados para este período.';
+      document.getElementById('previewBody').innerHTML = `<div style="padding:30px;text-align:center;color:var(--gray-500);">
+        No hay boletines generados para este curso y período. Genera los boletines primero desde la sección de Administrativo.
+      </div>`;
+      document.getElementById('exportCount').textContent = '0 registros';
+      return;
+    }
+
+    headersExport = ['Cédula', 'Estudiante', 'Promedio', 'Estado', 'Período', 'Curso'];
+    datosExport = boletines.map(b => ({
+      'Cédula':      b.estudiante?.cedula || '',
+      'Estudiante':  b.estudiante ? `${b.estudiante.nombre} ${b.estudiante.primerApellido} ${b.estudiante.segundoApellido || ''}`.trim() : '—',
+      'Promedio':    Number(b.promedio.toFixed(2)),
+      'Estado':      b.promedio >= 3.0 ? 'Aprobado' : 'Reprobado',
+      'Período':     b.periodo,
+      'Curso':       b.curso?.nombre || '',
+    })).sort((a, b) => b['Promedio'] - a['Promedio']);
+
+    const cursoNombre = boletines[0]?.curso?.nombre || '';
+    document.getElementById('previewTitle').textContent = `Promedios — ${cursoNombre} (${periodo})`;
+    document.getElementById('previewMeta').textContent = `${datosExport.length} estudiantes`;
+    renderTabla(headersExport, datosExport, 'Promedio');
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  RENDER TABLA PREVIEW
+  // ══════════════════════════════════════════════════════════
+  function notaClass(val) {
+    if (val >= 4.0) return 'nota-alta';
+    if (val >= 3.0) return 'nota-media';
+    return 'nota-baja';
+  }
+
+  function renderTabla(headers, datos, notaCol = null) {
+    if (!datos.length) {
+      document.getElementById('previewBody').innerHTML =
+        `<div style="padding:30px;text-align:center;color:var(--gray-500);">No hay datos para los filtros seleccionados.</div>`;
+      document.getElementById('exportCount').textContent = '0 registros';
+      return;
+    }
+    const theadRow = headers.map(h => `<th>${h}</th>`).join('');
+    const tbodyRows = datos.map(row => {
+      const cells = headers.map(h => {
+        const val = row[h];
+        let cls = '';
+        if (h === notaCol && typeof val === 'number') cls = ` class="${notaClass(val)}"`;
+        return `<td${cls}>${val !== null && val !== undefined ? val : ''}</td>`;
+      }).join('');
+      return `<tr>${cells}</tr>`;
+    }).join('');
+
+    document.getElementById('previewBody').innerHTML = `
+      <table class="preview-table">
+        <thead><tr>${theadRow}</tr></thead>
+        <tbody>${tbodyRows}</tbody>
+      </table>`;
+    document.getElementById('exportCount').textContent = `${datos.length} registro${datos.length !== 1 ? 's' : ''}`;
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  EXPORTAR EXCEL
+  // ══════════════════════════════════════════════════════════
+  function exportarExcel() {
+    if (!datosExport.length) { toast('Genera el reporte primero'); return; }
+    const titulo = document.getElementById('previewTitle').textContent;
+    const ws = XLSX.utils.json_to_sheet(datosExport, { header: headersExport });
+
+    // Estilos básicos de ancho de columna
+    const colWidths = headersExport.map(h => ({ wch: Math.max(h.length, 14) }));
+    ws['!cols'] = colWidths;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
+
+    // Meta info
+    wb.Props = {
+      Title: titulo,
+      Author: 'LearnScape',
+      CreatedDate: new Date(),
+    };
+
+    const filename = `${titulo.replace(/[^a-zA-Z0-9_\- ]/g,'').trim().replace(/\s+/g,'_')}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    toast(`Descargando ${filename} ✓`);
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  EXPORTAR CSV
+  // ══════════════════════════════════════════════════════════
+  function exportarCSV() {
+    if (!datosExport.length) { toast('Genera el reporte primero'); return; }
+    const titulo = document.getElementById('previewTitle').textContent;
+    const rows = [headersExport, ...datosExport.map(row => headersExport.map(h => row[h] ?? ''))];
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${titulo.replace(/[^a-zA-Z0-9_\- ]/g,'').trim().replace(/\s+/g,'_')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('CSV descargado ✓');
+  }
+</script>
+</body>
+</html>

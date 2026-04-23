@@ -1,0 +1,3 @@
+cd Desktop\Automatizacion_IE-main\frondend\src\app
+python -m http.server 4200
+http://localhost:4200/components/principal.html

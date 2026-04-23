@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEARNSCAPE — Jardín Infantil</title>
+    <link rel="stylesheet" href="../assets/styles/styleprincipal.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="../assets/config.js"></script>
+</head>
+<body>
+
+<header>
+    <div class="header-logo">
+        <div class="logo-bubble">🎒</div>
+        <div>
+            <div class="logo-name">LEARNSCAPE</div>
+            <div class="logo-tagline">Gestión Educativa</div>
+        </div>
+    </div>
+    <div class="header-right">Año lectivo 2026</div>
+</header>
+
+<main>
+    <section class="hero">
+        <div class="hero-badge"><span></span> Sistema activo</div>
+        <h1>Bienvenidos al<br><em>jardín infantil</em></h1>
+        <p>Selecciona tu perfil para ingresar al sistema. Juntos construimos el futuro de nuestros niños.</p>
+    </section>
+
+    <section class="cards-section">
+        <div class="cards-grid">
+
+            <div class="role-card" data-role="student">
+                <div class="card-icon">🎓</div>
+                <h2 class="card-title">Estudiante</h2>
+                <p class="card-desc">Consulta tus calificaciones, horarios y asignaturas del período actual.</p>
+                <button class="card-btn">Ingresar <i class="fas fa-arrow-right" style="font-size:11px"></i></button>
+            </div>
+
+            <div class="role-card" data-role="teacher">
+                <div class="card-icon">📚</div>
+                <h2 class="card-title">Profesor</h2>
+                <p class="card-desc">Gestiona tus asignaturas, registra notas y revisa la lista de estudiantes.</p>
+                <button class="card-btn">Ingresar <i class="fas fa-arrow-right" style="font-size:11px"></i></button>
+            </div>
+
+            <div class="role-card" data-role="admin">
+                <div class="card-icon">⭐</div>
+                <h2 class="card-title">Administrativo</h2>
+                <p class="card-desc">Administra profesores, estudiantes, cursos y matrículas del colegio.</p>
+                <button class="card-btn">Ingresar <i class="fas fa-arrow-right" style="font-size:11px"></i></button>
+            </div>
+
+            <div class="role-card" data-role="acudiente" style="border-top:4px solid #2d9e5f">
+                <div class="card-icon">👨‍👩‍👧</div>
+                <h2 class="card-title">Acudiente / Padre</h2>
+                <p class="card-desc">Consulta notas, asistencia y boletines de tu hijo/a. Mantente siempre informado.</p>
+                <button class="card-btn" style="background:#2d9e5f">Ingresar <i class="fas fa-arrow-right" style="font-size:11px"></i></button>
+            </div>
+
+        </div>
+    </section>
+</main>
+
+<!-- ─── MODAL LOGIN ─── -->
+<div class="modal" id="loginModal">
+    <div class="modal-content">
+        <div class="modal-head">
+            <div class="modal-head-left">
+                <div class="modal-head-icon">🔐</div>
+                <div>
+                    <div class="modal-title" id="modalTitle">Iniciar Sesión</div>
+                    <div class="modal-subtitle">Ingresa tus credenciales para continuar</div>
+                </div>
+            </div>
+            <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="loginForm">
+                <div class="form-group">
+                    <label id="identifierLabel">Cédula o Correo</label>
+                    <input type="text" id="identifier" placeholder="Tu cédula o correo electrónico" required>
+                    <div class="help-text" id="identifierHelp">Puedes usar tu número de cédula o correo</div>
+                </div>
+                <!-- Aviso acudiente: solo visible cuando rol = acudiente -->
+                <div id="acudienteNotice" style="display:none; background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:13px; color:#166534;">
+                    <i class="fas fa-info-circle" style="margin-right:6px;"></i>
+                    Ingresa la <strong>cédula del estudiante</strong>. La contraseña es la misma cédula.
+                </div>
+                <div class="form-group" id="passwordGroup">
+                    <label>Contraseña</label>
+                    <div class="input-wrap">
+                        <input type="password" id="password" name="password" placeholder="••••••••">
+                        <button class="toggle-vis" type="button" id="togglePassword">
+                            <i class="fas fa-eye" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="forgotPasswordContainer">
+                    <a href="#" class="forgot-password-link" id="forgotPasswordLink">¿Olvidaste tu contraseña?</a>
+                </div>
+                <button type="submit" class="submit-btn">Iniciar Sesión</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ─── MODAL CAMBIAR CONTRASEÑA ─── -->
+<div class="modal" id="changePasswordModal">
+    <div class="modal-content">
+        <div class="modal-head">
+            <div class="modal-head-left">
+                <div class="modal-head-icon">🔑</div>
+                <div>
+                    <div class="modal-title">Crea tu contraseña</div>
+                    <div class="modal-subtitle">Primer ingreso al sistema</div>
+                </div>
+            </div>
+            <button class="close-btn" id="closeChangePasswordBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="alert alert-info">
+                <i class="fas fa-shield-alt"></i>
+                <span>Por seguridad debes crear una contraseña personal antes de continuar.</span>
+            </div>
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label>Nueva Contraseña</label>
+                    <div class="input-wrap">
+                        <input type="password" id="newPassword" placeholder="Mínimo 6 caracteres" minlength="6" required>
+                        <button type="button" class="toggle-vis" id="toggleNewPassword">
+                            <i class="fas fa-eye" id="newEyeIcon"></i>
+                        </button>
+                    </div>
+                    <div class="help-text">Al menos 6 caracteres</div>
+                </div>
+                <div class="form-group">
+                    <label>Confirmar Contraseña</label>
+                    <div class="input-wrap">
+                        <input type="password" id="confirmPassword" placeholder="Repite la contraseña" required>
+                        <button type="button" class="toggle-vis" id="toggleConfirmPassword">
+                            <i class="fas fa-eye" id="confirmEyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="passwordError" class="alert alert-danger" style="display:none;">
+                    <i class="fas fa-exclamation-circle"></i> Las contraseñas no coinciden
+                </div>
+                <button type="submit" class="submit-btn">Establecer Contraseña</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ─── MODAL RECUPERAR CONTRASEÑA ─── -->
+<div class="modal" id="forgotPasswordModal">
+    <div class="modal-content">
+        <div class="modal-head">
+            <div class="modal-head-left">
+                <div class="modal-head-icon">📧</div>
+                <div>
+                    <div class="modal-title">Recuperar acceso</div>
+                    <div class="modal-subtitle">Te enviamos una contraseña temporal</div>
+                </div>
+            </div>
+            <button class="close-btn" id="closeForgotPasswordBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="forgotPasswordForm">
+                <div class="form-group">
+                    <label>Cédula o Correo</label>
+                    <input type="text" id="forgotIdentifier" placeholder="Tu cédula o correo registrado" required>
+                </div>
+                <div id="forgotError" class="alert alert-danger" style="display:none;"></div>
+                <div id="forgotSuccess" class="alert alert-success" style="display:none;">
+                    <i class="fas fa-check-circle"></i>
+                    Si el usuario existe, recibirás un correo con tu contraseña temporal.
+                </div>
+                <button type="submit" class="submit-btn" id="forgotSubmitBtn">Enviar instrucciones</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>© 2025 LEARNSCAPE — Todos los derechos reservados</p>
+</footer>
+
+<!-- ═══════ SCRIPTS (lógica sin cambios) ═══════ -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.role-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const role = this.dataset.role;
+            sessionStorage.setItem('selectedRole', role);
+            openModal(role);
+        });
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const identifier = document.getElementById('identifier').value.trim();
+        const role       = sessionStorage.getItem('selectedRole');
+
+        // Para acudiente la contraseña es la misma cédula
+        const password = (role === 'acudiente') ? identifier : document.getElementById('password').value;
+
+        try {
+            const response = await fetch(window.LEARNSCAPE_API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    query: `mutation Login($identifier: String!, $password: String!) {
+                        login(identifier: $identifier, password: $password) {
+                            token
+                            expiresAt
+                            user { id username email role }
+                            isFirstLogin
+                        }
+                    }`,
+                    variables: { identifier, password }
+                })
+            });
+
+            const result = await response.json();
+            if (result.errors) throw new Error(result.errors[0].message);
+            if (!result.data?.login) throw new Error('Respuesta inválida del servidor');
+
+            const { token, user, expiresAt } = result.data.login;
+
+            const roleMapping = {
+                'ADMIN': 'admin', 'admin': 'admin',
+                'ESTUDIANTE': 'student', 'estudiante': 'student', 'STUDENT': 'student',
+                'PROFESOR': 'teacher', 'profesor': 'teacher', 'TEACHER': 'teacher',
+                'ACUDIENTE': 'acudiente', 'acudiente': 'acudiente'
+            };
+
+            // Para acudiente: el login es con credenciales del estudiante,
+            // por eso el backend devuelve rol ESTUDIANTE — se fuerza el rol acudiente
+            const isAcudienteFlow = (role === 'acudiente');
+            const mappedRole = isAcudienteFlow ? 'acudiente' : (roleMapping[user.role.toUpperCase()] || roleMapping[user.role]);
+
+            if (!mappedRole) throw new Error('Rol no reconocido: ' + user.role);
+
+            // Verificar rol solo si NO es flujo acudiente
+            if (!isAcudienteFlow && mappedRole.toLowerCase() !== role.toLowerCase())
+                throw new Error(`Acceso denegado. Esta cuenta no tiene permisos de ${role}`);
+
+            // Si alguien con rol real de admin/profesor/estudiante intenta entrar por el portal acudiente, bloquearlo
+            if (isAcudienteFlow) {
+                const realRole = roleMapping[user.role.toUpperCase()] || roleMapping[user.role];
+                if (realRole && realRole !== 'student')
+                    throw new Error('Solo puedes consultar con la cédula de un estudiante');
+            }
+
+            sessionStorage.setItem('token', token);
+            sessionStorage.setItem('userRole', mappedRole);
+            sessionStorage.setItem('userEmail', user.email || '');
+            sessionStorage.setItem('userId', user.id);
+            sessionStorage.setItem('currentUsername', user.username || identifier);
+            if (expiresAt) sessionStorage.setItem('tokenExpiresAt', expiresAt);
+
+            // Para acudiente: guardar la cédula del estudiante consultado
+            if (isAcudienteFlow) {
+                sessionStorage.setItem('estudianteCedula', identifier);
+                sessionStorage.setItem('estudianteId', user.id);
+            }
+
+            if (result.data.login.isFirstLogin && mappedRole.toLowerCase() !== 'admin') {
+                document.getElementById('loginModal').style.display = 'none';
+                document.getElementById('changePasswordModal').style.display = 'flex';
+            } else {
+                const redirects = { admin: 'administrativo.html', teacher: 'profesor.html', student: 'estudiante.html', acudiente: 'acudiente.html' };
+                window.location.href = redirects[mappedRole.toLowerCase()];
+            }
+        } catch (error) {
+            alert(error.message || 'Error al iniciar sesión');
+        }
+    });
+
+    document.querySelector('#loginModal .close-btn').addEventListener('click', function() {
+        document.getElementById('loginModal').style.display = 'none';
+    });
+
+    const togglePassword = document.getElementById('togglePassword');
+    if (togglePassword) {
+        togglePassword.addEventListener('click', function() { togglePasswordField('password', 'eyeIcon'); });
+    }
+});
+
+function openModal(role) {
+    const labels = { student: 'Estudiante', teacher: 'Profesor', admin: 'Administrativo', acudiente: 'Acudiente' };
+    document.getElementById('modalTitle').textContent = `Acceso — ${labels[role] || role}`;
+
+    const isAcudiente = role === 'acudiente';
+
+    // Cambiar label e hint del identificador
+    document.getElementById('identifierLabel').textContent = isAcudiente ? 'Cédula del estudiante' : 'Cédula o Correo';
+    document.getElementById('identifierHelp').textContent  = isAcudiente ? 'Ingresa la cédula del estudiante que deseas consultar' : 'Puedes usar tu número de cédula o correo';
+    document.getElementById('identifier').placeholder      = isAcudiente ? 'Ej: 1234567890' : 'Tu cédula o correo electrónico';
+
+    // Mostrar/ocultar secciones
+    document.getElementById('acudienteNotice').style.display         = isAcudiente ? 'block' : 'none';
+    document.getElementById('passwordGroup').style.display            = isAcudiente ? 'none'  : 'block';
+    document.getElementById('forgotPasswordContainer').style.display  = isAcudiente ? 'none'  : 'block';
+
+    // Limpiar campos
+    document.getElementById('identifier').value = '';
+    document.getElementById('password').value   = '';
+
+    document.getElementById('loginModal').style.display = 'flex';
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const forgotLink  = document.getElementById('forgotPasswordLink');
+    const forgotModal = document.getElementById('forgotPasswordModal');
+    const closeForgot = document.getElementById('closeForgotPasswordBtn');
+
+    if (forgotLink) forgotLink.addEventListener('click', e => { e.preventDefault(); forgotModal.style.display = 'flex'; });
+    if (closeForgot) closeForgot.addEventListener('click', () => {
+        forgotModal.style.display = 'none';
+        document.getElementById('forgotIdentifier').value = '';
+        document.getElementById('forgotError').style.display   = 'none';
+        document.getElementById('forgotSuccess').style.display = 'none';
+    });
+
+    if (document.getElementById('forgotPasswordForm')) {
+        document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const identifier = document.getElementById('forgotIdentifier').value.trim();
+            const btn        = document.getElementById('forgotSubmitBtn');
+            const errorDiv   = document.getElementById('forgotError');
+            const successDiv = document.getElementById('forgotSuccess');
+
+            errorDiv.style.display = 'none'; successDiv.style.display = 'none';
+            btn.textContent = 'Enviando…'; btn.disabled = true;
+
+            try {
+                // olvidarPassword busca al usuario por cédula o email en estudiantes y profesores
+                const response = await fetch(window.LEARNSCAPE_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: `mutation OlvidarPassword($identifier: String!) {
+                            olvidarPassword(identifier: $identifier)
+                        }`,
+                        variables: { identifier }
+                    })
+                });
+                const result = await response.json();
+                if (result.errors) throw new Error(result.errors[0].message);
+
+                successDiv.style.display = 'flex';
+                document.getElementById('forgotIdentifier').value = '';
+                setTimeout(() => { forgotModal.style.display = 'none'; successDiv.style.display = 'none'; }, 4000);
+            } catch (error) {
+                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Ocurrió un error. Intenta de nuevo.';
+                errorDiv.style.display = 'flex';
+            } finally {
+                btn.textContent = 'Enviar instrucciones'; btn.disabled = false;
+            }
+        });
+    }
+
+    if (document.getElementById('closeChangePasswordBtn')) {
+        document.getElementById('closeChangePasswordBtn').addEventListener('click', function() {
+            if (confirm('¿Seguro que deseas cancelar? Es necesario crear tu contraseña.')) {
+                document.getElementById('changePasswordModal').style.display = 'none';
+                sessionStorage.clear();
+                window.location.href = 'principal.html';
+            }
+        });
+    }
+
+    if (document.getElementById('toggleNewPassword'))
+        document.getElementById('toggleNewPassword').addEventListener('click', () => togglePasswordField('newPassword', 'newEyeIcon'));
+    if (document.getElementById('toggleConfirmPassword'))
+        document.getElementById('toggleConfirmPassword').addEventListener('click', () => togglePasswordField('confirmPassword', 'confirmEyeIcon'));
+
+    if (document.getElementById('changePasswordForm')) {
+        document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const newPassword     = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const username        = sessionStorage.getItem('currentUsername');
+
+            if (newPassword !== confirmPassword) {
+                document.getElementById('passwordError').style.display = 'flex'; return;
+            }
+            document.getElementById('passwordError').style.display = 'none';
+            if (newPassword.length < 6) { alert('La contraseña debe tener al menos 6 caracteres'); return; }
+
+            try {
+                const response = await fetch(window.LEARNSCAPE_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('token')}` },
+                    body: JSON.stringify({
+                        query: `mutation CambiarPasswordPrimerLogin($username: String!, $newPassword: String!) {
+                            cambiarPasswordPrimerLogin(username: $username, newPassword: $newPassword)
+                        }`,
+                        variables: { username, newPassword }
+                    })
+                });
+                const result = await response.json();
+                if (result.errors) throw new Error(result.errors[0].message);
+                if (result.data?.cambiarPasswordPrimerLogin) {
+                    document.getElementById('changePasswordModal').style.display = 'none';
+                    const redirects = { admin: 'administrativo.html', teacher: 'profesor.html', student: 'estudiante.html', acudiente: 'acudiente.html' };
+                    window.location.href = redirects[sessionStorage.getItem('userRole').toLowerCase()];
+                } else throw new Error('No se pudo cambiar la contraseña');
+            } catch (error) {
+                alert(error.message || 'Error al cambiar la contraseña');
+            }
+        });
+    }
+});
+
+function togglePasswordField(inputId, iconId) {
+    const inp  = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (inp && icon) {
+        const hidden = inp.type === 'password';
+        inp.type = hidden ? 'text' : 'password';
+        icon.className = hidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+    }
+}
+</script>
+
+</body>
+</html>

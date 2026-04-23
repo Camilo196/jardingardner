@@ -1,0 +1,45 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@emailjs/nodejs": "^5.0.2",
+    "@graphql-tools/schema": "^10.0.2",
+    "@graphql-tools/utils": "^10.0.12",
+    "@sendgrid/mail": "^8.1.4",
+    "apollo-server": "^3.13.0",
+    "bcrypt": "^5.1.1",
+    "date-fns": "^2.30.0",
+    "dotenv": "^16.4.7",
+    "graphql": "^16.10.0",
+    "graphql-constraint-directive": "^6.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "4.0",
+    "mongoose": "^8.10.1",
+    "nodemailer": "^6.10.0",
+    "pg": "^8.7.1",
+    "reflect-metadata": "^0.1.13",
+    "typeorm": "^0.3.22",
+    "uuid": "^11.0.5"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/graphql": "^14.2.3",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^20.17.17",
+    "@types/nodemailer": "^6.4.17",
+    "@types/pdfkit": "^0.13.9",
+    "nodemon": "^3.1.9",
+    "npm-check": "^6.0.1",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.7.3"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "dev:raw": "nodemon --experimental-specifier-resolution=node --exec node --loader ts-node/esm src/index.ts",
+    "start": "node --experimental-specifier-resolution=node --loader ts-node/esm src/index.ts",
+    "dev": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev-clean.ps1",
+    "build": "tsc",
+    "serve": "node dist/index.js",
+    "test-db": "node --loader ts-node/esm src/testDatabaseConnection.ts"
+  }
+}

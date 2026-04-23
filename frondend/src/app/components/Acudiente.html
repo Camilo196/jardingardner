@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal Acudiente — LEARNSCAPE</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="../assets/config.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1a56db;--blue-dark:#1040b0;--blue-lt:#dbeafe;--blue-mid:#3b82f6;
+  --red:#e02222;--red-lt:#fee2e2;
+  --green:#16a34a;--green-lt:#dcfce7;
+  --amber:#d97706;--amber-lt:#fef3c7;
+  --teal:#0d9488;--teal-lt:#ccfbf1;
+  --ink:#0f172a;--ink2:#1e293b;--muted:#64748b;
+  --bg:#f0f5ff;--white:#ffffff;--surface:#f8fafc;
+  --border:#e2e8f0;
+  --sidebar-w:240px;
+  --r:12px;
+  --shadow-xs:0 1px 4px rgba(15,23,42,.06);
+  --shadow-sm:0 2px 10px rgba(15,23,42,.08);
+  --shadow:0 6px 24px rgba(15,23,42,.10);
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;font-size:14px}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--ink2);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:200}
+.sb-logo{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:12px}
+.sb-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#0d9488,#0f766e);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sb-logo-text .name{font-size:16px;font-weight:900;color:#fff;letter-spacing:.5px}
+.sb-logo-text .sub{font-size:9px;color:rgba(255,255,255,.4);font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
+.sb-user{padding:14px 16px;margin:12px 12px 4px;background:rgba(255,255,255,.06);border-radius:10px;display:flex;align-items:center;gap:10px}
+.sb-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#0f766e);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.sb-uname{font-size:12px;font-weight:700;color:#fff;line-height:1.3}
+.sb-urole{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px}
+.sb-section{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.3);padding:14px 20px 6px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 20px;color:rgba(255,255,255,.6);font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:.15s;border-left:3px solid transparent}
+.sb-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.sb-item.active{background:rgba(13,148,136,.25);color:#5eead4;border-left-color:var(--teal);font-weight:700}
+.sb-item .ico{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.sb-footer{margin-top:auto;padding:14px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:8px}
+.sb-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.65);padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;font-family:inherit;width:100%;text-align:left}
+.sb-btn:hover{background:rgba(255,255,255,.15);color:#fff}
+
+/* ── MAIN ── */
+.main{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-xs)}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-title{font-size:17px;font-weight:800;color:var(--ink)}
+.topbar-sub{font-size:12px;color:var(--muted);font-weight:500}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.tb-pill{background:var(--teal-lt);color:var(--teal);padding:5px 12px;border-radius:16px;font-size:11px;font-weight:700}
+.content{padding:24px 28px;flex:1}
+.section{display:none}.section.active{display:block}
+
+/* ── CARD HIJO ── */
+.child-banner{background:linear-gradient(135deg,var(--teal),#0f766e);border-radius:var(--r);padding:22px 26px;color:#fff;margin-bottom:24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.child-avatar{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;flex-shrink:0;border:2px solid rgba(255,255,255,.3)}
+.child-name{font-size:20px;font-weight:900;line-height:1.2}
+.child-meta{font-size:12px;opacity:.8;margin-top:3px}
+
+/* ── STATS ── */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;box-shadow:var(--shadow-xs);transition:.2s;position:relative;overflow:hidden}
+.kpi:hover{box-shadow:var(--shadow-sm);transform:translateY(-1px)}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.teal::after{background:linear-gradient(90deg,var(--teal),#2dd4bf)}
+.kpi.green::after{background:linear-gradient(90deg,var(--green),#4ade80)}
+.kpi.amber::after{background:linear-gradient(90deg,var(--amber),#fbbf24)}
+.kpi.blue::after{background:linear-gradient(90deg,var(--blue),var(--blue-mid))}
+.kpi-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px}
+.kpi-val{font-size:28px;font-weight:900;color:var(--ink)}
+
+/* ── PANEL CARD ── */
+.pcard{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow-xs);overflow:hidden;margin-bottom:20px}
+.pcard-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:linear-gradient(to right,var(--white),var(--bg))}
+.pcard-title{font-size:15px;font-weight:800;color:var(--teal)}
+.pcard-body{padding:20px 22px}
+
+/* ── TABLAS ── */
+.ntbl{width:100%;border-collapse:collapse;font-size:13px}
+.ntbl th,.ntbl td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+.ntbl th{background:var(--surface);font-weight:800;font-size:11px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
+.ntbl tr:last-child td{border-bottom:none}
+.ntbl tbody tr:hover td{background:var(--bg)}
+
+/* ── ASIGNATURA BLOQUE ── */
+.asig-blk{margin-bottom:18px;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.asig-blk-h{background:var(--surface);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.asig-blk-h span{font-weight:800;color:var(--ink)}
+
+/* ── BOLETÍN ── */
+.bcard{background:linear-gradient(135deg,var(--teal-lt),#e0fdf4);border:1px solid #99f6e4;border-radius:var(--r);padding:28px;text-align:center}
+.bcard h3{color:#0f766e;font-size:20px;font-weight:900;margin-bottom:8px}
+
+/* ── PILLS / BTNS ── */
+.pill{display:inline-flex;align-items:center;padding:4px 12px;border-radius:24px;font-weight:800;font-size:12px}
+.pill.g{background:var(--green-lt);color:var(--green)}
+.pill.a{background:var(--amber-lt);color:#854d0e}
+.pill.r{background:var(--red-lt);color:#991b1b}
+.pill.n{background:var(--surface);color:var(--muted);font-style:italic;font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;border:none;transition:.2s;font-family:inherit}
+.btn-t{background:var(--teal);color:#fff}.btn-t:hover{background:#0f766e}
+.btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed}
+
+/* ── MODAL ── */
+.mover{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:1000;justify-content:center;align-items:flex-start;padding:48px 20px;overflow-y:auto;backdrop-filter:blur(4px)}
+.mover.o{display:flex}
+.mbox{background:#fff;border-radius:16px;width:100%;max-width:420px;box-shadow:var(--shadow);animation:slideUp .25s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.mh{padding:18px 22px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);border-radius:16px 16px 0 0}
+.mh h3{font-size:16px;color:var(--teal);margin:0;font-weight:800}
+.mclose{font-size:22px;border:none;background:none;cursor:pointer;color:var(--muted);width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;transition:.2s}
+.mclose:hover{background:var(--surface)}
+.mbody{padding:22px}
+
+/* ── ESTADOS ── */
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-ico{font-size:48px;margin-bottom:12px;opacity:.6}
+.spin-w{display:flex;justify-content:center;padding:60px}
+.spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:28px;right:28px;background:var(--ink);color:#fff;padding:13px 22px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;opacity:0;transform:translateY(16px);transition:.3s;pointer-events:none;max-width:340px}
+.toast.on{opacity:1;transform:translateY(0)}.toast.ok{border-left:4px solid var(--green)}.toast.er{border-left:4px solid var(--red)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{width:60px}
+  .sb-logo-text,.sb-uname,.sb-urole,.sb-section,.sb-item span:not(.ico){display:none}
+  .sb-item{justify-content:center;padding:12px}
+  .kpis{grid-template-columns:1fr 1fr}
+  .content{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-mark">👨‍👩‍👧</div>
+    <div class="sb-logo-text">
+      <div class="name">LEARNSCAPE</div>
+      <div class="sub">Portal Acudiente</div>
+    </div>
+  </div>
+
+  <div class="sb-user">
+    <div class="sb-avatar" id="sbAvatar">AC</div>
+    <div>
+      <div class="sb-uname" id="sbName">Cargando...</div>
+      <div class="sb-urole" id="sbSub">Acudiente / Padre</div>
+    </div>
+  </div>
+
+  <div class="sb-section">Mi Hijo/a</div>
+  <button class="sb-item active" onclick="showSection('resumen',this)">
+    <span class="ico">📊</span><span>Resumen</span>
+  </button>
+
+  <div class="sb-section">Académico</div>
+  <button class="sb-item" onclick="showSection('notas',this)">
+    <span class="ico">📝</span><span>Calificaciones</span>
+  </button>
+  <button class="sb-item" onclick="showSection('asistencia',this)">
+    <span class="ico">📋</span><span>Asistencia</span>
+  </button>
+  <button class="sb-item" onclick="showSection('boletin',this)">
+    <span class="ico">📄</span><span>Boletín PDF</span>
+  </button>
+
+  <div class="sb-footer">
+    <!-- Sin cambio de contraseña para acudiente (clave = cédula del estudiante) -->
+    <button class="sb-btn" onclick="salir()">← Cerrar sesión</button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="topbar-title" id="topTitle">Resumen</div>
+        <div class="topbar-sub" id="topSub">Estado académico de tu hijo/a</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="tb-pill">Acudiente</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══ RESUMEN ═══ -->
+    <div id="sec-resumen" class="section active">
+      <div class="child-banner">
+        <div class="child-avatar" id="childAva">🎓</div>
+        <div>
+          <div class="child-name" id="childNombre">Cargando información del estudiante...</div>
+          <div class="child-meta" id="childMeta">Consultando datos académicos...</div>
+        </div>
+      </div>
+      <div class="kpis">
+        <div class="kpi teal"><div class="kpi-lbl">Asignaturas</div><div class="kpi-val" id="stA">—</div></div>
+        <div class="kpi green"><div class="kpi-lbl">Promedio General</div><div class="kpi-val" id="stP">—</div></div>
+        <div class="kpi amber"><div class="kpi-lbl">Estado</div><div class="kpi-val" id="stE" style="font-size:16px">—</div></div>
+        <div class="kpi blue"><div class="kpi-lbl">Asistencia</div><div class="kpi-val" id="stAs">—</div></div>
+      </div>
+      <div class="pcard">
+        <div class="pcard-head"><span class="pcard-title">📚 Cursos y Asignaturas</span></div>
+        <div class="pcard-body" id="cursosC"><div class="spin-w"><div class="spin"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ CALIFICACIONES ═══ -->
+    <div id="sec-notas" class="section">
+      <div class="pcard">
+        <div class="pcard-head" style="flex-wrap:wrap;gap:12px">
+          <span class="pcard-title">📝 Calificaciones</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <label style="font-size:12px;font-weight:800;color:var(--muted)">PERÍODO:</label>
+            <select id="notasPeriodoSel" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;background:#fff;cursor:pointer;outline:none" onchange="renderNotas()">
+              <option value="">Todos los períodos</option>
+            </select>
+          </div>
+        </div>
+        <div class="pcard-body" id="notasC"><div class="spin-w"><div class="spin"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ ASISTENCIA ═══ -->
+    <div id="sec-asistencia" class="section">
+      <div class="pcard">
+        <div class="pcard-head" style="flex-wrap:wrap;gap:12px">
+          <span class="pcard-title">📋 Registro de Asistencia</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <label style="font-size:12px;font-weight:800;color:var(--muted)">PERÍODO:</label>
+            <select id="asistPeriodoSel" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;background:#fff;cursor:pointer;outline:none" onchange="cargarAsistencia()">
+              <option value="">Todos los períodos</option>
+            </select>
+          </div>
+        </div>
+        <div class="pcard-body" id="asistC"><div class="spin-w"><div class="spin"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ BOLETÍN ═══ -->
+    <div id="sec-boletin" class="section">
+      <div class="pcard">
+        <div class="pcard-head"><span class="pcard-title">📄 Boletín de Calificaciones</span></div>
+        <div class="pcard-body">
+          <div class="bcard">
+            <div style="font-size:48px;margin-bottom:12px">📋</div>
+            <h3>Boletín Oficial de tu Hijo/a</h3>
+            <p style="color:var(--muted);font-size:14px;margin-bottom:24px;max-width:480px;margin-inline:auto">El boletín se habilita cuando el administrador cierra el período académico.</p>
+            <div id="periodosBoletinWrap" style="width:100%;max-width:440px;margin:0 auto 16px"><div class="spin-w" style="padding:20px"><div class="spin"></div></div></div>
+            <p id="dlMsg" style="margin-top:14px;font-size:13px;font-weight:700"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal cambiar contraseña -->
+<div class="mover" id="mPass" onclick="if(event.target===this)cerrarPass()">
+  <div class="mbox">
+    <div class="mh"><h3>🔑 Cambiar contraseña</h3><button class="mclose" onclick="cerrarPass()">✕</button></div>
+    <div class="mbody">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div><label style="font-size:12px;font-weight:800;color:var(--muted);display:block;margin-bottom:5px">CONTRASEÑA ACTUAL</label><input type="password" id="passActual" placeholder="Tu contraseña actual" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none"></div>
+        <div><label style="font-size:12px;font-weight:800;color:var(--muted);display:block;margin-bottom:5px">NUEVA CONTRASEÑA</label><input type="password" id="passNueva" placeholder="Mínimo 6 caracteres" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none"></div>
+        <div><label style="font-size:12px;font-weight:800;color:var(--muted);display:block;margin-bottom:5px">CONFIRMAR NUEVA CONTRASEÑA</label><input type="password" id="passConfirm" placeholder="Repite la nueva contraseña" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none"></div>
+        <div id="passError" style="display:none;background:var(--red-lt);color:#991b1b;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:700"></div>
+        <button class="btn btn-t" id="btnCambiarPass" onclick="guardarNuevaPass()" style="width:100%;justify-content:center;padding:11px">Guardar nueva contraseña</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API = window.LEARNSCAPE_API;
+const SECTION_LABELS = {
+  resumen:    ['Resumen','Estado académico de tu hijo/a'],
+  notas:      ['Calificaciones','Notas por asignatura y período'],
+  asistencia: ['Asistencia','Registro de asistencia escolar'],
+  boletin:    ['Boletín PDF','Descarga los boletines oficiales']
+};
+
+const G = {
+  estudianteId: null,
+  estudianteNombre: '',
+  cursos: [],
+  cals: [],
+  asistencias: [],
+  cargado: false,
+  _periodoSelBoletin: null
+};
+
+function showSection(id, btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  const lbl = SECTION_LABELS[id]||[id,''];
+  document.getElementById('topTitle').textContent = lbl[0];
+  document.getElementById('topSub').textContent = lbl[1];
+  if(id==='notas' && G.cargado) renderNotas();
+  if(id==='asistencia' && G.cargado) cargarAsistencia();
+  if(id==='boletin' && G.cargado) renderBoletin();
+}
+
+const tk = () => sessionStorage.getItem('token');
+function jwt(t){ try{return JSON.parse(decodeURIComponent(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')));}catch{return null;} }
+async function gql(q, v={}){
+  const r = await fetch(API, {method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk()}, body:JSON.stringify({query:q,variables:v})});
+  const j = await r.json();
+  if(j.errors){ const msg=j.errors[0].message; if(msg.includes('jwt expired')||msg.includes('invalid token')||msg.includes('No autenticado')){ sessionStorage.clear(); alert('Tu sesión ha expirado.'); window.location.href='principal.html'; return; } throw new Error(msg); }
+  return j.data;
+}
+function salir(){ sessionStorage.removeItem('token'); window.location.href='principal.html'; }
+function showT(m,t='ok',d=3500){ const el=document.getElementById('toast'); el.textContent=m; el.className=`toast on ${t}`; setTimeout(()=>el.className='toast',d); }
+
+async function init(){
+  const t = tk(); if(!t){ window.location.href='principal.html'; return; }
+  const d = jwt(t); if(!d){ window.location.href='principal.html'; return; }
+
+  // El acudiente ingresó con la cédula del estudiante — buscar su ID real
+  const cedula = sessionStorage.getItem('estudianteCedula') || sessionStorage.getItem('currentUsername');
+  if(!cedula){ window.location.href='principal.html'; return; }
+
+  try {
+    const dr = await gql(`query{ estudiantePorCedula(cedula:"${cedula}"){ id } }`);
+    G.estudianteId = dr?.estudiantePorCedula?.id;
+  } catch(_) {
+    // Fallback: usar cédula directamente si el backend lo soporta
+    G.estudianteId = cedula;
+  }
+
+  if(!G.estudianteId){ alert('No se encontró el estudiante con cédula: ' + cedula); window.location.href='principal.html'; return; }
+  await cargar();
+}
+
+async function cargar(){
+  document.getElementById('cursosC').innerHTML='<div class="spin-w"><div class="spin"></div></div>';
+  try{
+    // Datos del estudiante
+    try{
+      const de = await gql(`query{estudiante(id:"${G.estudianteId}"){nombre primerApellido segundoApellido cedula}}`);
+      const est = de.estudiante;
+      if(est){
+        G.estudianteNombre = `${est.nombre||''} ${est.primerApellido||''} ${est.segundoApellido||''}`.trim();
+        const parts = G.estudianteNombre.split(' ');
+        document.getElementById('sbName').textContent = G.estudianteNombre;
+        const ced = sessionStorage.getItem('estudianteCedula') || '';
+        document.getElementById('sbSub').textContent = ced ? `Cédula: ${ced}` : 'Acudiente';
+        document.getElementById('sbAvatar').textContent = (parts.length>=2?parts[0][0]+parts[1][0]:G.estudianteNombre.substring(0,2)).toUpperCase();
+        document.getElementById('childAva').textContent = (parts.length>=2?parts[0][0]+parts[1][0]:G.estudianteNombre.substring(0,2)).toUpperCase();
+        document.getElementById('childNombre').textContent = G.estudianteNombre;
+        document.getElementById('childMeta').textContent = `Cédula: ${est.cedula} — Seguimiento académico`;
+      }
+    }catch{ document.getElementById('childNombre').textContent = `Estudiante ${G.estudianteId}`; }
+
+    // Matrículas
+    const dm = await gql(`query{matriculasPorEstudiante(estudianteId:"${G.estudianteId}"){id estado periodo curso{id nombre} asignaturas{id nombre horario profesor{nombre primerApellido}}}}`);
+    G.cursos = (dm.matriculasPorEstudiante||[]).map(m=>({
+      id:m.curso?.id||'', nombre:m.curso?.nombre||'Sin curso', periodo:m.periodo||'',
+      asignaturas:(m.asignaturas||[]).map(a=>({id:String(a.id),nombre:a.nombre,horario:a.horario||'',prof:a.profesor?`${a.profesor.nombre} ${a.profesor.primerApellido}`:'Sin docente'}))
+    }));
+
+    // Calificaciones
+    try{
+      const dc = await gql(`query{calificacionesPorEstudiante(estudianteId:"${G.estudianteId}"){id asignaturaId nota periodo observaciones fecha tipoActividad nombreActividad corte}}`);
+      G.cals = (dc.calificacionesPorEstudiante||[]).map(c=>({...c,asignaturaId:String(c.asignaturaId)}));
+    }catch{ G.cals=[]; }
+
+    G.cargado = true;
+    renderResumen();
+  }catch(err){
+    document.getElementById('cursosC').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p style="font-size:14px;color:var(--red)">${err.message}</p><button onclick="cargar()" class="btn btn-t" style="margin:14px auto 0;display:flex">Reintentar</button></div>`;
+  }
+}
+
+function renderResumen(){
+  const asigIds = new Set(G.cursos.flatMap(c=>c.asignaturas.map(a=>a.id)));
+  document.getElementById('stA').textContent = asigIds.size;
+  const pg = promGen();
+  document.getElementById('stP').textContent = pg>0?pg.toFixed(2):'—';
+  const el = document.getElementById('stE');
+  if(pg>0){ el.innerHTML = pg>=3?'<span style="color:var(--green)">✅ Al día</span>':'<span style="color:var(--red)">⚠ Revisar</span>'; }else el.textContent='—';
+  document.getElementById('stAs').textContent = '—'; // se actualiza al cargar asistencia
+
+  const c = document.getElementById('cursosC');
+  if(!G.cursos.length){ c.innerHTML='<div class="empty"><div class="empty-ico">📚</div><p>El estudiante no está inscrito en ningún curso aún.</p></div>'; return; }
+  c.innerHTML = G.cursos.map((cu,i)=>{
+    const asigs = cu.asignaturas.map(a=>{ const cals=G.cals.filter(x=>String(x.asignaturaId)===String(a.id)&&(!x.periodo||!cu.periodo||x.periodo===cu.periodo)); const p=promAsig(cals); const ps=p!==null?p.toFixed(2):'—'; const pc=p===null?'n':p>=4?'g':p>=3?'a':'r';
+      return `<div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><div style="font-weight:700;font-size:14px">${a.nombre}</div><div style="font-size:12px;color:var(--muted);margin-top:3px">👤 ${a.prof}</div></div><span class="pill ${pc}">⭐ ${ps}</span></div>`; }).join('');
+    return `<div style="border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden;background:var(--white)"><div style="background:linear-gradient(135deg,var(--teal),#0f766e);color:#fff;padding:16px 20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between" onclick="togCC('cb${i}','ct${i}')"><div><div style="font-size:15px;font-weight:800">${cu.nombre}</div><div style="font-size:11px;opacity:.8;margin-top:3px">📅 ${periodoLabel(cu.periodo)} • ${cu.asignaturas.length} asignatura(s)</div></div><span id="ct${i}" style="font-size:16px;transition:.25s">▼</span></div><div id="cb${i}" style="display:none">${asigs||'<p style="padding:14px;color:var(--muted)">Sin asignaturas.</p>'}</div></div>`;
+  }).join('');
+}
+function togCC(b,t){ const el=document.getElementById(b); const tog=document.getElementById(t); const open=el.style.display==='block'; el.style.display=open?'none':'block'; tog.style.transform=open?'':'rotate(180deg)'; }
+
+function renderNotas(){
+  const c = document.getElementById('notasC');
+  if(!G.cursos.length){c.innerHTML='<div class="empty"><div class="empty-ico">📝</div><p>Sin cursos registrados.</p></div>';return;}
+  const sel = document.getElementById('notasPeriodoSel');
+  const periodos = [...new Set([...G.cursos.map(c=>c.periodo),...G.cals.map(c=>c.periodo)])].filter(Boolean).sort().reverse();
+  const selVal = sel.value; sel.innerHTML='<option value="">Todos los períodos</option>'+periodos.map(p=>`<option value="${p}" ${p===selVal?'selected':''}>${periodoLabel(p)}</option>`).join('');
+  const filtroPeriodo = sel.value; let h='';
+  G.cursos.forEach(cu=>{ if(filtroPeriodo&&cu.periodo&&cu.periodo!==filtroPeriodo)return; h+=`<div style="margin-bottom:28px"><h3 style="font-size:15px;color:var(--teal);margin-bottom:14px;font-weight:800">📚 ${cu.nombre} <span style="font-weight:600;font-size:13px;color:var(--muted)">— ${periodoLabel(cu.periodo)}</span></h3>`; if(!cu.asignaturas.length)h+=`<p style="color:var(--muted);font-size:14px">Sin asignaturas.</p>`; else cu.asignaturas.forEach(a=>{ const cf=G.cals.filter(x=>String(x.asignaturaId)===String(a.id)&&(!x.periodo||!cu.periodo||x.periodo===cu.periodo)); h+=bloqueAsig(a,cf); }); h+=`</div>`; });
+  if(!h)h='<div class="empty"><div class="empty-ico">📝</div><p>Sin datos para el período seleccionado.</p></div>';
+  c.innerHTML=h;
+}
+
+function bloqueAsig(a,cals){
+  const pc1=pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===1).map(c=>c.nota));
+  const pc2=pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===2).map(c=>c.nota));
+  const pc3=pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===3).map(c=>c.nota));
+  const pf=pPond(pc1,pc2,pc3);
+  let h=`<div class="asig-blk"><div class="asig-blk-h"><div><span>${a.nombre}</span> <small style="font-size:11px;color:var(--muted)">— 👤 ${a.prof}</small></div>${pf!==null?`<span class="pill ${pf>=4?'g':pf>=3?'a':'r'}">Final: ${pf.toFixed(2)} ${pf>=3?'✅':'❌'}</span>`:''}</div>`;
+  if(!cals.length){ h+=`<p style="padding:14px;color:var(--muted);font-style:italic;font-size:13px">Sin calificaciones registradas.</p>`; }
+  else{
+    const sorted=[...cals].sort((a,b)=>((a.corte||0)-(b.corte||0)));
+    h+=`<table class="ntbl"><thead><tr><th>Actividad</th><th>Tipo</th><th>Corte</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>`;
+    sorted.forEach(c=>{ const n=Number(c.nota); const cor=c.corte||gc(c.observaciones)||'—'; const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'—';
+      h+=`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.tipoActividad||'—'}</span></td><td style="font-size:12px;color:var(--muted)">${cor===1?'1° Corte':cor===2?'2° Corte':cor===3?'3° Corte':cor}</td><td><span class="pill ${n>=4?'g':n>=3?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`; });
+    h+=`</tbody></table>`;
+  }
+  return h+`</div>`;
+}
+
+async function cargarAsistencia(){
+  const c=document.getElementById('asistC'); c.innerHTML='<div class="spin-w"><div class="spin"></div></div>';
+  try{
+    const sel=document.getElementById('asistPeriodoSel');
+    const periodos=[...new Set([...G.cursos.map(x=>x.periodo),...G.cals.map(x=>x.periodo)])].filter(Boolean).sort().reverse();
+    const selVal=sel.value; sel.innerHTML='<option value="">Todos los períodos</option>'+periodos.map(p=>`<option value="${p}" ${p===selVal?'selected':''}>${periodoLabel(p)}</option>`).join('');
+    const periodo=sel.value||undefined;
+    const varStr=periodo?`(estudianteId:"${G.estudianteId}",periodo:"${periodo}")`:`(estudianteId:"${G.estudianteId}")`;
+    const d=await gql(`query{asistenciasPorEstudiante${varStr}{id asignaturaId fecha estado periodo observaciones}}`);
+    G.asistencias=d.asistenciasPorEstudiante||[];
+    renderAsistencia();
+  }catch(e){ document.getElementById('asistC').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p style="color:var(--red)">${e.message}</p></div>`; }
+}
+
+function renderAsistencia(){
+  const c=document.getElementById('asistC'); const regs=G.asistencias||[];
+  if(!regs.length){c.innerHTML='<div class="empty"><div class="empty-ico">📋</div><p>No hay registros de asistencia para este período.</p></div>';return;}
+  const asigMap={};for(const r of regs){const k=String(r.asignaturaId);if(!asigMap[k])asigMap[k]=[];asigMap[k].push(r);}
+  const nombreAsig=id=>{for(const cu of G.cursos){const a=cu.asignaturas.find(x=>String(x.id)===String(id));if(a)return a.nombre;}return`Asignatura ${id}`;};
+  const estadoClase={PRESENTE:'g',AUSENTE:'r',TARDE:'a',EXCUSA:'n'}; const estadoEmoji={PRESENTE:'✅',AUSENTE:'❌',TARDE:'⏰',EXCUSA:'📝'};
+  let h=''; let totalPres=0,totalClases=0;
+  for(const[asigId,rs] of Object.entries(asigMap)){
+    const nombre=nombreAsig(asigId); const total=rs.length; const pres=rs.filter(r=>r.estado==='PRESENTE').length; const aus=rs.filter(r=>r.estado==='AUSENTE').length; const tard=rs.filter(r=>r.estado==='TARDE').length; const exc=rs.filter(r=>r.estado==='EXCUSA').length; const pct=total>0?Math.round(((pres+exc)/total)*1000)/10:0; const pctColor=pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--red)';
+    totalPres+=pres+exc; totalClases+=total;
+    h+=`<div class="asig-blk" style="margin-bottom:18px"><div class="asig-blk-h"><span>${nombre}</span><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="pill n">🏫 ${total}</span><span class="pill g">✅ ${pres}</span>${tard?`<span class="pill a">⏰ ${tard}</span>`:''} ${aus?`<span class="pill r">❌ ${aus}</span>`:''}<span style="font-size:13px;font-weight:800;color:${pctColor}">${pct}%</span></div></div><div style="overflow-x:auto"><table class="ntbl"><thead><tr><th>Fecha</th><th>Estado</th><th>Período</th><th>Observación</th></tr></thead><tbody>`;
+    const sorted=[...rs].sort((a,b)=>new Date(b.fecha).getTime()-new Date(a.fecha).getTime());
+    for(const r of sorted){const f=r.fecha?new Date(r.fecha).toLocaleDateString('es-CO'):'—'; h+=`<tr><td style="font-weight:700">${f}</td><td><span class="pill ${estadoClase[r.estado]||'n'}">${estadoEmoji[r.estado]||''} ${r.estado}</span></td><td style="font-size:12px;color:var(--muted)">${periodoLabel(r.periodo)}</td><td style="font-size:12px;color:var(--muted)">${r.observaciones||'—'}</td></tr>`;}
+    h+=`</tbody></table></div></div>`;
+  }
+  c.innerHTML=h;
+  if(totalClases>0) document.getElementById('stAs').textContent=`${Math.round((totalPres/totalClases)*100)}%`;
+}
+
+async function renderBoletin(){
+  const wrap=document.getElementById('periodosBoletinWrap'); wrap.innerHTML='<div class="spin-w" style="padding:20px"><div class="spin"></div></div>'; document.getElementById('dlMsg').textContent='';
+  try{
+    const anio=new Date().getFullYear();
+    const dp=await gql(`query{periodosConfig(anio:${anio}){numeroPeriodo abierto fechaCierre}}`);
+    const configs=dp.periodosConfig||[];
+    const periodosConNotas=[...new Set(G.cals.map(c=>c.periodo))].filter(Boolean);
+    const tarjetas=[1,2,3].map(n=>{ const valor=`${anio}-${n}`; const cfg=configs.find(c=>c.numeroPeriodo===n); const abierto=cfg?cfg.abierto:true; const tieneNotas=periodosConNotas.includes(valor); const labels={1:'1er Período',2:'2do Período',3:'3er Período'}; const fc=cfg?.fechaCierre?new Date(cfg.fechaCierre).toLocaleDateString('es-CO'):null;
+      if(!abierto) return `<div style="border:2px solid #bbf7d0;border-radius:10px;padding:14px 18px;background:#f0fdf4;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px"><div><div style="font-weight:800;font-size:14px;color:#166534">✅ ${labels[n]} <span style="font-size:12px;background:var(--green-lt);color:var(--green);padding:2px 8px;border-radius:12px;margin-left:6px">CERRADO</span></div>${fc?`<div style="font-size:11px;color:#4ade80;margin-top:3px">Cerrado el ${fc}</div>`:''}</div><button class="btn btn-t" style="padding:8px 16px;font-size:12px;white-space:nowrap" onclick="descargar('${valor}',this)">⬇ Descargar</button></div>`;
+      else if(tieneNotas) return `<div style="border:2px solid #fde68a;border-radius:10px;padding:14px 18px;background:#fffbeb;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px"><div><div style="font-weight:800;font-size:14px;color:#92400e">⏳ ${labels[n]} <span style="font-size:12px;background:var(--amber-lt);color:#92400e;padding:2px 8px;border-radius:12px;margin-left:6px">EN CURSO</span></div><div style="font-size:11px;color:#b45309;margin-top:3px">Disponible cuando el período sea cerrado</div></div><button class="btn" disabled style="background:var(--border);color:var(--muted);padding:8px 16px;font-size:12px;cursor:not-allowed">🔒 No disponible</button></div>`;
+      else return `<div style="border:2px solid var(--border);border-radius:10px;padding:14px 18px;background:var(--surface);display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;opacity:.6"><div><div style="font-weight:800;font-size:14px;color:var(--muted)">⬜ ${labels[n]} <span style="font-size:12px;background:var(--surface);color:var(--muted);padding:2px 8px;border-radius:12px;margin-left:6px">SIN DATOS</span></div></div><button class="btn" disabled style="background:var(--border);color:var(--muted);padding:8px 16px;font-size:12px;cursor:not-allowed">— No disponible</button></div>`;
+    }).join('');
+    wrap.innerHTML=tarjetas;
+  }catch(err){ wrap.innerHTML=`<p style="color:var(--red);font-size:13px">⚠ Error: ${err.message}</p>`; }
+}
+
+async function descargar(per, btnOrigen){
+  const msg=document.getElementById('dlMsg');
+  if(btnOrigen){btnOrigen.disabled=true;btnOrigen.textContent='⏳ Generando...';}
+  msg.textContent='';
+  try{
+    const timeoutP=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Tiempo de espera agotado.')),30000));
+    const d=await Promise.race([gql(`query{exportarBoletinEstudiante(estudianteId:"${G.estudianteId}",periodo:"${per}") }`),timeoutP]);
+    const b64=d.exportarBoletinEstudiante; if(!b64)throw new Error('Sin datos');
+    const bytes=new Uint8Array(atob(b64).split('').map(c=>c.charCodeAt(0))); const blob=new Blob([bytes],{type:'application/pdf'}); const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=`Boletin_${G.estudianteNombre.replace(/\s+/g,'_')}_${per}.pdf`; a.click(); URL.revokeObjectURL(url);
+    msg.textContent=`✅ Boletín ${per} descargado correctamente`; msg.style.color='var(--green)'; showT('✅ Boletín descargado');
+  }catch(err){ msg.textContent=`⚠ ${err.message}`; msg.style.color='var(--red)'; showT(err.message,'er'); }
+  finally{ if(btnOrigen){btnOrigen.disabled=false;btnOrigen.textContent='⬇ Descargar';} }
+}
+
+function gc(obs){if(!obs)return null;const m=obs.match(/CORTE\s+(\d+)/i);return m?parseInt(m[1]):null;}
+function pArr(arr){if(!arr||!arr.length)return null;return arr.reduce((s,n)=>s+Number(n),0)/arr.length;}
+function pPond(p1,p2,p3){let s=0,w=0;if(p1!==null){s+=p1*.3;w+=.3;}if(p2!==null){s+=p2*.3;w+=.3;}if(p3!==null){s+=p3*.4;w+=.4;}return w>0?s/w:null;}
+function promAsig(cals){return pPond(pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===1).map(c=>c.nota)),pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===2).map(c=>c.nota)),pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===3).map(c=>c.nota)));}
+function promGen(){const ids=[...new Set(G.cursos.flatMap(c=>c.asignaturas.map(a=>a.id)))];if(!ids.length)return 0;const ps=ids.map(id=>promAsig(G.cals.filter(c=>c.asignaturaId===id))).filter(p=>p!==null);return ps.length?ps.reduce((s,p)=>s+p,0)/ps.length:0;}
+function periodoLabel(p){if(!p)return'—';const m=p.match(/^(\d{4})-(\d)$/);if(m){const labs={1:'1er Período',2:'2do Período',3:'3er Período',4:'4to Período'};return`${labs[m[2]]||'Período '+m[2]} ${m[1]}`;}return p;}
+
+function abrirCambioPass(){ ['passActual','passNueva','passConfirm'].forEach(id=>document.getElementById(id).value=''); document.getElementById('passError').style.display='none'; document.getElementById('mPass').classList.add('o'); }
+function cerrarPass(){ document.getElementById('mPass').classList.remove('o'); }
+async function guardarNuevaPass(){
+  const actual=document.getElementById('passActual').value; const nueva=document.getElementById('passNueva').value; const confirma=document.getElementById('passConfirm').value;
+  const errDiv=document.getElementById('passError'); const btn=document.getElementById('btnCambiarPass'); errDiv.style.display='none';
+  if(!actual||!nueva||!confirma){errDiv.textContent='Completa todos los campos.';errDiv.style.display='block';return;}
+  if(nueva!==confirma){errDiv.textContent='Las contraseñas no coinciden.';errDiv.style.display='block';return;}
+  if(nueva.length<6){errDiv.textContent='Mínimo 6 caracteres.';errDiv.style.display='block';return;}
+  btn.disabled=true; btn.textContent='Guardando...';
+  try{ const username=sessionStorage.getItem('currentUsername')||G.estudianteId; await gql(`mutation CP($u:String!,$o:String!,$n:String!){cambiarPassword(username:$u,oldPassword:$o,newPassword:$n)}`,{u:username,o:actual,n:nueva}); cerrarPass(); showT('✅ Contraseña actualizada correctamente'); }catch(e){ errDiv.textContent=e.message||'Error al cambiar la contraseña.'; errDiv.style.display='block'; }finally{btn.disabled=false;btn.textContent='Guardar nueva contraseña';}
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

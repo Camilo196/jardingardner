@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Asistencia — LEARNSCAPE</title>
+    <link rel="stylesheet" href="../assets/styles/styleprofesor.css">
+    <style>
+        :root {
+            --blue: #4a69bd;
+            --blue-dark: #364fc7;
+            --blue-light: rgba(74,105,189,0.1);
+            --green: #10b981;
+            --yellow: #f59e0b;
+            --red: #ef4444;
+            --purple: #8b5cf6;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-500: #6b7280;
+            --gray-700: #374151;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        body { background: var(--gray-50); }
+
+        /* ── Page layout ── */
+        .page-container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+
+        /* ── Top bar ── */
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .top-bar h1 { font-size: 22px; color: var(--gray-700); margin: 0; }
+        .back-btn { background: none; border: 1px solid var(--gray-200); border-radius: 6px; padding: 7px 14px; cursor: pointer; color: var(--gray-700); font-size: 14px; transition: all .2s; }
+        .back-btn:hover { background: var(--gray-100); }
+
+        /* ── Selector de asignatura y fecha ── */
+        .filtros-card { background: #fff; border-radius: 10px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 24px; display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+        .filtro-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 180px; }
+        .filtro-group label { font-size: 13px; font-weight: 600; color: var(--gray-700); }
+        .filtro-group select, .filtro-group input { padding: 9px 12px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 14px; color: var(--gray-700); background: #fff; }
+        .filtro-group select:focus, .filtro-group input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue-light); }
+        .btn-cargar { background: var(--blue); color: #fff; border: none; border-radius: 6px; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; white-space: nowrap; }
+        .btn-cargar:hover { background: var(--blue-dark); }
+
+        /* ── Estado chips ── */
+        .estado-chips { display: flex; gap: 6px; }
+        .chip-estado { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; border: 2px solid transparent; transition: all .15s; user-select: none; }
+        .chip-PRESENTE { background: #dcfce7; color: #166534; }
+        .chip-AUSENTE  { background: #fee2e2; color: #991b1b; }
+        .chip-TARDE    { background: #fef3c7; color: #92400e; }
+        .chip-EXCUSA   { background: #ede9fe; color: #5b21b6; }
+        .chip-estado.selected { border-color: currentColor; transform: scale(1.08); box-shadow: 0 0 0 3px rgba(0,0,0,0.08); }
+
+        /* ── Tabla de lista ── */
+        .lista-card { background: #fff; border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; }
+        .lista-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--gray-200); flex-wrap: wrap; gap: 10px; }
+        .lista-header h2 { margin: 0; font-size: 16px; color: var(--gray-700); }
+        .acciones-lista { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-todos { background: none; border: 1px solid var(--gray-200); border-radius: 6px; padding: 6px 12px; font-size: 13px; cursor: pointer; color: var(--gray-700); transition: all .2s; }
+        .btn-todos:hover { background: var(--gray-100); }
+        .btn-guardar { background: var(--green); color: #fff; border: none; border-radius: 6px; padding: 8px 18px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; }
+        .btn-guardar:hover { background: #059669; }
+        .btn-guardar:disabled { background: var(--gray-200); cursor: not-allowed; color: var(--gray-500); }
+
+        table.tabla-lista { width: 100%; border-collapse: collapse; }
+        table.tabla-lista thead { background: var(--gray-50); }
+        table.tabla-lista th { padding: 11px 16px; text-align: left; font-size: 13px; font-weight: 600; color: var(--gray-500); border-bottom: 2px solid var(--gray-200); }
+        table.tabla-lista td { padding: 12px 16px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+        table.tabla-lista tbody tr:last-child td { border-bottom: none; }
+        table.tabla-lista tbody tr:hover { background: var(--gray-50); }
+        .estudiante-nombre { font-weight: 600; color: var(--gray-700); font-size: 14px; }
+        .estudiante-cedula { font-size: 12px; color: var(--gray-500); }
+
+        /* ── Resumen stats ── */
+        .resumen-bar { display: flex; gap: 12px; padding: 14px 20px; background: var(--gray-50); border-top: 1px solid var(--gray-200); flex-wrap: wrap; }
+        .resumen-stat { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot-PRESENTE { background: var(--green); }
+        .dot-AUSENTE  { background: var(--red); }
+        .dot-TARDE    { background: var(--yellow); }
+        .dot-EXCUSA   { background: var(--purple); }
+
+        /* ── Historial ── */
+        .historial-card { background: #fff; border-radius: 10px; box-shadow: var(--shadow); margin-top: 24px; overflow: hidden; }
+        .historial-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--gray-200); }
+        .historial-header h2 { margin: 0; font-size: 16px; color: var(--gray-700); }
+        .tab-row { display: flex; gap: 0; border-bottom: 2px solid var(--gray-200); padding: 0 20px; }
+        .hist-tab { padding: 10px 16px; font-size: 13px; font-weight: 600; border: none; background: none; cursor: pointer; color: var(--gray-500); border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all .2s; }
+        .hist-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+        /* ── Tabla resumen por estudiante ── */
+        .badge-pct { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 700; }
+        .badge-ok  { background: #dcfce7; color: #166534; }
+        .badge-warn{ background: #fef3c7; color: #92400e; }
+        .badge-bad { background: #fee2e2; color: #991b1b; }
+
+        /* ── Empty / loading states ── */
+        .estado-vacio { text-align: center; padding: 40px; color: var(--gray-500); }
+        .estado-vacio .icon { font-size: 40px; margin-bottom: 8px; }
+
+        /* ── Toast ── */
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #1f2937; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 14px; z-index: 2000; opacity: 0; transform: translateY(10px); transition: all .3s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { border-left: 4px solid var(--green); }
+        .toast.error   { border-left: 4px solid var(--red); }
+
+        @media(max-width: 640px) {
+            .filtros-card { flex-direction: column; }
+            .estado-chips { flex-wrap: wrap; }
+            .acciones-lista { flex-direction: column; }
+        }
+    </style>
+<script src="../assets/config.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">LEARNSCAPE</div>
+                <div class="user-info">
+                    <div class="user-avatar" id="avatar">PR</div>
+                    <div class="user-details">
+                        <span class="user-name" id="prof-nombre">Prof. Usuario</span>
+                        <span class="user-role">Profesor</span>
+                    </div>
+                    <button class="logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="page-container">
+        <!-- Top bar -->
+        <div class="top-bar">
+            <h1>📋 Registro de Asistencia</h1>
+            <button class="back-btn" onclick="window.location.href='profesor.html'">← Volver al panel</button>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filtros-card">
+            <div class="filtro-group">
+                <label>Asignatura</label>
+                <select id="sel-asignatura">
+                    <option value="">— Seleccionar —</option>
+                </select>
+            </div>
+            <div class="filtro-group">
+                <label>Fecha</label>
+                <input type="date" id="sel-fecha">
+            </div>
+            <div class="filtro-group">
+                <label>Periodo</label>
+                <select id="sel-periodo">
+                    <option value="">— Cargando periodos —</option>
+                </select>
+            </div>
+            <button class="btn-cargar" onclick="cargarLista()">Cargar lista</button>
+        </div>
+
+        <!-- Lista de estudiantes -->
+        <div class="lista-card" id="lista-card" style="display:none;">
+            <div class="lista-header">
+                <h2 id="lista-titulo">Lista del día</h2>
+                <div class="acciones-lista">
+                    <button class="btn-todos" onclick="marcarTodos('PRESENTE')">✅ Todos presentes</button>
+                    <button class="btn-todos" onclick="marcarTodos('AUSENTE')">❌ Todos ausentes</button>
+                    <button class="btn-guardar" id="btn-guardar" onclick="guardarLista()">💾 Guardar lista</button>
+                </div>
+            </div>
+
+            <table class="tabla-lista">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Estudiante</th>
+                        <th>Estado</th>
+                        <th>Observación</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-lista"></tbody>
+            </table>
+
+            <!-- Resumen en tiempo real -->
+            <div class="resumen-bar" id="resumen-bar">
+                <span class="resumen-stat"><span class="dot dot-PRESENTE"></span><span id="cnt-presente">0</span> Presentes</span>
+                <span class="resumen-stat"><span class="dot dot-AUSENTE"></span><span id="cnt-ausente">0</span> Ausentes</span>
+                <span class="resumen-stat"><span class="dot dot-TARDE"></span><span id="cnt-tarde">0</span> Tardes</span>
+                <span class="resumen-stat"><span class="dot dot-EXCUSA"></span><span id="cnt-excusa">0</span> Excusas</span>
+            </div>
+        </div>
+
+        <!-- Historial / Resumen por periodo -->
+        <div class="historial-card" id="historial-card" style="display:none;">
+            <div class="historial-header">
+                <h2>📊 Historial del periodo</h2>
+            </div>
+            <div class="tab-row">
+                <button class="hist-tab active" onclick="switchHistTab('tab-resumen')">Resumen por estudiante</button>
+                <button class="hist-tab" onclick="switchHistTab('tab-fechas')">Por fechas</button>
+            </div>
+
+            <!-- Resumen por estudiante -->
+            <div id="tab-resumen" style="padding:0;">
+                <table class="tabla-lista">
+                    <thead>
+                        <tr>
+                            <th>Estudiante</th>
+                            <th>Clases</th>
+                            <th>Presentes</th>
+                            <th>Ausentes</th>
+                            <th>Tardes</th>
+                            <th>Excusas</th>
+                            <th>Asistencia</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-resumen"></tbody>
+                </table>
+            </div>
+
+            <!-- Por fechas -->
+            <div id="tab-fechas" style="display:none; padding: 20px;">
+                <div id="contenido-fechas"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API = window.LEARNSCAPE_API;
+        let estudiantesActuales = [];  // lista cargada
+        let estadosActuales = {};      // { cedula: 'PRESENTE' | ... }
+        let obsActuales = {};          // { cedula: string }
+        let asignaturaIdActual = null;
+        let historialPeriodo = [];
+
+        // ── Utilidades ──
+        function getToken() { return sessionStorage.getItem('token'); }
+        function decodeJWT(t) {
+            if (!t) return null;
+            try { return JSON.parse(decodeURIComponent(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''))); } catch { return null; }
+        }
+        function cerrarSesion() { sessionStorage.removeItem('token'); window.location.href = 'principal.html'; }
+
+        async function gql(query, variables = {}) {
+            const res = await fetch(API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+                body: JSON.stringify({ query, variables })
+            });
+            const json = await res.json();
+            if (json.errors) throw new Error(json.errors[0].message);
+            return json.data;
+        }
+
+        function toast(msg, tipo = 'success') {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.className = `toast show ${tipo}`;
+            setTimeout(() => el.className = 'toast', 3000);
+        }
+
+        function hoy() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        // ── Init ──
+        async function init() {
+            document.getElementById('sel-fecha').value = hoy();
+            const dec = decodeJWT(getToken());
+            if (!dec) { window.location.href = 'principal.html'; return; }
+
+            const profesorId = dec.username;
+
+            // Mostrar nombre
+            try {
+                const d = await gql(`query { profesor(id: "${profesorId}") { nombre primerApellido } }`);
+                const p = d.profesor;
+                const nombre = p ? `${p.nombre} ${p.primerApellido}` : profesorId;
+                document.getElementById('prof-nombre').textContent = `Prof. ${nombre}`;
+                const parts = nombre.split(' ');
+                document.getElementById('avatar').textContent = parts.length >= 2
+                    ? (parts[0][0] + parts[1][0]).toUpperCase() : nombre.substring(0,2).toUpperCase();
+            } catch {}
+
+            // Cargar asignaturas del profesor
+            try {
+                const da = await gql(`
+                    query {
+                        asignaturasPorProfesor(profesorId: "${profesorId}") {
+                            id nombre curso { nombre }
+                        }
+                    }
+                `);
+                const asigs = (da.asignaturasPorProfesor || []).filter(a => a.id);
+                const sel = document.getElementById('sel-asignatura');
+                asigs.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a.id;
+                    opt.textContent = `${a.nombre}${a.curso ? ' — ' + a.curso.nombre : ''}`;
+                    sel.appendChild(opt);
+                });
+            } catch (e) { toast('Error cargando asignaturas: ' + e.message, 'error'); }
+
+            // Bug 3 & 7 fix: Cargar periodos configurados dinámicamente
+            try {
+                const anio = new Date().getFullYear();
+                const dp = await gql(`query { periodosConfig(anio: ${anio}) { numeroPeriodo abierto } }`);
+                const periodos = dp.periodosConfig || [];
+                const selPer = document.getElementById('sel-periodo');
+                selPer.innerHTML = '';
+                if (periodos.length === 0) {
+                    // Si no hay periodos configurados, ofrecer los clásicos
+                    ['1','2','3'].forEach(n => {
+                        const opt = document.createElement('option');
+                        opt.value = `${anio}-${n}`;
+                        opt.textContent = `Periodo ${n} — ${anio}`;
+                        selPer.appendChild(opt);
+                    });
+                } else {
+                    periodos.forEach((p) => {
+                        const opt = document.createElement('option');
+                        opt.value = `${anio}-${p.numeroPeriodo}`;
+                        opt.textContent = `Periodo ${p.numeroPeriodo} — ${anio}${p.abierto ? '' : ' (cerrado)'}`;
+                        selPer.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                // Fallback si falla la carga de periodos
+                const anio = new Date().getFullYear();
+                const selPer = document.getElementById('sel-periodo');
+                selPer.innerHTML = '';
+                ['1','2','3'].forEach(n => {
+                    const opt = document.createElement('option');
+                    opt.value = `${anio}-${n}`;
+                    opt.textContent = `Periodo ${n} — ${anio}`;
+                    selPer.appendChild(opt);
+                });
+            }
+        }
+
+        // ── Cargar lista de estudiantes para esa asignatura+fecha ──
+        async function cargarLista() {
+            const asignaturaId = document.getElementById('sel-asignatura').value;
+            const fecha        = document.getElementById('sel-fecha').value;
+            const periodo      = document.getElementById('sel-periodo').value.trim();
+
+            if (!asignaturaId) { toast('Selecciona una asignatura', 'error'); return; }
+            if (!fecha)        { toast('Selecciona una fecha', 'error'); return; }
+            if (!periodo)      { toast('Ingresa el periodo', 'error'); return; }
+
+            asignaturaIdActual = asignaturaId;
+
+            try {
+                // Cargar estudiantes de la asignatura
+                const dm = await gql(`
+                    query {
+                        matriculasPorAsignatura(asignaturaId: "${asignaturaId}") {
+                            id estado
+                            estudiante { cedula nombre primerApellido segundoApellido }
+                        }
+                    }
+                `);
+                const matriculas = (dm.matriculasPorAsignatura || []).filter(m => m.estado === 'ACTIVA' && m.estudiante);
+                estudiantesActuales = matriculas.map(m => m.estudiante);
+
+                if (!estudiantesActuales.length) {
+                    toast('No hay estudiantes activos en esta asignatura', 'error');
+                    return;
+                }
+
+                // Cargar asistencia ya registrada para ese día
+                const da = await gql(`
+                    query {
+                        asistenciasPorFecha(asignaturaId: "${asignaturaId}", fecha: "${fecha}") {
+                            estudianteId estado observaciones
+                        }
+                    }
+                `);
+                const yaRegistrado = da.asistenciasPorFecha || [];
+                const mapaExistente = {};
+                yaRegistrado.forEach((r) => { mapaExistente[r.estudianteId] = r; });
+
+                // Inicializar estados (default PRESENTE)
+                estadosActuales = {};
+                obsActuales = {};
+                estudiantesActuales.forEach(est => {
+                    const existente = mapaExistente[est.cedula];
+                    estadosActuales[est.cedula] = existente ? existente.estado : 'PRESENTE';
+                    obsActuales[est.cedula] = existente ? (existente.observaciones || '') : '';
+                });
+
+                renderLista(fecha, periodo);
+                await cargarHistorial(asignaturaId, periodo);
+
+            } catch (e) {
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        // ── Renderizar tabla de lista ──
+        function renderLista(fecha, periodo) {
+            const tbody = document.getElementById('tbody-lista');
+            tbody.innerHTML = '';
+            const fechaObj = new Date(fecha + 'T12:00:00');
+            const fechaLabel = fechaObj.toLocaleDateString('es-ES', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+            document.getElementById('lista-titulo').textContent = `📅 ${fechaLabel}`;
+            document.getElementById('lista-card').style.display = 'block';
+
+            estudiantesActuales.forEach((est, idx) => {
+                const cedula = est.cedula;
+                const nombre = `${est.nombre} ${est.primerApellido} ${est.segundoApellido || ''}`.trim();
+                const estado = estadosActuales[cedula] || 'PRESENTE';
+                const obs    = obsActuales[cedula] || '';
+
+                const tr = document.createElement('tr');
+                tr.id = `fila-${cedula}`;
+                tr.innerHTML = `
+                    <td style="color:var(--gray-500);font-size:13px;">${idx + 1}</td>
+                    <td>
+                        <div class="estudiante-nombre">${nombre}</div>
+                        <div class="estudiante-cedula">${cedula}</div>
+                    </td>
+                    <td>
+                        <div class="estado-chips">
+                            ${['PRESENTE','AUSENTE','TARDE','EXCUSA'].map(e => `
+                                <span class="chip-estado chip-${e} ${estado === e ? 'selected' : ''}"
+                                      onclick="cambiarEstado('${cedula}', '${e}', this)">${labelEstado(e)}</span>
+                            `).join('')}
+                        </div>
+                    </td>
+                    <td>
+                        <input type="text" style="border:1px solid var(--gray-200);border-radius:4px;padding:5px 8px;font-size:13px;width:180px;"
+                               placeholder="Observación opcional..."
+                               value="${obs}"
+                               oninput="obsActuales['${cedula}'] = this.value">
+                    </td>`;
+                tbody.appendChild(tr);
+            });
+
+            actualizarResumen();
+        }
+
+        function labelEstado(e) {
+            return { PRESENTE:'✅ Presente', AUSENTE:'❌ Ausente', TARDE:'⏰ Tarde', EXCUSA:'📄 Excusa' }[e] || e;
+        }
+
+        function cambiarEstado(cedula, nuevoEstado, chipEl) {
+            estadosActuales[cedula] = nuevoEstado;
+            // Actualizar chips de esa fila
+            const fila = document.getElementById(`fila-${cedula}`);
+            fila.querySelectorAll('.chip-estado').forEach(c => c.classList.remove('selected'));
+            chipEl.classList.add('selected');
+            actualizarResumen();
+        }
+
+        function marcarTodos(estado) {
+            estudiantesActuales.forEach(est => { estadosActuales[est.cedula] = estado; });
+            // Re-renderizar solo los chips
+            estudiantesActuales.forEach(est => {
+                const fila = document.getElementById(`fila-${est.cedula}`);
+                if (!fila) return;
+                fila.querySelectorAll('.chip-estado').forEach(c => {
+                    c.classList.toggle('selected', c.textContent.includes(labelEstado(estado).replace('✅ ','').replace('❌ ','').replace('⏰ ','').replace('📄 ','')));
+                    // Más simple: comparar data
+                    const tipo = [...c.classList].find(cl => cl.startsWith('chip-') && cl !== 'chip-estado')?.replace('chip-','');
+                    if (tipo) c.classList.toggle('selected', tipo === estado);
+                });
+            });
+            actualizarResumen();
+        }
+
+        function actualizarResumen() {
+            let pres = 0, aus = 0, tard = 0, exc = 0;
+            Object.values(estadosActuales).forEach(e => {
+                if (e === 'PRESENTE') pres++;
+                else if (e === 'AUSENTE') aus++;
+                else if (e === 'TARDE') tard++;
+                else if (e === 'EXCUSA') exc++;
+            });
+            document.getElementById('cnt-presente').textContent = pres;
+            document.getElementById('cnt-ausente').textContent = aus;
+            document.getElementById('cnt-tarde').textContent = tard;
+            document.getElementById('cnt-excusa').textContent = exc;
+        }
+
+        // ── Guardar lista ──
+        async function guardarLista() {
+            const asignaturaId = document.getElementById('sel-asignatura').value;
+            const fecha        = document.getElementById('sel-fecha').value;
+            const periodo      = document.getElementById('sel-periodo').value.trim();
+            const dec          = decodeJWT(getToken());
+            const btn          = document.getElementById('btn-guardar');
+
+            btn.disabled = true;
+            btn.textContent = 'Guardando...';
+
+            const estudiantes = estudiantesActuales.map(est => ({
+                estudianteId:  est.cedula,
+                estado:        estadosActuales[est.cedula] || 'PRESENTE',
+                observaciones: obsActuales[est.cedula] || '',
+            }));
+
+            try {
+                await gql(`
+                    mutation RegistrarLista($input: RegistroListaInput!) {
+                        registrarLista(input: $input) { id estado }
+                    }
+                `, {
+                    input: {
+                        asignaturaId,
+                        fecha,
+                        periodo,
+                        registradoPor: dec?.username || '',
+                        estudiantes,
+                    }
+                });
+                toast(`✅ Lista guardada — ${estudiantes.length} registros`);
+                await cargarHistorial(asignaturaId, periodo);
+            } catch (e) {
+                toast('Error al guardar: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '💾 Guardar lista';
+            }
+        }
+
+        // ── Historial ──
+        async function cargarHistorial(asignaturaId, periodo) {
+            try {
+                // Resumen por estudiante
+                const dr = await gql(`
+                    query {
+                        resumenAsistencia(asignaturaId: "${asignaturaId}", periodo: "${periodo}") {
+                            estudianteId totalClases presentes ausentes tardes excusas porcentajeAsistencia
+                        }
+                    }
+                `);
+                historialPeriodo = dr.resumenAsistencia || [];
+
+                // Fechas (todos los registros)
+                const dp = await gql(`
+                    query {
+                        asistenciasPorPeriodo(asignaturaId: "${asignaturaId}", periodo: "${periodo}") {
+                            estudianteId fecha estado
+                        }
+                    }
+                `);
+                const todosRegistros = dp.asistenciasPorPeriodo || [];
+
+                renderResumen(historialPeriodo);
+                renderFechas(todosRegistros);
+                document.getElementById('historial-card').style.display = 'block';
+            } catch (e) {
+                console.error('Error cargando historial:', e);
+            }
+        }
+
+        function badgePct(pct) {
+            const cls = pct >= 80 ? 'badge-ok' : pct >= 60 ? 'badge-warn' : 'badge-bad';
+            return `<span class="badge-pct ${cls}">${pct}%</span>`;
+        }
+
+        function renderResumen(resumen) {
+            const tbody = document.getElementById('tbody-resumen');
+            if (!resumen.length) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray-500);">Sin registros en este periodo</td></tr>`;
+                return;
+            }
+            // Enriquecer con nombre si está en la lista actual
+            const mapaEst = {};
+            estudiantesActuales.forEach(e => { mapaEst[e.cedula] = e; });
+
+            tbody.innerHTML = resumen.map(r => {
+                const est = mapaEst[r.estudianteId];
+                const nombre = est
+                    ? `${est.nombre} ${est.primerApellido}`.trim()
+                    : r.estudianteId;
+                return `<tr>
+                    <td><div class="estudiante-nombre">${nombre}</div><div class="estudiante-cedula">${r.estudianteId}</div></td>
+                    <td>${r.totalClases}</td>
+                    <td style="color:var(--green);font-weight:600;">${r.presentes}</td>
+                    <td style="color:var(--red);font-weight:600;">${r.ausentes}</td>
+                    <td style="color:var(--yellow);font-weight:600;">${r.tardes}</td>
+                    <td style="color:var(--purple);font-weight:600;">${r.excusas}</td>
+                    <td>${badgePct(r.porcentajeAsistencia)}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderFechas(registros) {
+            const contenedor = document.getElementById('contenido-fechas');
+            if (!registros.length) {
+                contenedor.innerHTML = `<p style="color:var(--gray-500);text-align:center;padding:20px;">Sin registros</p>`;
+                return;
+            }
+
+            // Agrupar por fecha
+            const porFecha = {};
+            registros.forEach(r => {
+                const f = new Date(r.fecha).toLocaleDateString('es-ES', { weekday:'short', day:'2-digit', month:'short' });
+                if (!porFecha[f]) porFecha[f] = { PRESENTE:0, AUSENTE:0, TARDE:0, EXCUSA:0 };
+                porFecha[f][r.estado]++;
+            });
+
+            contenedor.innerHTML = Object.entries(porFecha).map(([fecha, cnts]) => {
+                const total = Object.values(cnts).reduce((a,b) => a+b, 0);
+                return `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid var(--gray-100);">
+                        <span style="font-weight:600;color:var(--gray-700);min-width:120px;">${fecha}</span>
+                        <div style="display:flex;gap:12px;font-size:13px;">
+                            <span style="color:var(--green);">✅ ${cnts.PRESENTE}</span>
+                            <span style="color:var(--red);">❌ ${cnts.AUSENTE}</span>
+                            <span style="color:var(--yellow);">⏰ ${cnts.TARDE}</span>
+                            <span style="color:var(--purple);">📄 ${cnts.EXCUSA}</span>
+                        </div>
+                        <span style="color:var(--gray-500);font-size:12px;">${total} estudiantes</span>
+                    </div>`;
+            }).join('');
+        }
+
+        function switchHistTab(tabId) {
+            document.querySelectorAll('.hist-tab').forEach((btn, i) => {
+                btn.classList.toggle('active', ['tab-resumen','tab-fechas'][i] === tabId);
+            });
+            document.getElementById('tab-resumen').style.display = tabId === 'tab-resumen' ? 'block' : 'none';
+            document.getElementById('tab-fechas').style.display  = tabId === 'tab-fechas'  ? 'block' : 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

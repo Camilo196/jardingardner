@@ -1,0 +1,533 @@
+# Tipos principales
+
+enum UserRole {
+    ADMIN
+    PROFESOR
+    ESTUDIANTE
+}
+
+enum TipoActividad {
+    TRABAJO
+    EXAMEN
+    QUIZ
+    PARTICIPACION
+    TALLER
+}
+
+enum EstadoAsistencia {
+  PRESENTE
+  AUSENTE
+  TARDE
+  EXCUSA
+}
+
+enum EstadoMatricula {
+  ACTIVA
+  CANCELADA
+  FINALIZADA
+  SIN_PAGAR
+}
+
+type User {
+    id: ID!
+    username: String!
+    email: String!
+    role: UserRole!
+}
+
+type Empleado {
+  id: ID!
+  cedula: String!
+  nombre: String!
+  primerApellido: String!
+  segundoApellido: String!
+  email: String!
+  telefono: String
+  direccion: String
+  tipo: String!
+}
+
+type Estudiante {
+  id: ID!
+  cedula: String!
+  nombre: String!
+  primerApellido: String!
+  segundoApellido: String!
+  email: String!
+  telefono: String
+  direccion: String
+  acudiente: String
+  empleado: Empleado!
+  matriculas: [Matricula!]
+  calificaciones: [Calificacion!]
+  boletines: [Boletin!]
+  asignaturas: [Asignatura!]
+}
+
+type Profesor {
+    id: ID!
+    cedula: String!
+    nombre: String!
+    primerApellido: String!
+    segundoApellido: String!
+    email: String!
+    telefono: String
+    direccion: String
+    empleado: Empleado
+}
+
+type Curso {
+  id: ID!
+  nombre: String!
+  duracion: String
+  cantidadMax: Int!
+  profesorId: ID!
+  profesor: Profesor 
+}
+
+type Calificacion {
+    id: ID!
+    estudianteId: ID!
+    asignaturaId: ID!
+    nota: Float!
+    periodo: String!
+    observaciones: String
+    fecha: String
+    tipoActividad: TipoActividad
+    nombreActividad: String
+    corte: Int
+}
+
+type Indicadores {
+    id: ID!
+    asignaturaId: ID!
+    periodo: String!
+    saber: [String!]!
+    hacer: [String!]!
+    ser: [String!]!
+    creadoPor: String
+}
+
+type CalificacionBoletin {
+    asignaturaId: ID!
+    asignaturaNombre: String!
+    docenteNombre: String!
+    valoracion: String!
+    nota: Float!
+    faltas: Int!
+    observacion: String
+    indicadores: Indicadores
+}
+
+type Boletin {
+  id: ID!
+  estudiante: Estudiante!
+  curso: Curso!
+  periodo: String!
+  fecha: String!
+  calificaciones: [Calificacion!]!
+  promedio: Float!
+  observaciones: String
+}
+
+type Matricula {
+  id: ID!
+  estudiante: Estudiante!
+  curso: Curso!
+  asignaturas: [Asignatura!]!
+  estado: EstadoMatricula!
+  periodo: String!
+  fechaMatricula: String!
+}
+
+type Asignatura {
+  id: ID!
+  nombre: String!
+  horario: String!
+  profesorId: ID!
+  profesor: Profesor
+  cursoId: ID!
+  curso: Curso
+}
+
+type Asistencia {
+  id: ID!
+  estudianteId: String!
+  asignaturaId: String!
+  fecha: String!
+  estado: EstadoAsistencia!
+  periodo: String!
+  observaciones: String
+  registradoPor: String
+}
+
+type PeriodoConfig {
+  id: ID!
+  anio: Int!
+  numeroPeriodo: Int!
+  numCortes: Int!
+  pesoPorCorte: Float!
+  abierto: Boolean!
+  fechaApertura: String
+  fechaCierre: String
+}
+
+type Comportamiento {
+  id: ID!
+  estudianteId: ID!
+  asignaturaId: ID!
+  profesorId: ID!
+  periodo: String!
+  anio: Int!
+  nota: Float
+  nivel: String!
+  descripcion: String
+}
+
+type EventoCronograma {
+  id: ID!
+  titulo: String!
+  descripcion: String
+  fechaInicio: String!
+  fechaFin: String
+  tipo: String!
+  cursoId: ID
+  color: String
+}
+
+type ResumenAsistencia {
+  estudianteId: String!
+  totalClases: Int!
+  presentes: Int!
+  ausentes: Int!
+  tardes: Int!
+  excusas: Int!
+  porcentajeAsistencia: Float!
+}
+
+type AuthPayload {
+    token: String!
+    user: User!
+    isFirstLogin: Boolean
+    expiresAt: String
+}
+
+# ── Inputs ──
+
+input EmpleadoInput {
+  cedula: String!
+  nombre: String!
+  primerApellido: String!
+  segundoApellido: String!
+  email: String!
+  telefono: String
+  direccion: String
+}
+
+input EstudianteInput {
+    cedula: String!
+    nombre: String!
+    primerApellido: String!
+    segundoApellido: String!
+    email: String!
+    telefono: String
+    direccion: String
+    acudiente: String
+}
+
+input ProfesorInput {
+    cedula: String!
+    nombre: String!
+    primerApellido: String!
+    segundoApellido: String!
+    email: String!
+    telefono: String
+    direccion: String
+}
+
+input CursoInput {
+  id: ID!
+  nombre: String!
+  duracion: String
+  cantidadMax: Int!
+  profesorId: ID!
+}
+
+input CalificacionInput {
+  estudianteId: ID!
+  asignaturaId: ID!
+  nota: Float!
+  fecha: String
+  periodo: String!
+  observaciones: String
+  tipoActividad: TipoActividad
+  nombreActividad: String
+  corte: Int
+}
+
+input BoletinInput {
+  estudianteId: ID!
+  cursoId: ID!
+  periodo: String!
+  fecha: String!
+  calificaciones: [CalificacionInput!]!
+  observaciones: String
+}
+
+input MatriculaInput {
+  estudianteId: String!
+  cursoId: ID!
+  asignaturas: [ID!]!
+  estado: EstadoMatricula!
+  periodo: String!
+}
+
+input ActualizarMatriculaInput {
+  estudianteId: ID
+  cursoId: ID
+  asignaturas: [ID!]
+  estado: EstadoMatricula
+  periodo: String
+}
+
+input AsignaturaInput {
+  nombre: String!
+  horario: String!
+  profesorId: ID!
+  cursoId: ID!
+}
+
+input CursoHorarioInput {
+  cursoId: ID!
+  horario: String!
+}
+
+input AsignaturaMultiCursoInput {
+  nombre: String!
+  profesorId: ID!
+  cursos: [CursoHorarioInput!]!
+}
+
+type AsignaturaMultiCursoResult {
+  creadas: [Asignatura!]!
+  errores: [String!]!
+}
+
+input AsistenciaInput {
+  estudianteId: String!
+  asignaturaId: String!
+  fecha: String!
+  estado: EstadoAsistencia!
+  periodo: String!
+  observaciones: String
+  registradoPor: String
+}
+
+input PeriodoConfigInput {
+  anio: Int!
+  numeroPeriodo: Int!
+  numCortes: Int!
+  fechaApertura: String
+  fechaCierre: String
+}
+
+input ComportamientoInput {
+  estudianteId: ID!
+  asignaturaId: ID!
+  periodo: String!
+  anio: Int!
+  nota: Float
+  nivel: String!
+  descripcion: String
+}
+
+input EventoCronogramaInput {
+  titulo: String!
+  descripcion: String
+  fechaInicio: String!
+  fechaFin: String
+  tipo: String!
+  cursoId: ID
+  color: String
+}
+
+input EstudianteAsistenciaInput {
+  estudianteId: String!
+  estado: EstadoAsistencia!
+  observaciones: String
+}
+
+input RegistroListaInput {
+  asignaturaId: String!
+  fecha: String!
+  periodo: String!
+  registradoPor: String
+  estudiantes: [EstudianteAsistenciaInput!]!
+}
+
+# ── Queries ──
+
+type Query {
+  me: User
+
+  # Estudiantes
+  estudiantes: [Estudiante!]!
+  estudiante(id: ID!): Estudiante
+  estudiantesPorIds(ids: [String!]!): [Estudiante!]!
+
+  # Profesores
+  profesores: [Profesor!]!
+  profesor(id: ID!): Profesor
+
+  # Cursos
+  cursos: [Curso!]!
+  curso(id: ID!): Curso
+
+  # Calificaciones
+  calificaciones: [Calificacion!]!
+  calificacion(id: ID!): Calificacion
+  calificacionesPorEstudiante(estudianteId: ID!): [Calificacion!]!
+  calificacionesPorCurso(cursoId: ID!): [Calificacion!]!
+  calificacionesPorAsignaturaYPeriodo(asignaturaId: ID!, periodo: String!): [Calificacion!]!
+
+  # Indicadores
+  indicadoresPorAsignatura(asignaturaId: ID!, periodo: String!): Indicadores
+  indicadoresPorProfesor(profesorId: ID!, periodo: String!): [Indicadores!]!
+
+  # Boletines
+  boletines: [Boletin!]!
+  boletin(id: ID!): Boletin
+  boletinesPorEstudiante(estudianteId: ID!): [Boletin!]!
+  exportarBoletin(id: ID!): String!
+  exportarBoletinEstudiante(estudianteId: ID!, periodo: String!): String!
+  boletinesPorCursoPeriodo(cursoId: ID!, periodo: String!): [Boletin!]!
+
+  # Matriculas
+  matriculas: [Matricula!]!
+  matricula(id: ID!): Matricula
+  matriculasPorEstudiante(estudianteId: ID!): [Matricula!]!
+  matriculasPorAsignatura(asignaturaId: ID!): [Matricula!]!
+
+  # Asignaturas
+  asignaturas: [Asignatura!]!
+  asignatura(id: ID!): Asignatura
+  asignaturasPorProfesor(profesorId: ID!): [Asignatura]
+  asignaturasPorCurso(cursoId: ID!): [Asignatura!]!
+
+  # Asistencias
+  asistencias: [Asistencia!]!
+  asistencia(id: ID!): Asistencia
+  asistenciasPorAsignatura(asignaturaId: ID!): [Asistencia!]!
+  asistenciasPorFecha(asignaturaId: ID!, fecha: String!): [Asistencia!]!
+  asistenciasPorPeriodo(asignaturaId: ID!, periodo: String!): [Asistencia!]!
+  resumenAsistencia(asignaturaId: ID!, periodo: String!): [ResumenAsistencia!]!
+  asistenciasPorEstudiante(estudianteId: String!, periodo: String): [Asistencia!]!
+  resumenAsistenciaEstudiante(estudianteId: String!, periodo: String): [ResumenAsistencia!]!
+
+  # Configuración de periodos
+  periodoConfig(anio: Int!, numeroPeriodo: Int!): PeriodoConfig
+  periodosConfig(anio: Int!): [PeriodoConfig!]!
+
+  # Comportamiento
+  comportamientosPorAsignatura(asignaturaId: ID!, periodo: String!): [Comportamiento!]!
+  comportamientoEstudiante(estudianteId: ID!, asignaturaId: ID!, periodo: String!): Comportamiento
+
+  # Cronograma
+  cronograma(anio: Int!): [EventoCronograma!]!
+  cronogramaPorCurso(cursoId: ID!, anio: Int!): [EventoCronograma!]!
+}
+
+# ── Mutations ──
+
+type Mutation {
+  enviarCrearCredenciales(estudianteId: ID, profesorId: ID): Boolean!
+  generarClaveProvisional(estudianteId: ID, profesorId: ID): Boolean!
+  cambiarPassword(username: String!, oldPassword: String!, newPassword: String!): Boolean!
+  cambiarPasswordPrimerLogin(username: String!, newPassword: String!): Boolean!
+  olvidarPassword(identifier: String!): Boolean!
+
+  register(email: String!, password: String!, role: String!): AuthPayload
+  login(identifier: String!, password: String!): AuthPayload!
+
+  limpiarRegistrosProblematicos: Boolean
+
+  guardarIndicadores(
+    asignaturaId: ID!
+    periodo: String!
+    saber: [String!]!
+    hacer: [String!]!
+    ser: [String!]!
+  ): Indicadores!
+  eliminarIndicadores(asignaturaId: ID!, periodo: String!): Boolean!
+
+  guardarCalificacionBoletin(
+    estudianteId: ID!
+    asignaturaId: ID!
+    periodo: String!
+    valoracion: String!
+    nota: Float!
+    faltas: Int!
+    observacion: String
+  ): Boolean!
+
+  exportarBoletinCompleto(estudianteId: ID!, periodo: String!, observacionGeneral: String): String!
+
+  # Estudiantes
+  crearEstudiante(input: EstudianteInput!): Estudiante
+  actualizarEstudiante(id: ID!, input: EstudianteInput!): Estudiante
+  eliminarEstudiante(id: ID!): Boolean
+
+  # Profesores
+  crearProfesor(input: ProfesorInput!): Profesor!
+  actualizarProfesor(id: ID!, input: ProfesorInput!): Profesor!
+  eliminarProfesor(id: ID!): Boolean!
+
+  # Cursos
+  crearCurso(input: CursoInput!): Curso!
+  actualizarCurso(id: ID!, input: CursoInput!): Curso!
+  eliminarCurso(id: ID!): Boolean!
+
+  # Calificaciones
+  crearCalificacion(input: CalificacionInput!): Calificacion!
+  actualizarCalificacion(id: ID!, input: CalificacionInput!): Calificacion!
+  eliminarCalificacion(id: ID!): Boolean!
+
+  # Boletines
+  generarBoletin(input: BoletinInput!): Boletin!
+  actualizarBoletin(id: ID!, input: BoletinInput!): Boletin!
+  eliminarBoletin(id: ID!): Boolean!
+
+  # Matriculas
+  crearMatricula(input: MatriculaInput!): Matricula!
+  actualizarMatricula(id: ID!, input: ActualizarMatriculaInput!): Matricula!
+  actualizarEstadoMatricula(id: ID!, estado: EstadoMatricula!): Matricula!
+  eliminarMatricula(id: ID!): Boolean!
+
+  # Asignaturas
+  crearAsignatura(input: AsignaturaInput!): Asignatura!
+  crearAsignaturaEnVariosCursos(input: AsignaturaMultiCursoInput!): AsignaturaMultiCursoResult!
+  actualizarAsignatura(id: ID!, input: AsignaturaInput!): Asignatura!
+  eliminarAsignatura(id: ID!): Boolean!
+
+  # Administrador
+  crearAdmin(email: String!, password: String!): AuthPayload
+
+  # Asistencias
+  registrarLista(input: RegistroListaInput!): [Asistencia!]!
+  crearAsistencia(input: AsistenciaInput!): Asistencia!
+  actualizarAsistencia(id: ID!, input: AsistenciaInput!): Asistencia!
+  eliminarAsistencia(id: ID!): Boolean!
+
+  # Periodos
+  configurarPeriodo(input: PeriodoConfigInput!): PeriodoConfig!
+  cerrarPeriodo(anio: Int!, numeroPeriodo: Int!, fechaCierre: String): PeriodoConfig!
+  abrirPeriodo(anio: Int!, numeroPeriodo: Int!): PeriodoConfig!
+
+  # Comportamiento
+  guardarComportamiento(input: ComportamientoInput!): Comportamiento!
+
+  # Cronograma
+  crearEventoCronograma(input: EventoCronogramaInput!): EventoCronograma!
+  actualizarEventoCronograma(id: ID!, input: EventoCronogramaInput!): EventoCronograma!
+  eliminarEventoCronograma(id: ID!): Boolean!
+}
