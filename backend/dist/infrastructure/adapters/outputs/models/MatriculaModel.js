@@ -1,5 +1,11 @@
-import mongoose from 'mongoose';
-const matriculaSchema = new mongoose.Schema({
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MatriculaModel = void 0;
+const mongoose_1 = __importDefault(require("mongoose"));
+const matriculaSchema = new mongoose_1.default.Schema({
     estudianteId: {
         type: String, // Usar String en lugar de ObjectId para la cédula
         ref: 'Estudiante',
@@ -11,7 +17,7 @@ const matriculaSchema = new mongoose.Schema({
         required: true
     },
     asignaturas: [{
-            type: mongoose.Schema.Types.ObjectId, // Mantener como ObjectId para asignaturas
+            type: mongoose_1.default.Schema.Types.ObjectId, // Mantener como ObjectId para asignaturas
             ref: 'Asignatura'
         }],
     estado: {
@@ -28,5 +34,5 @@ const matriculaSchema = new mongoose.Schema({
         default: Date.now
     }
 });
-export const MatriculaModel = mongoose.model('Matricula', matriculaSchema);
+exports.MatriculaModel = mongoose_1.default.model('Matricula', matriculaSchema);
 //# sourceMappingURL=MatriculaModel.js.map

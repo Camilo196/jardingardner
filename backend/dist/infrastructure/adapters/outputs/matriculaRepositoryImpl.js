@@ -1,13 +1,19 @@
-import { Matricula } from '../../../core/domain/matricula';
-import { MatriculaModel } from './models/MatriculaModel';
-import { EstudianteModel } from './models/EstudianteModel';
-import mongoose from 'mongoose';
-export class MatriculaRepositoryImpl {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MatriculaRepositoryImpl = void 0;
+const matricula_1 = require("../../../core/domain/matricula");
+const MatriculaModel_1 = require("./models/MatriculaModel");
+const EstudianteModel_1 = require("./models/EstudianteModel");
+const mongoose_1 = __importDefault(require("mongoose"));
+class MatriculaRepositoryImpl {
     // Esta función solo está como placeholder porque está en la interfaz
     // Debe ser implementada en AsignaturaRepositoryImpl, no aquí
     async findByIds(ids) {
         try {
-            const matriculas = await MatriculaModel.find({
+            const matriculas = await MatriculaModel_1.MatriculaModel.find({
                 _id: { $in: ids }
             })
                 .populate({
@@ -31,7 +37,7 @@ export class MatriculaRepositoryImpl {
     }
     async findAll() {
         try {
-            const matriculas = await MatriculaModel.find()
+            const matriculas = await MatriculaModel_1.MatriculaModel.find()
                 .populate({
                 path: 'estudianteId',
                 select: 'cedula nombre primerApellido segundoApellido'
@@ -53,7 +59,7 @@ export class MatriculaRepositoryImpl {
     }
     async findById(id) {
         try {
-            const matricula = await MatriculaModel.findById(id)
+            const matricula = await MatriculaModel_1.MatriculaModel.findById(id)
                 .populate({
                 path: 'estudianteId',
                 select: 'cedula nombre primerApellido segundoApellido'
@@ -77,7 +83,7 @@ export class MatriculaRepositoryImpl {
         try {
             console.log(`Buscando estudiante por cédula: ${estudianteId}`);
             // Buscar directamente usando la cédula como estudianteId
-            let matriculas = await MatriculaModel.find({
+            let matriculas = await MatriculaModel_1.MatriculaModel.find({
                 estudianteId: estudianteId // Usar directamente la cédula
             })
                 .populate({
@@ -101,19 +107,19 @@ export class MatriculaRepositoryImpl {
         }
     }
     async findByAsignaturaId(asignaturaId) {
-        const documents = await MatriculaModel.find({ asignaturas: asignaturaId }).populate('estudiante').exec();
+        const documents = await MatriculaModel_1.MatriculaModel.find({ asignaturas: asignaturaId }).populate('estudiante').exec();
         return documents.map(doc => this.mapToEntity(doc));
     }
     async create(input) {
         try {
             // 1. Buscar el estudiante para verificar que existe
             console.log(`Buscando estudiante con cédula: ${input.estudianteId}`);
-            const estudiante = await EstudianteModel.findOne({ cedula: input.estudianteId });
+            const estudiante = await EstudianteModel_1.EstudianteModel.findOne({ cedula: input.estudianteId });
             if (!estudiante) {
                 throw new Error(`No se encontró estudiante con cédula ${input.estudianteId}`);
             }
             // 2. Verificar matrícula existente
-            const matriculaExistente = await MatriculaModel.findOne({
+            const matriculaExistente = await MatriculaModel_1.MatriculaModel.findOne({
                 estudianteId: input.estudianteId, // Usar directamente la cédula
                 cursoId: input.cursoId,
                 estado: 'ACTIVA',
@@ -125,7 +131,7 @@ export class MatriculaRepositoryImpl {
             // 3. Verificar que las asignaturas existan
             if (input.asignaturas && input.asignaturas.length > 0) {
                 console.log(`Verificando ${input.asignaturas.length} asignaturas`);
-                const asignaturasValidas = await mongoose.model('Asignatura').find({
+                const asignaturasValidas = await mongoose_1.default.model('Asignatura').find({
                     _id: { $in: input.asignaturas },
                     cursoId: input.cursoId
                 });
@@ -135,7 +141,7 @@ export class MatriculaRepositoryImpl {
                 console.log(`Todas las asignaturas son válidas`);
             }
             // 4. Crear y guardar la matrícula
-            const matricula = new MatriculaModel({
+            const matricula = new MatriculaModel_1.MatriculaModel({
                 estudianteId: input.estudianteId, // Usar directamente la cédula
                 cursoId: input.cursoId,
                 asignaturas: input.asignaturas,
@@ -146,7 +152,7 @@ export class MatriculaRepositoryImpl {
             console.log(`Guardando matrícula`);
             const saved = await matricula.save();
             // 5. Poblar los datos relacionados
-            const populated = await MatriculaModel.findById(saved._id)
+            const populated = await MatriculaModel_1.MatriculaModel.findById(saved._id)
                 .populate({
                 path: 'estudianteId',
                 select: 'cedula nombre primerApellido segundoApellido email'
@@ -173,13 +179,13 @@ export class MatriculaRepositoryImpl {
     async update(id, matricula) {
         try {
             // Verificar que la matrícula existe
-            const exists = await MatriculaModel.findById(id);
+            const exists = await MatriculaModel_1.MatriculaModel.findById(id);
             if (!exists) {
                 throw new Error(`No se encontró matrícula con ID ${id}`);
             }
             // Si se está actualizando el estudiante, verificar que existe
             if (matricula.estudianteId) {
-                const estudiante = await EstudianteModel.findOne({ cedula: matricula.estudianteId });
+                const estudiante = await EstudianteModel_1.EstudianteModel.findOne({ cedula: matricula.estudianteId });
                 if (!estudiante) {
                     throw new Error(`No se encontró estudiante con cédula ${matricula.estudianteId}`);
                 }
@@ -187,7 +193,7 @@ export class MatriculaRepositoryImpl {
                 matricula.estudianteId = estudiante.cedula;
             }
             // Actualizar y obtener el resultado actualizado
-            const matriculaActualizada = await MatriculaModel.findByIdAndUpdate(id, { ...matricula }, { new: true })
+            const matriculaActualizada = await MatriculaModel_1.MatriculaModel.findByIdAndUpdate(id, { ...matricula }, { new: true })
                 .populate({
                 path: 'estudianteId',
                 select: 'cedula nombre primerApellido segundoApellido email'
@@ -213,7 +219,7 @@ export class MatriculaRepositoryImpl {
     async updateEstado(id, estado) {
         try {
             console.log(`Actualizando estado de matrícula ${id} a ${estado}`);
-            const matriculaActualizada = await MatriculaModel.findByIdAndUpdate(id, { estado }, { new: true })
+            const matriculaActualizada = await MatriculaModel_1.MatriculaModel.findByIdAndUpdate(id, { estado }, { new: true })
                 .populate({
                 path: 'estudianteId',
                 select: 'cedula nombre primerApellido segundoApellido email'
@@ -240,7 +246,7 @@ export class MatriculaRepositoryImpl {
     async delete(id) {
         try {
             console.log(`Eliminando matrícula con ID ${id}`);
-            const result = await MatriculaModel.findByIdAndDelete(id);
+            const result = await MatriculaModel_1.MatriculaModel.findByIdAndDelete(id);
             console.log(result ? 'Matrícula eliminada correctamente' : 'No se encontró la matrícula');
             return !!result;
         }
@@ -251,7 +257,7 @@ export class MatriculaRepositoryImpl {
     }
     mapToEntity(doc) {
         try {
-            return new Matricula(doc._id.toString(), doc.estudianteId ? (doc.estudianteId.cedula || (typeof doc.estudianteId === 'string' ? doc.estudianteId : doc.estudianteId._id.toString())) : '', doc.cursoId ? (typeof doc.cursoId === 'string' ? doc.cursoId : doc.cursoId._id.toString()) : '', doc.asignaturas?.map((asig) => asig._id ? asig._id.toString() : String(asig)) || [], doc.estado, doc.periodo, doc.fechaMatricula ? new Date(doc.fechaMatricula) : new Date());
+            return new matricula_1.Matricula(doc._id.toString(), doc.estudianteId ? (doc.estudianteId.cedula || (typeof doc.estudianteId === 'string' ? doc.estudianteId : doc.estudianteId._id.toString())) : '', doc.cursoId ? (typeof doc.cursoId === 'string' ? doc.cursoId : doc.cursoId._id.toString()) : '', doc.asignaturas?.map((asig) => asig._id ? asig._id.toString() : String(asig)) || [], doc.estado, doc.periodo, doc.fechaMatricula ? new Date(doc.fechaMatricula) : new Date());
         }
         catch (error) {
             console.error('Error al mapear entidad Matricula:', error, 'Documento:', doc);
@@ -259,4 +265,5 @@ export class MatriculaRepositoryImpl {
         }
     }
 }
+exports.MatriculaRepositoryImpl = MatriculaRepositoryImpl;
 //# sourceMappingURL=matriculaRepositoryImpl.js.map

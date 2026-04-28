@@ -1,13 +1,19 @@
-import { Asignatura } from '../../../core/domain/asignatura';
-import { AsignaturaModel } from './models/AsignaturaModel';
-import mongoose from 'mongoose';
-export class AsignaturaRepositoryImpl {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AsignaturaRepositoryImpl = void 0;
+const asignatura_1 = require("../../../core/domain/asignatura");
+const AsignaturaModel_1 = require("./models/AsignaturaModel");
+const mongoose_1 = __importDefault(require("mongoose"));
+class AsignaturaRepositoryImpl {
     static findAll() {
         throw new Error('Method not implemented.');
     }
     async findByProfesorId(profesorId) {
         try {
-            const asignaturas = await AsignaturaModel.find({
+            const asignaturas = await AsignaturaModel_1.AsignaturaModel.find({
                 profesorId: profesorId
             })
                 .populate({
@@ -58,8 +64,8 @@ export class AsignaturaRepositoryImpl {
             // Convertir a ObjectId si son compatibles con MongoDB
             const objectIds = validIds.map(id => {
                 try {
-                    if (mongoose.Types.ObjectId.isValid(id)) {
-                        return new mongoose.Types.ObjectId(id);
+                    if (mongoose_1.default.Types.ObjectId.isValid(id)) {
+                        return new mongoose_1.default.Types.ObjectId(id);
                     }
                     return id;
                 }
@@ -69,7 +75,7 @@ export class AsignaturaRepositoryImpl {
                 }
             });
             // Buscar asignaturas con IDs válidos usando una consulta más flexible
-            const asignaturas = await AsignaturaModel.find({
+            const asignaturas = await AsignaturaModel_1.AsignaturaModel.find({
                 $or: [
                     { _id: { $in: objectIds } },
                     { id: { $in: validIds } }
@@ -87,7 +93,7 @@ export class AsignaturaRepositoryImpl {
     }
     async findAll() {
         try {
-            const asignaturas = await AsignaturaModel.find()
+            const asignaturas = await AsignaturaModel_1.AsignaturaModel.find()
                 .populate({
                 path: 'profesorId',
                 select: 'cedula nombre primerApellido segundoApellido'
@@ -105,7 +111,7 @@ export class AsignaturaRepositoryImpl {
     }
     async findById(id) {
         try {
-            const asignatura = await AsignaturaModel.findById(id)
+            const asignatura = await AsignaturaModel_1.AsignaturaModel.findById(id)
                 .populate({
                 path: 'profesorId',
                 select: 'cedula nombre primerApellido segundoApellido'
@@ -123,7 +129,7 @@ export class AsignaturaRepositoryImpl {
     }
     async findByCursoId(cursoId) {
         try {
-            const asignaturas = await AsignaturaModel.find({
+            const asignaturas = await AsignaturaModel_1.AsignaturaModel.find({
                 cursoId: cursoId
             })
                 .populate({
@@ -143,14 +149,14 @@ export class AsignaturaRepositoryImpl {
     }
     async create(input) {
         try {
-            const asignatura = new AsignaturaModel({
+            const asignatura = new AsignaturaModel_1.AsignaturaModel({
                 nombre: input.nombre,
                 horario: input.horario,
                 profesorId: input.profesorId,
                 cursoId: input.cursoId
             });
             const saved = await asignatura.save();
-            const populated = await AsignaturaModel.findById(saved._id)
+            const populated = await AsignaturaModel_1.AsignaturaModel.findById(saved._id)
                 .populate({
                 path: 'profesorId',
                 select: 'cedula nombre primerApellido segundoApellido'
@@ -171,11 +177,11 @@ export class AsignaturaRepositoryImpl {
     }
     async update(id, input) {
         try {
-            const exists = await AsignaturaModel.findById(id);
+            const exists = await AsignaturaModel_1.AsignaturaModel.findById(id);
             if (!exists) {
                 throw new Error(`No se encontró asignatura con ID ${id}`);
             }
-            const asignaturaActualizada = await AsignaturaModel.findByIdAndUpdate(id, { ...input }, { new: true })
+            const asignaturaActualizada = await AsignaturaModel_1.AsignaturaModel.findByIdAndUpdate(id, { ...input }, { new: true })
                 .populate({
                 path: 'profesorId',
                 select: 'cedula nombre primerApellido segundoApellido'
@@ -196,7 +202,7 @@ export class AsignaturaRepositoryImpl {
     }
     async delete(id) {
         try {
-            const result = await AsignaturaModel.findByIdAndDelete(id);
+            const result = await AsignaturaModel_1.AsignaturaModel.findByIdAndDelete(id);
             return !!result;
         }
         catch (error) {
@@ -206,7 +212,7 @@ export class AsignaturaRepositoryImpl {
     }
     mapToEntity(doc) {
         try {
-            return new Asignatura(doc._id.toString(), doc.nombre, doc.horario, doc.profesorId ? (doc.profesorId.cedula || (typeof doc.profesorId === 'string' ? doc.profesorId : doc.profesorId._id.toString())) : '', doc.profesorId && typeof doc.profesorId === 'object' ? doc.profesorId : null, doc.cursoId ? (typeof doc.cursoId === 'string' ? doc.cursoId : doc.cursoId._id.toString()) : '', doc.cursoId && typeof doc.cursoId === 'object' ? doc.cursoId : null);
+            return new asignatura_1.Asignatura(doc._id.toString(), doc.nombre, doc.horario, doc.profesorId ? (doc.profesorId.cedula || (typeof doc.profesorId === 'string' ? doc.profesorId : doc.profesorId._id.toString())) : '', doc.profesorId && typeof doc.profesorId === 'object' ? doc.profesorId : null, doc.cursoId ? (typeof doc.cursoId === 'string' ? doc.cursoId : doc.cursoId._id.toString()) : '', doc.cursoId && typeof doc.cursoId === 'object' ? doc.cursoId : null);
         }
         catch (error) {
             console.error('Error al mapear entidad Asignatura:', error, 'Documento:', doc);
@@ -214,4 +220,5 @@ export class AsignaturaRepositoryImpl {
         }
     }
 }
+exports.AsignaturaRepositoryImpl = AsignaturaRepositoryImpl;
 //# sourceMappingURL=asignaturaRepositoryImpl.js.map

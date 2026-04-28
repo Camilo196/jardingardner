@@ -1,7 +1,15 @@
-import dns from 'node:dns';
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-dotenv.config();
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getMongoUri = getMongoUri;
+exports.configureMongoDns = configureMongoDns;
+exports.connectMongo = connectMongo;
+const node_dns_1 = __importDefault(require("node:dns"));
+const mongoose_1 = __importDefault(require("mongoose"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 function firstDefined(...values) {
     for (const value of values) {
         if (value && value.trim()) {
@@ -10,7 +18,7 @@ function firstDefined(...values) {
     }
     return undefined;
 }
-export function getMongoUri() {
+function getMongoUri() {
     const directUri = firstDefined(process.env.MONGO_URI_DIRECT, process.env.MONGODB_URI_DIRECT);
     const defaultUri = firstDefined(process.env.MONGO_URI, process.env.MONGODB_URI);
     const uri = directUri ?? defaultUri;
@@ -19,7 +27,7 @@ export function getMongoUri() {
     }
     return uri;
 }
-export function configureMongoDns() {
+function configureMongoDns() {
     const rawServers = process.env.MONGO_DNS_SERVERS;
     if (!rawServers) {
         return;
@@ -29,7 +37,7 @@ export function configureMongoDns() {
         .map(server => server.trim())
         .filter(Boolean);
     if (servers.length > 0) {
-        dns.setServers(servers);
+        node_dns_1.default.setServers(servers);
         console.log(`MongoDB DNS configurado con: ${servers.join(', ')}`);
     }
 }
@@ -43,11 +51,11 @@ function normalizeMongoConnectionError(error, uri) {
     }
     return error instanceof Error ? error : new Error(String(error));
 }
-export async function connectMongo() {
+async function connectMongo() {
     const uri = getMongoUri();
     configureMongoDns();
     try {
-        await mongoose.connect(uri);
+        await mongoose_1.default.connect(uri);
     }
     catch (error) {
         throw normalizeMongoConnectionError(error, uri);

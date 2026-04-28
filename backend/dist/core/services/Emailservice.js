@@ -1,10 +1,20 @@
-import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
-dotenv.config();
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.verificarConexionEmail = verificarConexionEmail;
+exports.enviarCredenciales = enviarCredenciales;
+exports.enviarPasswordRecuperacion = enviarPasswordRecuperacion;
+exports.notificarNuevaCalificacion = notificarNuevaCalificacion;
+exports.enviarConfirmacionMatricula = enviarConfirmacionMatricula;
+const nodemailer_1 = __importDefault(require("nodemailer"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const GMAIL_USER = process.env.GMAIL_USER?.trim() || '';
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, '').trim() || '';
 // Crear transporter usando Gmail
-const transporter = nodemailer.createTransport({
+const transporter = nodemailer_1.default.createTransport({
     service: 'gmail',
     auth: {
         user: GMAIL_USER,
@@ -14,7 +24,7 @@ const transporter = nodemailer.createTransport({
 const FROM_EMAIL = GMAIL_USER;
 const APP_URL = process.env.APP_URL || 'http://localhost:4200';
 // Verificar conexiÃ³n al iniciar
-export async function verificarConexionEmail() {
+async function verificarConexionEmail() {
     try {
         await transporter.verify();
     }
@@ -41,7 +51,7 @@ function plantillaBase(contenido) {
   `;
 }
 // Enviar credenciales a usuario nuevo (estudiante o profesor)
-export async function enviarCredenciales(params) {
+async function enviarCredenciales(params) {
     const { email, nombre, apellido, cedula, password, rol } = params;
     const rolTexto = rol === 'PROFESOR' ? 'profesor/a' : 'estudiante';
     const contenido = `
@@ -74,7 +84,7 @@ export async function enviarCredenciales(params) {
     }
 }
 // Enviar nueva contraseÃ±a temporal (recuperaciÃ³n)
-export async function enviarPasswordRecuperacion(params) {
+async function enviarPasswordRecuperacion(params) {
     const { email, nombre, cedula, passwordTemporal } = params;
     const contenido = `
     <h2 style="color: #4a69bd;">RecuperaciÃ³n de contraseÃ±a</h2>
@@ -106,7 +116,7 @@ export async function enviarPasswordRecuperacion(params) {
     }
 }
 // Notificar al estudiante que se registrÃ³ una nueva calificaciÃ³n
-export async function notificarNuevaCalificacion(params) {
+async function notificarNuevaCalificacion(params) {
     const { email, nombre, apellido, asignaturaNombre, cursoNombre, tipoActividad, nombreActividad, nota, periodo, corte, observaciones } = params;
     const colorNota = nota >= 4.0 ? '#15803d' : nota >= 3.0 ? '#d97706' : '#dc2626';
     const bgNota = nota >= 4.0 ? '#dcfce7' : nota >= 3.0 ? '#fef3c7' : '#fee2e2';
@@ -159,7 +169,7 @@ export async function notificarNuevaCalificacion(params) {
     }
 }
 // Enviar confirmaciÃ³n de matrÃ­cula
-export async function enviarConfirmacionMatricula(params) {
+async function enviarConfirmacionMatricula(params) {
     const { email, nombre, apellido, curso, asignaturas } = params;
     const listaAsignaturas = asignaturas.map(a => `<li style="margin: 4px 0;">${a}</li>`).join('');
     const contenido = `

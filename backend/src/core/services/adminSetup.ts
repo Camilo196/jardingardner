@@ -1,5 +1,5 @@
 import { UserModel } from '../../infrastructure/adapters/outputs/models/UserModel.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 /**
  * Crea el usuario administrador si no existe.

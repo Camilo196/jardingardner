@@ -1,17 +1,53 @@
-import mongoose, { Schema } from 'mongoose';
-const calificacionSchema = new Schema({
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CalificacionModel = void 0;
+const mongoose_1 = __importStar(require("mongoose"));
+const calificacionSchema = new mongoose_1.Schema({
     estudianteId: {
-        type: mongoose.Schema.Types.Mixed,
+        type: mongoose_1.default.Schema.Types.Mixed,
         ref: 'Estudiante',
         required: true
     },
     asignaturaId: {
-        type: mongoose.Schema.Types.Mixed,
+        type: mongoose_1.default.Schema.Types.Mixed,
         ref: 'Asignatura',
         required: true
     },
     boletinId: {
-        type: Schema.Types.ObjectId,
+        type: mongoose_1.Schema.Types.ObjectId,
         ref: 'Boletin'
     },
     nota: {
@@ -51,5 +87,5 @@ const calificacionSchema = new Schema({
 // Índices para acelerar búsquedas de boletines y calificaciones por estudiante/asignatura
 calificacionSchema.index({ estudianteId: 1, periodo: 1 });
 calificacionSchema.index({ asignaturaId: 1, periodo: 1 });
-export const CalificacionModel = mongoose.model('Calificacion', calificacionSchema);
+exports.CalificacionModel = mongoose_1.default.model('Calificacion', calificacionSchema);
 //# sourceMappingURL=CalificacionModel.js.map

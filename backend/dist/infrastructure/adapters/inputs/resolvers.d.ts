@@ -1,6 +1,6 @@
 import { Matricula } from '../../../core/domain/matricula.js';
 import mongoose from 'mongoose';
-import { Asignatura } from '@core/domain/asignatura.js';
+import { Asignatura } from '../../../core/domain/asignatura.js';
 export declare const resolvers: {
     Query: {
         me: (_: any, __: any, { user, repositories }: any) => Promise<any>;
@@ -283,12 +283,12 @@ export declare const resolvers: {
         login: (_: any, { identifier, password }: any, { repositories }: any) => Promise<{
             token: string;
             user: {
-                id: string;
-                username: string;
+                id: any;
+                username: any;
                 role: "ESTUDIANTE" | "PROFESOR" | "ADMIN";
-                email: string;
+                email: any;
             };
-            isFirstLogin: boolean;
+            isFirstLogin: any;
             expiresAt: string;
         }>;
         register: (_: any, { email, password, role }: any, { user, repositories }: any) => Promise<{

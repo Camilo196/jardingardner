@@ -1,3 +1,4 @@
+"use strict";
 /**
  * ProfesorService — lógica de negocio específica de profesores.
  *
@@ -9,8 +10,9 @@
  *   const service = new ProfesorService(repositories);
  *   await service.obtenerResumenDocente(profesorId, periodo);
  */
-export class ProfesorService {
-    repositories;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ProfesorService = void 0;
+class ProfesorService {
     constructor(repositories) {
         this.repositories = repositories;
     }
@@ -32,4 +34,5 @@ export class ProfesorService {
         return resultado;
     }
 }
+exports.ProfesorService = ProfesorService;
 //# sourceMappingURL=profesorService.js.map

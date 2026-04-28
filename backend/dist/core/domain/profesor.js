@@ -1,12 +1,7 @@
-export class Profesor {
-    cedula;
-    nombre;
-    primerApellido;
-    segundoApellido;
-    email;
-    telefono;
-    direccion;
-    empleado;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Profesor = void 0;
+class Profesor {
     constructor(cedula, nombre, primerApellido, segundoApellido, email, telefono = '', direccion = '') {
         this.cedula = cedula;
         this.nombre = nombre;
@@ -20,4 +15,5 @@ export class Profesor {
         return this.cedula;
     }
 }
+exports.Profesor = Profesor;
 //# sourceMappingURL=profesor.js.map

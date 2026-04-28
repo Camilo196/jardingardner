@@ -1,11 +1,7 @@
-export class Matricula {
-    id;
-    estudianteId;
-    cursoId;
-    asignaturas;
-    estado;
-    periodo;
-    fechaMatricula;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Matricula = void 0;
+class Matricula {
     constructor(id, estudianteId, cursoId, asignaturas, // IDs de las asignaturas
     estado, periodo, fechaMatricula) {
         this.id = id;
@@ -17,4 +13,5 @@ export class Matricula {
         this.fechaMatricula = fechaMatricula;
     }
 }
+exports.Matricula = Matricula;
 //# sourceMappingURL=matricula.js.map

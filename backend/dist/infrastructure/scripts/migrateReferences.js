@@ -1,11 +1,16 @@
-import mongoose from 'mongoose';
-import { EstudianteModel } from '../adapters/outputs/models/EstudianteModel';
-import { AsignaturaModel } from '../adapters/outputs/models/AsignaturaModel';
-import { MatriculaModel } from '../adapters/outputs/models/MatriculaModel';
-import { BoletinModel } from '../adapters/outputs/models/BoletinModel';
-import { connectMongo } from '../config/mongo.js';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose_1 = __importDefault(require("mongoose"));
+const EstudianteModel_1 = require("../adapters/outputs/models/EstudianteModel");
+const AsignaturaModel_1 = require("../adapters/outputs/models/AsignaturaModel");
+const MatriculaModel_1 = require("../adapters/outputs/models/MatriculaModel");
+const BoletinModel_1 = require("../adapters/outputs/models/BoletinModel");
+const mongo_js_1 = require("../config/mongo.js");
 // Conectar a la base de datos
-connectMongo()
+(0, mongo_js_1.connectMongo)()
     .then(() => {
     console.log('âœ… Conectado a MongoDB');
     migrateReferences();
@@ -19,15 +24,15 @@ async function migrateReferences() {
         console.log('Iniciando migraciÃ³n de referencias...');
         // 1. Migrar referencias en Asignatura
         console.log('Migrando referencias en Asignatura...');
-        const asignaturas = await AsignaturaModel.find();
+        const asignaturas = await AsignaturaModel_1.AsignaturaModel.find();
         for (const asignatura of asignaturas) {
             const estudianteId = asignatura.estudianteId;
             if (typeof estudianteId === 'object' ||
-                (typeof estudianteId === 'string' && mongoose.Types.ObjectId.isValid(estudianteId))) {
+                (typeof estudianteId === 'string' && mongoose_1.default.Types.ObjectId.isValid(estudianteId))) {
                 // Convertir a string si es un ObjectId
                 const idStr = estudianteId.toString();
                 try {
-                    const estudianteObj = await EstudianteModel.findById(idStr);
+                    const estudianteObj = await EstudianteModel_1.EstudianteModel.findById(idStr);
                     if (estudianteObj) {
                         console.log(`Asignatura ${asignatura._id}: Actualizando estudianteId de ${estudianteId} a ${estudianteObj.cedula}`);
                         asignatura.estudianteId = estudianteObj.cedula;
@@ -44,13 +49,13 @@ async function migrateReferences() {
         }
         // 2. Migrar referencias en Matricula
         console.log('Migrando referencias en Matricula...');
-        const matriculas = await MatriculaModel.find();
+        const matriculas = await MatriculaModel_1.MatriculaModel.find();
         for (const matricula of matriculas) {
             if (typeof matricula.estudianteId === 'object' ||
-                (typeof matricula.estudianteId === 'string' && mongoose.Types.ObjectId.isValid(matricula.estudianteId))) {
+                (typeof matricula.estudianteId === 'string' && mongoose_1.default.Types.ObjectId.isValid(matricula.estudianteId))) {
                 const idStr = matricula.estudianteId.toString();
                 try {
-                    const estudianteObj = await EstudianteModel.findById(idStr);
+                    const estudianteObj = await EstudianteModel_1.EstudianteModel.findById(idStr);
                     if (estudianteObj) {
                         console.log(`Matricula ${matricula._id}: Actualizando estudianteId de ${matricula.estudianteId} a ${estudianteObj.cedula}`);
                         matricula.estudianteId = estudianteObj.cedula;
@@ -67,13 +72,13 @@ async function migrateReferences() {
         }
         // 3. Migrar referencias en Boletin
         console.log('Migrando referencias en Boletin...');
-        const boletines = await BoletinModel.find();
+        const boletines = await BoletinModel_1.BoletinModel.find();
         for (const boletin of boletines) {
             if (typeof boletin.estudianteId === 'object' ||
-                (typeof boletin.estudianteId === 'string' && mongoose.Types.ObjectId.isValid(boletin.estudianteId))) {
+                (typeof boletin.estudianteId === 'string' && mongoose_1.default.Types.ObjectId.isValid(boletin.estudianteId))) {
                 const idStr = boletin.estudianteId.toString();
                 try {
-                    const estudianteObj = await EstudianteModel.findById(idStr);
+                    const estudianteObj = await EstudianteModel_1.EstudianteModel.findById(idStr);
                     if (estudianteObj) {
                         console.log(`Boletin ${boletin._id}: Actualizando estudianteId de ${boletin.estudianteId} a ${estudianteObj.cedula}`);
                         boletin.estudianteId = estudianteObj.cedula;

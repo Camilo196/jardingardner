@@ -1,10 +1,7 @@
-export class User {
-    id;
-    username;
-    password;
-    role;
-    email;
-    isFirstLogin;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.User = void 0;
+class User {
     static findById(id) {
         throw new Error('Method not implemented.');
     }
@@ -17,4 +14,5 @@ export class User {
         this.isFirstLogin = isFirstLogin;
     }
 }
+exports.User = User;
 //# sourceMappingURL=user.js.map

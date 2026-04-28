@@ -1,15 +1,21 @@
-import { Calificacion } from '../../../core/domain/calificacion.js';
-import { CalificacionModel } from '../outputs/models/CalificacionModel.js';
-import { AsignaturaModel } from '../outputs/models/AsignaturaModel.js';
-import mongoose from 'mongoose';
-export class CalificacionRepositoryImpl {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.calificacionRepository = exports.CalificacionRepositoryImpl = void 0;
+const calificacion_js_1 = require("../../../core/domain/calificacion.js");
+const CalificacionModel_js_1 = require("../outputs/models/CalificacionModel.js");
+const AsignaturaModel_js_1 = require("../outputs/models/AsignaturaModel.js");
+const mongoose_1 = __importDefault(require("mongoose"));
+class CalificacionRepositoryImpl {
     async findByCursoId(cursoId) {
         try {
-            const asignaturas = await AsignaturaModel.find({ cursoId }).exec();
+            const asignaturas = await AsignaturaModel_js_1.AsignaturaModel.find({ cursoId }).exec();
             if (!asignaturas || asignaturas.length === 0)
                 return [];
             const asignaturaIds = asignaturas.map(a => a._id);
-            const calificacionesDoc = await CalificacionModel.find({
+            const calificacionesDoc = await CalificacionModel_js_1.CalificacionModel.find({
                 asignaturaId: { $in: asignaturaIds }
             }).exec();
             return calificacionesDoc.map(doc => this.mapToEntity(doc));
@@ -20,24 +26,24 @@ export class CalificacionRepositoryImpl {
         }
     }
     async findAll() {
-        const docs = await CalificacionModel.find().exec();
+        const docs = await CalificacionModel_js_1.CalificacionModel.find().exec();
         return docs.map(doc => this.mapToEntity(doc));
     }
     async findById(id) {
-        const doc = await CalificacionModel.findById(id).exec();
+        const doc = await CalificacionModel_js_1.CalificacionModel.findById(id).exec();
         return doc ? this.mapToEntity(doc) : null;
     }
     async findByEstudianteId(estudianteId) {
         try {
             // Busca tanto por cedula directa como por ObjectId para cubrir ambos casos de almacenamiento
             let queries = [{ estudianteId }];
-            if (!mongoose.Types.ObjectId.isValid(estudianteId)) {
-                const EstudianteModel = mongoose.model('Estudiante');
+            if (!mongoose_1.default.Types.ObjectId.isValid(estudianteId)) {
+                const EstudianteModel = mongoose_1.default.model('Estudiante');
                 const est = await EstudianteModel.findOne({ cedula: estudianteId }).exec();
                 if (est)
                     queries.push({ estudianteId: est._id });
             }
-            const docs = await CalificacionModel.find({ $or: queries }).exec();
+            const docs = await CalificacionModel_js_1.CalificacionModel.find({ $or: queries }).exec();
             return docs.map(doc => this.mapToEntity(doc));
         }
         catch (error) {
@@ -46,24 +52,24 @@ export class CalificacionRepositoryImpl {
         }
     }
     async findByAsignaturaId(asignaturaId) {
-        const docs = await CalificacionModel.find({ asignaturaId }).exec();
+        const docs = await CalificacionModel_js_1.CalificacionModel.find({ asignaturaId }).exec();
         return docs.map(doc => this.mapToEntity(doc));
     }
     async findByBoletinId(boletinId) {
-        const docs = await CalificacionModel.find({ boletinId }).exec();
+        const docs = await CalificacionModel_js_1.CalificacionModel.find({ boletinId }).exec();
         return docs.map(doc => this.mapToEntity(doc));
     }
     async findByEstudianteIdAndPeriodo(estudianteId, periodo) {
         try {
             // También cubre búsqueda por cédula para boletines
             let queries = [{ estudianteId, periodo }];
-            if (!mongoose.Types.ObjectId.isValid(estudianteId)) {
-                const EstudianteModel = mongoose.model('Estudiante');
+            if (!mongoose_1.default.Types.ObjectId.isValid(estudianteId)) {
+                const EstudianteModel = mongoose_1.default.model('Estudiante');
                 const est = await EstudianteModel.findOne({ cedula: estudianteId }).exec();
                 if (est)
                     queries.push({ estudianteId: est._id, periodo });
             }
-            const docs = await CalificacionModel.find({ $or: queries }).exec();
+            const docs = await CalificacionModel_js_1.CalificacionModel.find({ $or: queries }).exec();
             return docs.map(doc => this.mapToEntity(doc));
         }
         catch (error) {
@@ -72,7 +78,7 @@ export class CalificacionRepositoryImpl {
         }
     }
     async findByAsignaturaYPeriodo(asignaturaId, periodo) {
-        const docs = await CalificacionModel.find({ asignaturaId, periodo }).lean().exec();
+        const docs = await CalificacionModel_js_1.CalificacionModel.find({ asignaturaId, periodo }).lean().exec();
         return docs.map(doc => this.mapToEntity(doc));
     }
     async create(calificacion) {
@@ -93,7 +99,7 @@ export class CalificacionRepositoryImpl {
                 nombreActividad: calificacion.nombreActividad,
                 corte: calificacion.corte,
             };
-            const nueva = new CalificacionModel(calificacionData);
+            const nueva = new CalificacionModel_js_1.CalificacionModel(calificacionData);
             const saved = await nueva.save();
             return this.mapToEntity(saved);
         }
@@ -102,18 +108,18 @@ export class CalificacionRepositoryImpl {
         }
     }
     async update(id, calificacion) {
-        const updated = await CalificacionModel.findByIdAndUpdate(id, calificacion, { new: true }).exec();
+        const updated = await CalificacionModel_js_1.CalificacionModel.findByIdAndUpdate(id, calificacion, { new: true }).exec();
         return updated ? this.mapToEntity(updated) : null;
     }
     async delete(id) {
-        const result = await CalificacionModel.findByIdAndDelete(id).exec();
+        const result = await CalificacionModel_js_1.CalificacionModel.findByIdAndDelete(id).exec();
         return !!result;
     }
     // ── FIX: mapToEntity ahora incluye tipoActividad, nombreActividad y corte ──
     mapToEntity(doc) {
         try {
             const toStr = (v) => v ? (typeof v === 'string' ? v : v.toString()) : '';
-            return new Calificacion(doc._id ? doc._id.toString() : '', toStr(doc.estudianteId), toStr(doc.asignaturaId), doc.nota, doc.periodo, doc.observaciones || '', doc.fecha || new Date(), doc.boletinId, doc.tipoActividad, // ← nuevo
+            return new calificacion_js_1.Calificacion(doc._id ? doc._id.toString() : '', toStr(doc.estudianteId), toStr(doc.asignaturaId), doc.nota, doc.periodo, doc.observaciones || '', doc.fecha || new Date(), doc.boletinId, doc.tipoActividad, // ← nuevo
             doc.nombreActividad, // ← nuevo
             doc.corte // ← nuevo
             );
@@ -124,5 +130,6 @@ export class CalificacionRepositoryImpl {
         }
     }
 }
-export const calificacionRepository = new CalificacionRepositoryImpl();
+exports.CalificacionRepositoryImpl = CalificacionRepositoryImpl;
+exports.calificacionRepository = new CalificacionRepositoryImpl();
 //# sourceMappingURL=calificacionRepositoryImpl.js.map

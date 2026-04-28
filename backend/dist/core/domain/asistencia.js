@@ -1,12 +1,7 @@
-export class Asistencia {
-    id;
-    estudianteId;
-    asignaturaId;
-    fecha;
-    estado;
-    periodo;
-    observaciones;
-    registradoPor;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Asistencia = void 0;
+class Asistencia {
     constructor(id, estudianteId, // cédula del estudiante
     asignaturaId, // ObjectId de la asignatura
     fecha, estado, periodo, observaciones, registradoPor // cédula del profesor
@@ -21,4 +16,5 @@ export class Asistencia {
         this.registradoPor = registradoPor;
     }
 }
+exports.Asistencia = Asistencia;
 //# sourceMappingURL=asistencia.js.map

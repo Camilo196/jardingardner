@@ -1,23 +1,26 @@
-import { Asistencia } from '../../../core/domain/asistencia.js';
-import { AsistenciaModel } from './models/AsistenciaModel.js';
-export class AsistenciaRepositoryImpl {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.asistenciaRepository = exports.AsistenciaRepositoryImpl = void 0;
+const asistencia_js_1 = require("../../../core/domain/asistencia.js");
+const AsistenciaModel_js_1 = require("./models/AsistenciaModel.js");
+class AsistenciaRepositoryImpl {
     mapToEntity(doc) {
-        return new Asistencia(doc._id.toString(), doc.estudianteId, doc.asignaturaId, doc.fecha, doc.estado, doc.periodo, doc.observaciones, doc.registradoPor);
+        return new asistencia_js_1.Asistencia(doc._id.toString(), doc.estudianteId, doc.asignaturaId, doc.fecha, doc.estado, doc.periodo, doc.observaciones, doc.registradoPor);
     }
     async findAll() {
-        const docs = await AsistenciaModel.find().exec();
+        const docs = await AsistenciaModel_js_1.AsistenciaModel.find().exec();
         return docs.map(d => this.mapToEntity(d));
     }
     async findById(id) {
-        const doc = await AsistenciaModel.findById(id).exec();
+        const doc = await AsistenciaModel_js_1.AsistenciaModel.findById(id).exec();
         return doc ? this.mapToEntity(doc) : null;
     }
     async findByAsignaturaId(asignaturaId) {
-        const docs = await AsistenciaModel.find({ asignaturaId }).exec();
+        const docs = await AsistenciaModel_js_1.AsistenciaModel.find({ asignaturaId }).exec();
         return docs.map(d => this.mapToEntity(d));
     }
     async findByEstudianteId(estudianteId) {
-        const docs = await AsistenciaModel.find({ estudianteId }).exec();
+        const docs = await AsistenciaModel_js_1.AsistenciaModel.find({ estudianteId }).exec();
         return docs.map(d => this.mapToEntity(d));
     }
     async findByAsignaturaFecha(asignaturaId, fecha) {
@@ -26,14 +29,14 @@ export class AsistenciaRepositoryImpl {
         inicio.setHours(0, 0, 0, 0);
         const fin = new Date(fecha);
         fin.setHours(23, 59, 59, 999);
-        const docs = await AsistenciaModel.find({
+        const docs = await AsistenciaModel_js_1.AsistenciaModel.find({
             asignaturaId,
             fecha: { $gte: inicio, $lte: fin }
         }).exec();
         return docs.map(d => this.mapToEntity(d));
     }
     async findByAsignaturaPeriodo(asignaturaId, periodo) {
-        const docs = await AsistenciaModel.find({ asignaturaId, periodo }).exec();
+        const docs = await AsistenciaModel_js_1.AsistenciaModel.find({ asignaturaId, periodo }).exec();
         return docs.map(d => this.mapToEntity(d));
     }
     // Registrar lista completa de un día — usa upsert para no duplicar
@@ -45,7 +48,7 @@ export class AsistenciaRepositoryImpl {
             inicio.setHours(0, 0, 0, 0);
             const fin = new Date(fecha);
             fin.setHours(23, 59, 59, 999);
-            const doc = await AsistenciaModel.findOneAndUpdate({ estudianteId: r.estudianteId, asignaturaId: r.asignaturaId, fecha: { $gte: inicio, $lte: fin } }, {
+            const doc = await AsistenciaModel_js_1.AsistenciaModel.findOneAndUpdate({ estudianteId: r.estudianteId, asignaturaId: r.asignaturaId, fecha: { $gte: inicio, $lte: fin } }, {
                 estudianteId: r.estudianteId,
                 asignaturaId: r.asignaturaId,
                 fecha: fecha,
@@ -60,7 +63,7 @@ export class AsistenciaRepositoryImpl {
         return resultados;
     }
     async create(data) {
-        const doc = new AsistenciaModel({
+        const doc = new AsistenciaModel_js_1.AsistenciaModel({
             estudianteId: data.estudianteId,
             asignaturaId: data.asignaturaId,
             fecha: new Date(data.fecha),
@@ -73,13 +76,14 @@ export class AsistenciaRepositoryImpl {
         return this.mapToEntity(saved);
     }
     async update(id, data) {
-        const updated = await AsistenciaModel.findByIdAndUpdate(id, data, { new: true }).exec();
+        const updated = await AsistenciaModel_js_1.AsistenciaModel.findByIdAndUpdate(id, data, { new: true }).exec();
         return updated ? this.mapToEntity(updated) : null;
     }
     async delete(id) {
-        const result = await AsistenciaModel.findByIdAndDelete(id).exec();
+        const result = await AsistenciaModel_js_1.AsistenciaModel.findByIdAndDelete(id).exec();
         return !!result;
     }
 }
-export const asistenciaRepository = new AsistenciaRepositoryImpl();
+exports.AsistenciaRepositoryImpl = AsistenciaRepositoryImpl;
+exports.asistenciaRepository = new AsistenciaRepositoryImpl();
 //# sourceMappingURL=asistenciaRepositoryImpl.js.map

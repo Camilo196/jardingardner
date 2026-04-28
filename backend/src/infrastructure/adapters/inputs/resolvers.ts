@@ -1,4 +1,4 @@
-﻿import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { Matricula, CrearMatriculaInput, ActualizarMatriculaInput } from '../../../core/domain/matricula.js';
 import { EmpleadoModel } from '../outputs/models/EmpleadoModel';
 import mongoose from 'mongoose';
@@ -23,7 +23,7 @@ import {
 import { Asignatura } from '../../../core/domain/asignatura.js';
 import { pdfService } from '../../../core/services/pdfService.js';
 
-// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function generarClaveAleatoria(longitud = 8): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -76,23 +76,23 @@ async function validarAccesoEstudiantePorMatricula(username: string): Promise<vo
     if (!ESTADOS_MATRICULA_BLOQUEADOS.has(estado)) return;
 
     const estadoLabel = LABEL_ESTADO_MATRICULA[estado] ?? estado.toLowerCase();
-    throw new Error(`Acceso bloqueado: tu matrícula está ${estadoLabel}. Contacta a la institución.`);
+    throw new Error(`Acceso bloqueado: tu matr�cula est� ${estadoLabel}. Contacta a la instituci�n.`);
 }
 
-// â”€â”€â”€ Helper: verificar que el periodo no estÃ© cerrado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Helper: verificar que el periodo no esté cerrado ────────────────────────
 
 // Parsear periodo con formato "YYYY-N" o "N"
 function parsePeriodo(periodo: string): { anio: number; numeroPeriodo: number } {
     if (periodo.includes('-')) {
         const parts = periodo.split('-');
-        // Formato "2026-1": primer segmento es aÃ±o, segundo es nÃºmero de periodo
+        // Formato "2026-1": primer segmento es año, segundo es número de periodo
         const anio = parseInt(parts[0]);
         const numeroPeriodo = parseInt(parts[1]);
         if (!isNaN(anio) && !isNaN(numeroPeriodo) && anio > 2000) {
             return { anio, numeroPeriodo };
         }
     }
-    // Formato "1", "2", "3" â€” usar aÃ±o actual
+    // Formato "1", "2", "3" — usar año actual
     return { anio: new Date().getFullYear(), numeroPeriodo: parseInt(periodo) };
 }
 
@@ -112,7 +112,7 @@ function valoracionDesdeNota(nota: number | null): string {
     if (nota === null) return 'Sin nota';
     if (nota >= 4.5) return 'Superior';
     if (nota >= 4.0) return 'Alto';
-    if (nota >= 3.0) return 'Básico';
+    if (nota >= 3.0) return 'B�sico';
     return 'Bajo';
 }
 
@@ -224,7 +224,7 @@ async function generarBoletinAcumuladoBase64(
     }
 
     const calsDelPeriodo = calsAcumuladas.filter((c: any) => String(c.periodo) === String(periodo));
-    if (!calsDelPeriodo.length) throw new Error('No hay calificaciones para este período');
+    if (!calsDelPeriodo.length) throw new Error('No hay calificaciones para este per�odo');
 
     const asigIdsUnicos = [...new Set(calsAcumuladas.map((c: any) => String(c.asignaturaId)))];
     const asigsBatch: any[] = await repositories.asignaturaRepository.findByIds(asigIdsUnicos).catch(() => []);
@@ -293,10 +293,10 @@ async function generarBoletinAcumuladoBase64(
         const valoracion = valoracionDesdeNota(prom);
         const resumenNotas =
             periodoObjetivo === 1
-                ? `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '—'}`
+                ? `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '�'}`
                 : periodoObjetivo === 2
-                    ? `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '—'} · P2: ${promediosPeriodos[1] !== null ? promediosPeriodos[1]!.toFixed(2) : '—'} · Promedio: ${prom.toFixed(2)}`
-                    : `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '—'} · P2: ${promediosPeriodos[1] !== null ? promediosPeriodos[1]!.toFixed(2) : '—'} · P3: ${promediosPeriodos[2] !== null ? promediosPeriodos[2]!.toFixed(2) : '—'} · Nota final: ${prom.toFixed(2)}`;
+                    ? `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '�'} � P2: ${promediosPeriodos[1] !== null ? promediosPeriodos[1]!.toFixed(2) : '�'} � Promedio: ${prom.toFixed(2)}`
+                    : `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '�'} � P2: ${promediosPeriodos[1] !== null ? promediosPeriodos[1]!.toFixed(2) : '�'} � P3: ${promediosPeriodos[2] !== null ? promediosPeriodos[2]!.toFixed(2) : '�'} � Nota final: ${prom.toFixed(2)}`;
 
         let docenteNombre = 'Docente';
         if (asig?.profesorId) {
@@ -326,7 +326,7 @@ async function generarBoletinAcumuladoBase64(
         };
     });
 
-    let directorNombre = 'Coordinación Académica';
+    let directorNombre = 'Coordinaci�n Acad�mica';
     if (curso?.profesorId) {
         const dirProf = await repositories.profesorRepository.findById(curso.profesorId).catch(() => null);
         if (dirProf) directorNombre = `${dirProf.nombre} ${dirProf.primerApellido}`;
@@ -362,27 +362,27 @@ async function generarBoletinAcumuladoBase64(
 async function verificarPeriodoAbierto(periodo: string): Promise<void> {
     const { anio, numeroPeriodo } = parsePeriodo(periodo);
     const config = await PeriodoConfigModel.findOne({ anio, numeroPeriodo });
-    if (!config) return; // sin configuraciÃ³n = abierto por defecto
+    if (!config) return; // sin configuración = abierto por defecto
     if (!config.abierto) {
         throw new Error(
-            `El periodo ${periodo} está cerrado. Contacte al administrador para reactivarlo.`
+            `El periodo ${periodo} est� cerrado. Contacte al administrador para reactivarlo.`
         );
     }
     if (config.fechaCierre && new Date() > config.fechaCierre) {
         await PeriodoConfigModel.updateOne({ anio, numeroPeriodo }, { abierto: false });
         throw new Error(
-            `El periodo ${periodo} cerrÃ³ el ${config.fechaCierre.toLocaleDateString('es-CO')}. Contacte al administrador.`
+            `El periodo ${periodo} cerró el ${config.fechaCierre.toLocaleDateString('es-CO')}. Contacte al administrador.`
         );
     }
 }
 
-// â”€â”€â”€ Resolvers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Resolvers ────────────────────────────────────────────────────────────────
 
 export const resolvers = {
 
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // ═══════════════════════════
     //  QUERIES
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // ═══════════════════════════
     Query: {
 
         me: async (_: any, __: any, { user, repositories }: any) => {
@@ -449,7 +449,7 @@ export const resolvers = {
             return await IndicadoresModel.find({ asignaturaId: { $in: ids }, periodo }).lean();
         },
 
-        // ConfiguraciÃ³n de periodos
+        // Configuración de periodos
         periodoConfig: async (_: any, { anio, numeroPeriodo }: any) => {
             const config = await PeriodoConfigModel.findOne({ anio, numeroPeriodo }).lean();
             if (!config) return null;
@@ -515,7 +515,7 @@ export const resolvers = {
 
         exportarBoletin: async (_: any, { id }: { id: string }, { repositories }: any) => {
             const boletin = await repositories.boletinRepository.findById(id);
-            if (!boletin) throw new Error(`Boletín ${id} no encontrado`);
+            if (!boletin) throw new Error(`Bolet�n ${id} no encontrado`);
             return await generarBoletinAcumuladoBase64(
                 repositories,
                 String(boletin.estudianteId),
@@ -542,7 +542,7 @@ export const resolvers = {
             return await repositories.boletinRepository.findByCursoYPeriodo(cursoId, periodo);
         },
 
-        // MatrÃ­culas
+        // Matrículas
         matriculas: async (_: any, __: any, { repositories }: any) =>
             await repositories.matriculaRepository.findAll(),
 
@@ -654,12 +654,12 @@ export const resolvers = {
         },
     },
 
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // ═══════════════════════════
     //  MUTATIONS
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // ═══════════════════════════
     Mutation: {
 
-        // â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Auth ──────────────────────────────────────────────
         login: async (_: any, { identifier, password }: any, { repositories }: any) => {
             const authService = new AuthService(repositories.userRepository);
             let result: any;
@@ -682,7 +682,7 @@ export const resolvers = {
                 await authService.createUserCredentials(identificador, 'ESTUDIANTE');
                 result = await authService.authenticate(identificador, clave);
             }
-            if (!result?.user) throw new Error('Credenciales inválidas');
+            if (!result?.user) throw new Error('Credenciales inv�lidas');
 
             const user = result.user;
             const role = normalizarRol(user.role);
@@ -731,31 +731,31 @@ export const resolvers = {
             if (!user) throw new Error('Usuario no encontrado');
             const authService = new AuthService(repositories.userRepository);
             try { await authService.authenticate(username, oldPassword); }
-            catch { throw new Error('La contraseña actual es incorrecta'); }
-            if (!newPassword || newPassword.length < 6) throw new Error('Mínimo 6 caracteres');
+            catch { throw new Error('La contrase�a actual es incorrecta'); }
+            if (!newPassword || newPassword.length < 6) throw new Error('M�nimo 6 caracteres');
             const hashed = await bcrypt.hash(newPassword, 10);
             const ok = await repositories.userRepository.updatePassword(username, hashed);
-            if (!ok) throw new Error('No se pudo actualizar la contraseña');
+            if (!ok) throw new Error('No se pudo actualizar la contrase�a');
             return true;
         },
 
         cambiarPasswordPrimerLogin: async (_: any, { username, newPassword }: any, { user, repositories }: any): Promise<boolean> => {
-            // Requiere token vÃ¡lido y que el usuario solo pueda cambiar su propia contraseÃ±a
+            // Requiere token válido y que el usuario solo pueda cambiar su propia contraseña
             if (!user) throw new Error('No autenticado');
-            if (user.username !== username) throw new Error('No autorizado: solo puedes cambiar tu propia contraseña');
+            if (user.username !== username) throw new Error('No autorizado: solo puedes cambiar tu propia contrase�a');
             const dbUser = await repositories.userRepository.findByUsername(username);
-            if (!dbUser) throw new Error('Credenciales inválidas');
-            if (!newPassword || newPassword.length < 6) throw new Error('Mínimo 6 caracteres');
+            if (!dbUser) throw new Error('Credenciales inv�lidas');
+            if (!newPassword || newPassword.length < 6) throw new Error('M�nimo 6 caracteres');
             const hashed = await bcrypt.hash(newPassword, 10);
             const ok = await repositories.userRepository.updatePassword(username, hashed);
-            if (!ok) throw new Error('No se pudo actualizar la contraseña');
+            if (!ok) throw new Error('No se pudo actualizar la contrase�a');
             return true;
         },
 
         olvidarPassword: async (_: any, { identifier }: any, { repositories }: any): Promise<boolean> => {
             let email = '', nombre = '', cedula = identifier;
 
-            // Fix N+1: buscar primero por cÃ©dula, luego por email directo en DB (sin findAll)
+            // Fix N+1: buscar primero por cédula, luego por email directo en DB (sin findAll)
             const est = await repositories.estudianteRepository.findByCedula(identifier).catch(() => null)
                 ?? await repositories.estudianteRepository.findByEmail(identifier).catch(() => null);
 
@@ -767,16 +767,16 @@ export const resolvers = {
                 if (prof) { email = prof.email; nombre = prof.nombre; cedula = prof.cedula; }
             }
 
-            if (!email) throw new Error('No se encontró usuario con ese identificador');
+            if (!email) throw new Error('No se encontr� usuario con ese identificador');
             const clave = generarClaveAleatoria();
             const passwordReset = await repositories.userRepository.resetPassword(cedula, clave);
-            if (!passwordReset) throw new Error('No se pudo restablecer la contraseña');
+            if (!passwordReset) throw new Error('No se pudo restablecer la contrase�a');
             const emailSent = await enviarPasswordRecuperacion({ email, nombre, cedula, passwordTemporal: clave });
-            if (!emailSent) throw new Error('La contraseña se restableció, pero no se pudo enviar el correo');
+            if (!emailSent) throw new Error('La contrase�a se restableci�, pero no se pudo enviar el correo');
             return true;
         },
 
-        // â”€â”€ Credenciales â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Credenciales ──────────────────────────────────────
         enviarCrearCredenciales: async (
             _: any,
             { estudianteId, profesorId }: { estudianteId?: string; profesorId?: string },
@@ -838,21 +838,21 @@ export const resolvers = {
             }
             if (email) {
                 const emailSent = await enviarPasswordRecuperacion({ email, nombre: nombre.split(' ')[0], cedula, passwordTemporal: clave });
-                if (!emailSent) throw new Error('La clave provisional se generó, pero no se pudo enviar el correo');
+                if (!emailSent) throw new Error('La clave provisional se gener�, pero no se pudo enviar el correo');
             } else {
                 console.warn(`No se pudo enviar la clave provisional por email a ${cedula}: email no registrado`);
             }
             return true;
         },
 
-        // â”€â”€ Limpieza â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Limpieza ──────────────────────────────────────────
         limpiarRegistrosProblematicos: async (_: any, __: any, { user }: any): Promise<boolean> => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
             await MatriculaModel.deleteMany({ $or: [{ estudianteId: null }, { estudianteId: '' }] }).exec();
             return true;
         },
 
-        // â”€â”€ Indicadores â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Indicadores ───────────────────────────────────────
         guardarIndicadores: async (_: any, { asignaturaId, periodo, saber, hacer, ser }: any, { user }: any) => {
             const creadoPor = user?.username ?? 'sistema';
             const doc = await IndicadoresModel.findOneAndUpdate(
@@ -877,7 +877,7 @@ export const resolvers = {
             return result.deletedCount > 0;
         },
 
-        // â”€â”€ BoletÃ­n avanzado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Boletín avanzado ──────────────────────────────────
         guardarCalificacionBoletin: async (
             _: any,
             { estudianteId, asignaturaId, periodo, valoracion, nota, faltas, observacion }: any,
@@ -919,15 +919,15 @@ export const resolvers = {
             );
         },
 
-        // â”€â”€ Estudiantes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Estudiantes ───────────────────────────────────────
         crearEstudiante: async (_: any, { input }: any, { user, repositories }: any) => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
             const cedula = String(input.cedula ?? '').trim();
-            if (!cedula) throw new Error('La cédula es obligatoria');
+            if (!cedula) throw new Error('La c�dula es obligatoria');
             if (!input.nombre?.trim() || !input.primerApellido?.trim())
                 throw new Error('Nombre y primer apellido son obligatorios');
             const existe = await repositories.estudianteRepository.findByCedula(cedula);
-            if (existe) throw new Error(`Ya existe un estudiante con cédula ${cedula}`);
+            if (existe) throw new Error(`Ya existe un estudiante con c�dula ${cedula}`);
             return await repositories.estudianteRepository.create({
                 cedula,
                 nombre: input.nombre.trim(),
@@ -955,27 +955,27 @@ export const resolvers = {
 
         eliminarEstudiante: async (_: any, { id }: any, { user, repositories }: any) => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
-            // Obtener la cÃ©dula del estudiante para borrar el usuario asociado
+            // Obtener la cédula del estudiante para borrar el usuario asociado
             const estudiante = await repositories.estudianteRepository.findById(id).catch(() => null)
                 ?? await repositories.estudianteRepository.findByCedula(id).catch(() => null);
             const ok = await repositories.estudianteRepository.delete(id);
             if (!ok) throw new Error(`No se pudo eliminar el estudiante ${id}`);
-            // Eliminar el usuario del sistema (username = cÃ©dula)
+            // Eliminar el usuario del sistema (username = cédula)
             if (estudiante?.cedula) {
                 await UserModel.deleteOne({ username: estudiante.cedula }).catch(() => {});
             }
             return ok;
         },
 
-        // â”€â”€ Profesores â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Profesores ────────────────────────────────────────
         crearProfesor: async (_: any, { input }: any, { user, repositories }: any) => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
             const cedula = String(input.cedula ?? '').trim();
-            if (!cedula) throw new Error('La cédula es obligatoria');
+            if (!cedula) throw new Error('La c�dula es obligatoria');
             if (!input.nombre?.trim() || !input.primerApellido?.trim() || !input.email?.trim())
                 throw new Error('Nombre, primer apellido y email son obligatorios');
             const existe = await repositories.profesorRepository.findByCedula(cedula);
-            if (existe) throw new Error(`Ya existe un profesor con cédula ${cedula}`);
+            if (existe) throw new Error(`Ya existe un profesor con c�dula ${cedula}`);
             const profesor = await repositories.profesorRepository.create({
                 cedula,
                 nombre: input.nombre.trim(),
@@ -985,7 +985,7 @@ export const resolvers = {
                 telefono: (input.telefono ?? '').trim(),
                 direccion: (input.direccion ?? '').trim(),
             });
-            // Crear credenciales automÃ¡ticamente â€” best-effort
+            // Crear credenciales automáticamente — best-effort
             await resolvers.Mutation.enviarCrearCredenciales(_, { profesorId: cedula }, { user, repositories });
             return profesor;
         },
@@ -999,19 +999,19 @@ export const resolvers = {
 
         eliminarProfesor: async (_: any, { id }: any, { user, repositories }: any) => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
-            // Obtener la cÃ©dula del profesor para borrar el usuario asociado
+            // Obtener la cédula del profesor para borrar el usuario asociado
             const profesor = await repositories.profesorRepository.findById(id).catch(() => null)
                 ?? await repositories.profesorRepository.findByCedula(id).catch(() => null);
             const ok = await repositories.profesorRepository.delete(id);
             if (!ok) throw new Error(`No se pudo eliminar el profesor ${id}`);
-            // Eliminar el usuario del sistema (username = cÃ©dula)
+            // Eliminar el usuario del sistema (username = cédula)
             if (profesor?.cedula) {
                 await UserModel.deleteOne({ username: profesor.cedula }).catch(() => {});
             }
             return ok;
         },
 
-        // â”€â”€ Cursos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Cursos ────────────────────────────────────────────
         crearCurso: async (_: any, { input }: any, { user, repositories }: any) => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
             if (!input.id || !input.nombre) throw new Error('El ID y nombre del curso son obligatorios');
@@ -1043,18 +1043,18 @@ export const resolvers = {
             return !!(await repositories.cursoRepository.delete(id));
         },
 
-        // â”€â”€ Calificaciones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Calificaciones ────────────────────────────────────
         crearCalificacion: async (_: any, { input }: any, { user, repositories }: any) => {
             if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado: se requiere rol ADMIN o PROFESOR');
             if (!input.estudianteId) throw new Error('El estudianteId es requerido');
             if (!input.asignaturaId) throw new Error('El asignaturaId es requerido');
 
-            // Verificar que el periodo estÃ© abierto
+            // Verificar que el periodo esté abierto
             await verificarPeriodoAbierto(input.periodo);
 
             const cal = await repositories.calificacionRepository.create(input);
 
-            // NotificaciÃ³n email â€” best-effort, en background
+            // Notificación email — best-effort, en background
             (async () => {
                 try {
                     const estudiante = await repositories.estudianteRepository.findById(input.estudianteId);
@@ -1100,10 +1100,10 @@ export const resolvers = {
             return !!(await repositories.calificacionRepository.delete(id));
         },
 
-        // â”€â”€ Boletines â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Boletines ─────────────────────────────────────────
         generarBoletin: async (_: any, { input }: any, { repositories }: any) => {
             if (!input.estudianteId || !input.cursoId || !input.periodo || !Array.isArray(input.calificaciones))
-                throw new Error('Datos incompletos para generar boletín');
+                throw new Error('Datos incompletos para generar bolet�n');
             if (!input.calificaciones.length)
                 throw new Error('No se proporcionaron calificaciones');
 
@@ -1151,7 +1151,7 @@ export const resolvers = {
 
         actualizarBoletin: async (_: any, { id, input }: any, { repositories }: any) => {
             if (!input.estudianteId || !input.cursoId || !input.periodo || !Array.isArray(input.calificaciones))
-                throw new Error('Datos incompletos para actualizar boletín');
+                throw new Error('Datos incompletos para actualizar bolet�n');
             if (!input.calificaciones.length)
                 throw new Error('No se proporcionaron calificaciones');
 
@@ -1199,7 +1199,7 @@ export const resolvers = {
         eliminarBoletin: async (_: any, { id }: any, { repositories }: any) =>
             !!(await repositories.boletinRepository.delete(id)),
 
-        // â”€â”€ MatrÃ­culas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Matrículas ────────────────────────────────────────
         crearMatricula: async (_: any, { input }: any, { user, repositories }: any) => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
             if (!input.estudianteId || !input.cursoId)
@@ -1215,7 +1215,7 @@ export const resolvers = {
             const yaMatriculado = existentes.some(
                 (m: any) => m.cursoId === input.cursoId && m.estado === 'ACTIVA' && m.periodo === input.periodo,
             );
-            if (yaMatriculado) throw new Error(`El estudiante ya está matriculado en este curso para ${input.periodo}`);
+            if (yaMatriculado) throw new Error(`El estudiante ya est� matriculado en este curso para ${input.periodo}`);
 
             for (const asigId of input.asignaturas ?? []) {
                 const asig = await repositories.asignaturaRepository.findById(asigId);
@@ -1232,7 +1232,7 @@ export const resolvers = {
                 asignaturas: input.asignaturas ?? [],
             });
 
-            // Credenciales y confirmaciÃ³n â€” best-effort
+            // Credenciales y confirmación — best-effort
             (async () => {
                 try {
                     const yaExiste = await repositories.userRepository.findByUsername(estudiante.cedula);
@@ -1262,7 +1262,7 @@ export const resolvers = {
         eliminarMatricula: async (_: any, { id }: any, { repositories }: any) =>
             await repositories.matriculaRepository.delete(id),
 
-        // â”€â”€ Asignaturas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Asignaturas ───────────────────────────────────────
         crearAsignatura: async (_: any, { input }: any, { user, repositories }: any) => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
             const profesor = await repositories.profesorRepository.findById(input.profesorId);
@@ -1277,7 +1277,7 @@ export const resolvers = {
             });
         },
 
-        // â”€â”€ Nueva feature: crear la misma asignatura en varios cursos a la vez â”€â”€
+        // ── Nueva feature: crear la misma asignatura en varios cursos a la vez ──
         crearAsignaturaEnVariosCursos: async (
             _: any,
             { input }: { input: { nombre: string; profesorId: string; cursos: Array<{ cursoId: string; horario: string }> } },
@@ -1325,7 +1325,7 @@ export const resolvers = {
             return !!(await repositories.asignaturaRepository.delete(id));
         },
 
-        // â”€â”€ Asistencias â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Asistencias ───────────────────────────────────────
         registrarLista: async (_: any, { input }: any, { repositories }: any) => {
             const registros = input.estudiantes.map((est: any) => ({
                 estudianteId:  est.estudianteId,
@@ -1348,7 +1348,7 @@ export const resolvers = {
         eliminarAsistencia: async (_: any, { id }: any, { repositories }: any) =>
             await repositories.asistenciaRepository.delete(id),
 
-        // â”€â”€ Periodos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Periodos ─────────────────────────────────────────
         configurarPeriodo: async (_: any, { input }: any, { user }: any) => {
             if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
             const doc = await PeriodoConfigModel.findOneAndUpdate(
@@ -1384,13 +1384,13 @@ export const resolvers = {
             return { ...(doc as any), id: (doc as any)._id?.toString(), pesoPorCorte: 100 / (doc as any).numCortes };
         },
 
-        // â”€â”€ Comportamiento â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Comportamiento ───────────────────────────────────
         guardarComportamiento: async (_: any, { input }: any, { user, repositories }: any) => {
             if (!user) throw new Error('No autenticado');
             const profesor = await repositories.profesorRepository.findByCedula(user.username).catch(() => null);
             if (!profesor) throw new Error('Solo profesores pueden registrar comportamiento');
 
-            // Calcular nivel automÃ¡ticamente desde la nota si se proporciona
+            // Calcular nivel automáticamente desde la nota si se proporciona
             let nivel = input.nivel;
             if (input.nota !== undefined && input.nota !== null) {
                 const n = parseFloat(input.nota);
@@ -1408,7 +1408,7 @@ export const resolvers = {
             return { ...(doc as any), id: (doc as any)._id?.toString() };
         },
 
-        // â”€â”€ Cronograma â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Cronograma ───────────────────────────────────────
         crearEventoCronograma: async (_: any, { input }: any, { user }: any) => {
             if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
             const doc = await CronogramaModel.create({ ...input, creadoPor: user.username });
@@ -1440,9 +1440,9 @@ export const resolvers = {
         },
     },
 
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // ═══════════════════════════
     //  TYPE RESOLVERS
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // ═══════════════════════════
     User: {
         id: (user: any) => user._id ?? user.id,
     },
@@ -1579,6 +1579,7 @@ export const resolvers = {
             await repositories.cursoRepository.findById(boletin.cursoId),
     },
 };
+
 
 
 

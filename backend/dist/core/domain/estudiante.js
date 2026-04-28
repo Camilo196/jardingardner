@@ -1,13 +1,7 @@
-export class Estudiante {
-    cedula;
-    nombre;
-    primerApellido;
-    segundoApellido;
-    email;
-    telefono;
-    direccion;
-    acudiente;
-    empleado; // Para compatibilidad con los resolvers
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Estudiante = void 0;
+class Estudiante {
     constructor(cedula, nombre, primerApellido, segundoApellido, email = '', telefono = '', direccion = '', acudiente = '') {
         this.cedula = cedula;
         this.nombre = nombre;
@@ -42,4 +36,5 @@ export class Estudiante {
         };
     }
 }
+exports.Estudiante = Estudiante;
 //# sourceMappingURL=estudiante.js.map

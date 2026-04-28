@@ -1,13 +1,7 @@
-export class Empleado {
-    cedula;
-    nombre;
-    primerApellido;
-    segundoApellido;
-    email;
-    telefono;
-    direccion;
-    tipo;
-    id;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Empleado = void 0;
+class Empleado {
     constructor(cedula, nombre, primerApellido, segundoApellido, email, telefono = '', direccion = '', tipo) {
         this.cedula = cedula;
         this.nombre = nombre;
@@ -54,4 +48,5 @@ export class Empleado {
         };
     }
 }
+exports.Empleado = Empleado;
 //# sourceMappingURL=empleado.js.map

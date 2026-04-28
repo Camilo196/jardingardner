@@ -1,25 +1,31 @@
-import { UserModel } from '../../infrastructure/adapters/outputs/models/UserModel.js';
-import bcrypt from 'bcrypt';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.crearAdminSiNoExiste = crearAdminSiNoExiste;
+const UserModel_js_1 = require("../../infrastructure/adapters/outputs/models/UserModel.js");
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 /**
  * Crea el usuario administrador si no existe.
  * Las credenciales se leen desde las variables de entorno ADMIN_USERNAME y ADMIN_PASSWORD.
  * Se ejecuta una sola vez al arrancar el servidor.
  */
-export async function crearAdminSiNoExiste() {
+async function crearAdminSiNoExiste() {
     try {
         const adminUsername = process.env.ADMIN_USERNAME || 'admin';
         const adminPassword = process.env.ADMIN_PASSWORD || 'Admin1234!';
         const adminEmail = process.env.ADMIN_EMAIL || 'admin@learnscape.edu.co';
         // Verificar si ya existe un admin (acepta tanto 'admin' como 'ADMIN' por compatibilidad)
-        const adminExistente = await UserModel.findOne({ role: { $in: ['admin', 'ADMIN'] } });
+        const adminExistente = await UserModel_js_1.UserModel.findOne({ role: { $in: ['admin', 'ADMIN'] } });
         if (adminExistente) {
             console.log(`✅ Administrador ya existe: ${adminExistente.username}`);
             return;
         }
         // Crear el admin
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(adminPassword, salt);
-        await UserModel.create({
+        const salt = await bcryptjs_1.default.genSalt(10);
+        const hashedPassword = await bcryptjs_1.default.hash(adminPassword, salt);
+        await UserModel_js_1.UserModel.create({
             username: adminUsername,
             password: hashedPassword,
             role: 'ADMIN',

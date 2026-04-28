@@ -1,6 +1,12 @@
-import { User } from '../../../core/domain/user';
-import { UserModel } from './models/UserModel';
-import bcrypt from 'bcrypt';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.UserRepositoryImpl = void 0;
+const user_1 = require("../../../core/domain/user");
+const UserModel_1 = require("./models/UserModel");
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 // Normalizar roles a mayúsculas para consistencia en la DB
 const ROLE_ALIASES = {
     admin: 'ADMIN', administrator: 'ADMIN', ADMINISTRATOR: 'ADMIN',
@@ -10,10 +16,9 @@ const ROLE_ALIASES = {
 function normalizarRol(rol) {
     return ROLE_ALIASES[rol] ?? rol.toUpperCase();
 }
-export class UserRepositoryImpl {
-    userModel;
+class UserRepositoryImpl {
     constructor() {
-        this.userModel = UserModel;
+        this.userModel = UserModel_1.UserModel;
     }
     async findByUsername(username) {
         console.log(`Buscando usuario con username: ${username}`);
@@ -28,7 +33,7 @@ export class UserRepositoryImpl {
             console.log(`Usuario encontrado: ${user ? 'Sí' : 'No'}`);
             if (!user)
                 return null;
-            return new User(user.id, user.username, user.password, user.role, user.email, user.isFirstLogin);
+            return new user_1.User(user.id, user.username, user.password, user.role, user.email, user.isFirstLogin);
         }
         catch (error) {
             console.error('Error al buscar usuario por username:', error);
@@ -77,8 +82,8 @@ export class UserRepositoryImpl {
             if (existingUser) {
                 console.log(`El usuario ${userData.username} ya existe, actualizando contraseña`);
                 // Si existe, actualizar la contraseña
-                const salt = await bcrypt.genSalt(10);
-                const hashedPassword = await bcrypt.hash(userData.password, salt);
+                const salt = await bcryptjs_1.default.genSalt(10);
+                const hashedPassword = await bcryptjs_1.default.hash(userData.password, salt);
                 existingUser.password = hashedPassword;
                 // Actualizar email si se proporciona y no existe
                 if (userData.email && !existingUser.email) {
@@ -92,8 +97,8 @@ export class UserRepositoryImpl {
                 return this.mapToEntity(updatedUser);
             }
             // Si no existe, crear nuevo usuario
-            const salt = await bcrypt.genSalt(10);
-            const hashedPassword = await bcrypt.hash(userData.password, salt);
+            const salt = await bcryptjs_1.default.genSalt(10);
+            const hashedPassword = await bcryptjs_1.default.hash(userData.password, salt);
             const newUser = new this.userModel({
                 username: userData.username,
                 password: hashedPassword,
@@ -124,8 +129,8 @@ export class UserRepositoryImpl {
                 console.error(`Usuario con identificador ${identifier} no encontrado para reset de contraseña`);
                 return false;
             }
-            const salt = await bcrypt.genSalt(10);
-            const hashedPassword = await bcrypt.hash(newPassword, salt);
+            const salt = await bcryptjs_1.default.genSalt(10);
+            const hashedPassword = await bcryptjs_1.default.hash(newPassword, salt);
             user.password = hashedPassword;
             user.isFirstLogin = true; // Marcar como primer inicio cuando se restablece la contraseña
             await user.save();
@@ -158,7 +163,8 @@ export class UserRepositoryImpl {
         }
     }
     mapToEntity(doc) {
-        return new User(doc._id.toString(), doc.username, doc.password, doc.role, doc.email, doc.isFirstLogin);
+        return new user_1.User(doc._id.toString(), doc.username, doc.password, doc.role, doc.email, doc.isFirstLogin);
     }
 }
+exports.UserRepositoryImpl = UserRepositoryImpl;
 //# sourceMappingURL=userRepositoryImpl.js.map

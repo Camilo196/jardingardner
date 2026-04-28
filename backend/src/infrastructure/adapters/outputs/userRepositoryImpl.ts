@@ -2,7 +2,7 @@ import { UserRepository } from '../../../core/ports/UserRepository';
 import { User } from '../../../core/domain/user';
 import { UserModel } from './models/UserModel';
 import { Document } from 'mongoose';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 // Normalizar roles a mayúsculas para consistencia en la DB
 const ROLE_ALIASES: Record<string, string> = {

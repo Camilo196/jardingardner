@@ -1,6 +1,6 @@
 import { UserRepository } from '../ports/UserRepository';
 import { User } from '../domain/user';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 

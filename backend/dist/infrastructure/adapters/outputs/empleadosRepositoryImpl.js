@@ -1,9 +1,15 @@
-import mongoose from 'mongoose';
-import { EmpleadoModel } from './models/EmpleadoModel';
-export class EmpleadoRepositoryImpl {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EmpleadoRepositoryImpl = void 0;
+const mongoose_1 = __importDefault(require("mongoose"));
+const EmpleadoModel_1 = require("./models/EmpleadoModel");
+class EmpleadoRepositoryImpl {
     async findByCedula(cedula) {
         try {
-            return await EmpleadoModel.findOne({ cedula });
+            return await EmpleadoModel_1.EmpleadoModel.findOne({ cedula });
         }
         catch (error) {
             console.error('Error en findByCedula:', error);
@@ -12,7 +18,7 @@ export class EmpleadoRepositoryImpl {
     }
     async findByEmail(email) {
         try {
-            return await EmpleadoModel.findOne({ email });
+            return await EmpleadoModel_1.EmpleadoModel.findOne({ email });
         }
         catch (error) {
             console.error('Error en findByEmail:', error);
@@ -20,7 +26,7 @@ export class EmpleadoRepositoryImpl {
         }
     }
     async create(empleado) {
-        const session = await mongoose.startSession();
+        const session = await mongoose_1.default.startSession();
         session.startTransaction();
         try {
             // Verificar si ya existe
@@ -34,7 +40,7 @@ export class EmpleadoRepositoryImpl {
                 throw new Error(`Ya existe un empleado con el email ${empleado.email}`);
             }
             // Crear el empleado
-            const nuevoEmpleado = new EmpleadoModel({
+            const nuevoEmpleado = new EmpleadoModel_1.EmpleadoModel({
                 _id: empleado.cedula,
                 ...empleado
             });
@@ -52,10 +58,10 @@ export class EmpleadoRepositoryImpl {
         }
     }
     async update(id, empleadoData) {
-        const session = await mongoose.startSession();
+        const session = await mongoose_1.default.startSession();
         session.startTransaction();
         try {
-            const updatedEmpleado = await EmpleadoModel.findByIdAndUpdate(id, { $set: empleadoData }, { new: true, session });
+            const updatedEmpleado = await EmpleadoModel_1.EmpleadoModel.findByIdAndUpdate(id, { $set: empleadoData }, { new: true, session });
             if (!updatedEmpleado) {
                 throw new Error('No se encontró el empleado a actualizar');
             }
@@ -72,10 +78,10 @@ export class EmpleadoRepositoryImpl {
         }
     }
     async delete(id) {
-        const session = await mongoose.startSession();
+        const session = await mongoose_1.default.startSession();
         session.startTransaction();
         try {
-            const result = await EmpleadoModel.findByIdAndDelete(id, { session });
+            const result = await EmpleadoModel_1.EmpleadoModel.findByIdAndDelete(id, { session });
             if (!result) {
                 throw new Error('No se encontró el empleado a eliminar');
             }
@@ -93,7 +99,7 @@ export class EmpleadoRepositoryImpl {
     }
     async findAll() {
         try {
-            return await EmpleadoModel.find().lean().exec();
+            return await EmpleadoModel_1.EmpleadoModel.find().lean().exec();
         }
         catch (error) {
             console.error('Error en findAll:', error);
@@ -101,4 +107,5 @@ export class EmpleadoRepositoryImpl {
         }
     }
 }
+exports.EmpleadoRepositoryImpl = EmpleadoRepositoryImpl;
 //# sourceMappingURL=empleadosRepositoryImpl.js.map

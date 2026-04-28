@@ -1,10 +1,15 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
-export class AuthService {
-    JWT_SECRET = process.env.JWT_SECRET;
-    userRepository;
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AuthService = void 0;
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const crypto_1 = __importDefault(require("crypto"));
+class AuthService {
     constructor(userRepository) {
+        this.JWT_SECRET = process.env.JWT_SECRET;
         if (!userRepository) {
             throw new Error("AuthService requiere un userRepository válido");
         }
@@ -12,7 +17,7 @@ export class AuthService {
     }
     generateRandomPassword(length = 8) {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        const bytes = crypto.randomBytes(length);
+        const bytes = crypto_1.default.randomBytes(length);
         return Array.from(bytes)
             .map(byte => characters[byte % characters.length])
             .join('');
@@ -34,7 +39,7 @@ export class AuthService {
                 role
             });
             // Generar token JWT
-            const token = jwt.sign({
+            const token = jsonwebtoken_1.default.sign({
                 id: user.id,
                 username: user.username,
                 role: user.role
@@ -57,12 +62,12 @@ export class AuthService {
                 throw new Error('Usuario no encontrado');
             }
             // Verificar contraseña
-            const validPassword = await bcrypt.compare(password, user.password);
+            const validPassword = await bcryptjs_1.default.compare(password, user.password);
             if (!validPassword) {
                 throw new Error('Contraseña incorrecta');
             }
             // Generar token JWT
-            const token = jwt.sign({
+            const token = jsonwebtoken_1.default.sign({
                 id: user.id,
                 username: user.username,
                 role: user.role
@@ -91,14 +96,14 @@ export class AuthService {
                 throw new Error('Usuario no encontrado');
             }
             // Verificar contraseña
-            const isPasswordValid = await bcrypt.compare(password, user.password);
+            const isPasswordValid = await bcryptjs_1.default.compare(password, user.password);
             if (!isPasswordValid) {
                 console.error(`❌ Contraseña incorrecta para ${identifier}`);
                 throw new Error('Contraseña incorrecta');
             }
             console.log(`✅ Autenticación exitosa para ${identifier}`);
             // Crear token JWT
-            const token = jwt.sign({
+            const token = jsonwebtoken_1.default.sign({
                 id: user.id,
                 username: user.username,
                 role: user.role,
@@ -145,8 +150,7 @@ export class AuthService {
                 await this.userRepository.create({
                     username: userId,
                     password: password,
-                    role: role, // Usar el rol proporcionado en lugar de hardcodear ESTUDIANTE
-                    email: userId // Usar la cédula como email temporalmente si no tienes otro
+                    role: role,
                 });
             }
             console.log(`Credenciales generadas exitosamente para ${role.toLowerCase()} ${userId}`);
@@ -180,11 +184,12 @@ export class AuthService {
      */
     verifyToken(token) {
         try {
-            return jwt.verify(token, this.JWT_SECRET);
+            return jsonwebtoken_1.default.verify(token, this.JWT_SECRET);
         }
         catch (error) {
             throw new Error('Token inválido');
         }
     }
 }
+exports.AuthService = AuthService;
 //# sourceMappingURL=AuthService.js.map
