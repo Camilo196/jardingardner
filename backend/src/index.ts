@@ -22,9 +22,6 @@ import { verificarConexionEmail } from './core/services/Emailservice';
 import { AsistenciaRepositoryImpl } from './infrastructure/adapters/outputs/asistenciaRepositoryImpl';
 import { connectMongo } from './infrastructure/config/mongo';
 
-const __filename = module.filename;
-const __dirname = path.dirname(__filename);
-
 dotenv.config();
 
 // Configuración de MongoDB Atlas
