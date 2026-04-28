@@ -20,7 +20,7 @@ import {
     enviarConfirmacionMatricula,
     notificarNuevaCalificacion,
 } from '../../../core/services/Emailservice.js';
-import { Asignatura } from '@core/domain/asignatura.js';
+import { Asignatura } from '../../../core/domain/asignatura.js';
 import { pdfService } from '../../../core/services/pdfService.js';
 
 // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
