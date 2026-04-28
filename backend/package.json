@@ -1,4 +1,5 @@
 {
+  "type": "commonjs",
   "dependencies": {
     "@emailjs/nodejs": "^5.0.2",
     "@graphql-tools/schema": "^10.0.2",
@@ -34,11 +35,12 @@
   },
   "main": "dist/index.js",
   "scripts": {
-    "dev:raw": "nodemon --experimental-specifier-resolution=node --exec node --loader ts-node/esm src/index.ts",
-    "start": "node --experimental-specifier-resolution=node --loader ts-node/esm src/index.ts",
+    "dev:raw": "nodemon --exec node -r ts-node/register src/index.ts",
+    "start": "npm run build && node dist/index.js",
     "dev": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev-clean.ps1",
     "build": "tsc",
+    "postbuild": "node scripts/copy-graphql.js",
     "serve": "node dist/index.js",
-    "test-db": "node --loader ts-node/esm src/testDatabaseConnection.ts"
+    "test-db": "node -r ts-node/register src/testDatabaseConnection.ts"
   }
 }
