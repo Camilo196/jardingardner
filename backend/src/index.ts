@@ -4,8 +4,6 @@ import express from 'express';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { readFileSync } from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
@@ -22,10 +20,10 @@ import { UserModel } from './infrastructure/adapters/outputs/models/UserModel';
 import { crearAdminSiNoExiste } from './core/services/adminSetup';
 import { verificarConexionEmail } from './core/services/Emailservice';
 import { AsistenciaRepositoryImpl } from './infrastructure/adapters/outputs/asistenciaRepositoryImpl';
-import { connectMongo } from './infrastructure/config/mongo.js';
+import { connectMongo } from './infrastructure/config/mongo';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __filename = module.filename;
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -44,35 +42,23 @@ if (!process.env.JWT_SECRET) {
   throw new Error('FATAL: JWT_SECRET no está definido en .env — el servidor no puede arrancar sin una clave segura');
 }
 
-// Conexión a MongoDB Atlas
-let db;
-try {
-  await connectMongo();
-  console.log('✅ Conectado a MongoDB Atlas');
-  db = mongoose.connection;
-} catch (err) {
-  console.error('❌ Error conectando a MongoDB Atlas:', err);
-  process.exit(1);
-}
-
-// Crear admin si no existe (no detiene el servidor si falla)
-await crearAdminSiNoExiste();
-
-// Verificar servicio de correo (no detiene el servidor si falla)
-await verificarConexionEmail();
+let repositories: any;
+let db: any;
 
 // Inicializar repositorios
-export const repositories = {
-  estudianteRepository: new EstudianteRepositoryImpl(),
-  profesorRepository: new ProfesorRepositoryImpl(),
-  cursoRepository: new CursoRepositoryImpl(),
-  calificacionRepository: new CalificacionRepositoryImpl(),
-  boletinRepository: new BoletinRepositoryImpl(),
-  matriculaRepository: new MatriculaRepositoryImpl(),
-  empleadoRepository: new EmpleadoRepositoryImpl(),    
-  asignaturaRepository: new AsignaturaRepositoryImpl(),
-  userRepository: new UserRepositoryImpl(), // Agregamos el userRepository
-  asistenciaRepository: new AsistenciaRepositoryImpl(),
+const initializeRepositories = () => {
+  repositories = {
+    estudianteRepository: new EstudianteRepositoryImpl(),
+    profesorRepository: new ProfesorRepositoryImpl(),
+    cursoRepository: new CursoRepositoryImpl(),
+    calificacionRepository: new CalificacionRepositoryImpl(),
+    boletinRepository: new BoletinRepositoryImpl(),
+    matriculaRepository: new MatriculaRepositoryImpl(),
+    empleadoRepository: new EmpleadoRepositoryImpl(),    
+    asignaturaRepository: new AsignaturaRepositoryImpl(),
+    userRepository: new UserRepositoryImpl(),
+    asistenciaRepository: new AsistenciaRepositoryImpl(),
+  };
 };
 
 // Configuración de Apollo Server
@@ -173,6 +159,20 @@ app.use('/graphql', (req, res, next) => {
 // Iniciar servidor
 const startServer = async () => {
   try {
+    // Conexión a MongoDB Atlas
+    await connectMongo();
+    console.log('✅ Conectado a MongoDB Atlas');
+    db = mongoose.connection;
+
+    // Crear admin si no existe (no detiene el servidor si falla)
+    await crearAdminSiNoExiste();
+
+    // Verificar servicio de correo (no detiene el servidor si falla)
+    await verificarConexionEmail();
+
+    // Inicializar repositorios
+    initializeRepositories();
+
     await server.start();
     server.applyMiddleware({ app });
     const PORT = process.env.PORT || 4000;
