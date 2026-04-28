@@ -15,13 +15,19 @@ export class Empleado {
     }
 
     public validate(): boolean {
-        if (!this.cedula || !this.nombre || !this.primerApellido || !this.email || !this.tipo) {
+        if (!this.cedula || !this.nombre || !this.primerApellido || !this.tipo) {
             return false;
         }
-        
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(this.email)) {
+
+        if (this.tipo === 'profesor' && !this.email) {
             return false;
+        }
+
+        if (this.email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(this.email)) {
+                return false;
+            }
         }
 
         if (this.tipo !== 'estudiante' && this.tipo !== 'profesor') {

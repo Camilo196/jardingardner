@@ -4,9 +4,12 @@ export interface BoletinDocument extends Document {
     cursoId: string;
     calificaciones: {
         id: string;
+        estudianteId: string;
+        asignaturaId: string;
         nota: number;
         periodo: string;
         fecha: string;
+        observaciones?: string;
     }[];
     promedio: number;
     periodo: string;

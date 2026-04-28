@@ -8,50 +8,44 @@ export class EstudianteRepositoryImpl {
         session.startTransaction();
         try {
             console.log("Datos recibidos en create estudiante:", JSON.stringify(estudianteData, null, 2));
-            // Validar y normalizar la cédula
-            let cedula = estudianteData.cedula;
-            if (!cedula) {
+            if (!estudianteData.cedula) {
                 throw new Error('La cédula es obligatoria');
             }
-            // Convertir la cédula a string si es un objeto
-            if (typeof cedula === 'object') {
-                if (cedula.buffer) {
-                    cedula = cedula.buffer.toString('hex');
-                }
-                else if (cedula.toString) {
-                    cedula = cedula.toString();
-                }
-            }
-            cedula = String(cedula).trim();
-            if (!cedula) {
-                throw new Error('La cédula es obligatoria');
-            }
-            // Verificar si ya existe un estudiante con esta cédula
-            const estudianteExistente = await EstudianteModel.findOne({ cedula }).session(session);
+            const estudianteExistente = await EstudianteModel.findOne({
+                cedula: estudianteData.cedula
+            }).session(session);
             if (estudianteExistente) {
-                throw new Error(`Ya existe un estudiante con la cédula ${cedula}`);
+                throw new Error(`Ya existe un estudiante con la cédula ${estudianteData.cedula}`);
             }
-            // Crear empleado relacionado
-            const empleado = new EmpleadoModel({
-                cedula,
+            const empleadoPayload = {
+                _id: estudianteData.cedula,
+                cedula: estudianteData.cedula,
                 nombre: estudianteData.nombre,
                 primerApellido: estudianteData.primerApellido,
-                segundoApellido: estudianteData.segundoApellido,
-                email: estudianteData.email,
+                segundoApellido: estudianteData.segundoApellido || '',
                 telefono: estudianteData.telefono || '',
                 direccion: estudianteData.direccion || '',
                 tipo: 'estudiante'
-            });
+            };
+            if (estudianteData.email) {
+                empleadoPayload.email = estudianteData.email;
+            }
+            const empleado = new EmpleadoModel(empleadoPayload);
+            console.log("Creando empleado con ID:", empleado._id);
             const savedEmpleado = await empleado.save({ session });
-            // Crear estudiante
+            console.log("Empleado creado con ID:", savedEmpleado._id);
             const nuevoEstudiante = new EstudianteModel({
-                cedula,
+                _id: estudianteData.cedula,
+                cedula: estudianteData.cedula,
                 empleadoId: savedEmpleado._id,
                 acudiente: estudianteData.acudiente || ''
             });
+            console.log("Creando estudiante con ID:", nuevoEstudiante._id);
+            console.log("Relacionado con empleadoId:", savedEmpleado._id);
             const savedEstudiante = await nuevoEstudiante.save({ session });
             await session.commitTransaction();
-            return new Estudiante(cedula, estudianteData.nombre, estudianteData.primerApellido, estudianteData.segundoApellido, estudianteData.email, estudianteData.telefono || '', estudianteData.direccion || '', estudianteData.acudiente || '');
+            console.log("Estudiante creado con éxito. ID:", savedEstudiante._id);
+            return new Estudiante(estudianteData.cedula, estudianteData.nombre, estudianteData.primerApellido, estudianteData.segundoApellido || '', estudianteData.email || '', estudianteData.telefono || '', estudianteData.direccion || '', estudianteData.acudiente || '');
         }
         catch (error) {
             await session.abortTransaction();
@@ -74,7 +68,7 @@ export class EstudianteRepositoryImpl {
                     console.error('Empleado no encontrado para estudiante:', doc);
                     return null;
                 }
-                return new Estudiante(doc.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido, empleado.email, empleado.telefono || '', empleado.direccion || '', doc.acudiente || '');
+                return new Estudiante(doc.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido || '', empleado.email || '', empleado.telefono || '', empleado.direccion || '', doc.acudiente || '');
             }).filter(Boolean);
         }
         catch (error) {
@@ -85,7 +79,6 @@ export class EstudianteRepositoryImpl {
     async findById(id) {
         try {
             console.log("Buscando estudiante con ID:", id);
-            // Convertir a string si es un ObjectId
             let idStr = id;
             if (typeof id === 'object' && id !== null) {
                 if (id.toString) {
@@ -95,13 +88,11 @@ export class EstudianteRepositoryImpl {
                     idStr = id.buffer.toString('hex');
                 }
             }
-            // Primero intentar buscar por _id (MongoDB ObjectId)
             let estudiante = null;
             if (mongoose.Types.ObjectId.isValid(idStr)) {
                 console.log("Buscando por ObjectId:", idStr);
                 estudiante = await EstudianteModel.findById(idStr).populate('empleadoId');
             }
-            // Si no se encuentra, intentar buscar por cédula
             if (!estudiante) {
                 console.log("No se encontró por ObjectId, intentando por cédula:", idStr);
                 estudiante = await EstudianteModel.findOne({ cedula: idStr }).populate('empleadoId');
@@ -115,41 +106,68 @@ export class EstudianteRepositoryImpl {
                 console.log("No se encontró el empleado asociado al estudiante");
                 return null;
             }
-            return new Estudiante(estudiante.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido, empleado.email, empleado.telefono || '', empleado.direccion || '', estudiante.acudiente || '');
+            return new Estudiante(estudiante.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido || '', empleado.email || '', empleado.telefono || '', empleado.direccion || '', estudiante.acudiente || '');
         }
         catch (error) {
             console.error("Error en findById de estudiante:", error);
             return null;
         }
     }
-    // En estudianteRepositoryImpl.ts
-    async findByCedula(cedula) {
+    async findByIds(ids) {
         try {
-            console.log("Buscando estudiante por cédula:", cedula);
-            // Si tenemos un objeto (posiblemente un ObjectId), intentar convertir a string
-            if (typeof cedula === 'object' && cedula !== null) {
-                if (cedula.toString) {
-                    cedula = cedula.toString();
-                }
-                else if (cedula.buffer) {
-                    cedula = cedula.buffer.toString('hex');
-                }
-                console.log("Cédula convertida a string:", cedula);
-            }
-            const estudiante = await EstudianteModel.findOne({ cedula }).populate('empleadoId');
-            if (!estudiante) {
-                console.log("No se encontró estudiante con cédula:", cedula);
-                return null;
-            }
-            const empleado = estudiante.empleadoId;
-            if (!empleado) {
-                console.log("No se encontró el empleado asociado al estudiante con cédula:", cedula);
-                return null;
-            }
-            return new Estudiante(estudiante.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido, empleado.email, empleado.telefono || '', empleado.direccion || '', estudiante.acudiente || '');
+            console.log(`Buscando estudiantes con IDs: ${ids}`);
+            const estudiantes = await EstudianteModel.find({
+                $or: [{ cedula: { $in: ids } }, { _id: { $in: ids } }]
+            }).populate('empleadoId').lean();
+            return estudiantes.map((doc) => {
+                const emp = doc.empleadoId;
+                return {
+                    id: doc.cedula,
+                    cedula: doc.cedula,
+                    nombre: emp?.nombre ?? '',
+                    primerApellido: emp?.primerApellido ?? '',
+                    segundoApellido: emp?.segundoApellido ?? '',
+                    email: emp?.email ?? '',
+                    telefono: emp?.telefono ?? '',
+                    direccion: emp?.direccion ?? '',
+                    acudiente: doc.acudiente ?? '',
+                };
+            });
         }
         catch (error) {
-            console.error("Error en findByCedula de estudiante:", error);
+            console.error('Error en findByIds:', error);
+            throw new Error('Error al buscar estudiantes por IDs');
+        }
+    }
+    async findByCedula(cedula) {
+        try {
+            if (typeof cedula === 'object' && cedula !== null) {
+                cedula = cedula.toString ? cedula.toString() : cedula.buffer?.toString('hex') ?? String(cedula);
+            }
+            const estudiante = await EstudianteModel.findOne({ cedula }).populate('empleadoId');
+            if (!estudiante)
+                return null;
+            const empleado = estudiante.empleadoId;
+            if (!empleado)
+                return null;
+            return new Estudiante(estudiante.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido || '', empleado.email || '', empleado.telefono || '', empleado.direccion || '', estudiante.acudiente || '');
+        }
+        catch (error) {
+            return null;
+        }
+    }
+    async findByEmail(email) {
+        try {
+            const Empleado = mongoose.model('Empleado');
+            const empleado = await Empleado.findOne({ email }).lean();
+            if (!empleado)
+                return null;
+            const estudiante = await EstudianteModel.findOne({ empleadoId: empleado._id }).populate('empleadoId');
+            if (!estudiante)
+                return null;
+            return new Estudiante(estudiante.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido || '', empleado.email || '', empleado.telefono || '', empleado.direccion || '', estudiante.acudiente || '');
+        }
+        catch {
             return null;
         }
     }
@@ -157,7 +175,6 @@ export class EstudianteRepositoryImpl {
         const session = await mongoose.startSession();
         session.startTransaction();
         try {
-            // Actualizar el empleado relacionado
             const estudiante = await EstudianteModel.findOne({ cedula: id }).session(session);
             if (!estudiante) {
                 throw new Error(`No se encontró un estudiante con la cédula ${id}`);
@@ -166,27 +183,27 @@ export class EstudianteRepositoryImpl {
             if (!empleado) {
                 throw new Error(`No se encontró un empleado relacionado con el estudiante de cédula ${id}`);
             }
-            // Actualizar los datos del empleado
             if (estudianteData.nombre)
                 empleado.nombre = estudianteData.nombre;
             if (estudianteData.primerApellido)
                 empleado.primerApellido = estudianteData.primerApellido;
-            if (estudianteData.segundoApellido)
+            if (estudianteData.segundoApellido !== undefined)
                 empleado.segundoApellido = estudianteData.segundoApellido;
-            if (estudianteData.email)
-                empleado.email = estudianteData.email;
-            if (estudianteData.telefono)
+            if (estudianteData.telefono !== undefined)
                 empleado.telefono = estudianteData.telefono;
-            if (estudianteData.direccion)
+            if (estudianteData.direccion !== undefined)
                 empleado.direccion = estudianteData.direccion;
-            // Actualizar acudiente si se proporciona
+            if ('email' in estudianteData) {
+                const nuevoEmail = String(estudianteData.email || '').trim();
+                empleado.email = (nuevoEmail || undefined);
+            }
             if (estudianteData.acudiente !== undefined) {
                 estudiante.acudiente = estudianteData.acudiente;
                 await estudiante.save({ session });
             }
             await empleado.save({ session });
             await session.commitTransaction();
-            return new Estudiante(estudiante.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido, empleado.email, empleado.telefono || '', empleado.direccion || '', estudiante.acudiente || '');
+            return new Estudiante(estudiante.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido || '', empleado.email || '', empleado.telefono || '', empleado.direccion || '', estudiante.acudiente || '');
         }
         catch (error) {
             await session.abortTransaction();
@@ -201,12 +218,10 @@ export class EstudianteRepositoryImpl {
         const session = await mongoose.startSession();
         session.startTransaction();
         try {
-            // Encontrar el estudiante para obtener el empleadoId
             const estudiante = await EstudianteModel.findOne({ cedula: id }).session(session);
             if (!estudiante) {
                 throw new Error('Estudiante no encontrado');
             }
-            // Eliminar estudiante y su empleado asociado
             await Promise.all([
                 EstudianteModel.findOneAndDelete({ cedula: id }, { session }),
                 EmpleadoModel.findByIdAndDelete(estudiante.empleadoId, { session })

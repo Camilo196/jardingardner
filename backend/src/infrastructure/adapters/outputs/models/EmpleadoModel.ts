@@ -27,9 +27,9 @@ const empleadoSchema = new Schema({
   },
   email: {
     type: String,
-    required: true,
     trim: true,
-    unique: true
+    unique: true,
+    sparse: true
   },
   telefono: {
     type: String,

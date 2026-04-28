@@ -8,7 +8,7 @@ export declare class Estudiante {
     direccion: string;
     acudiente: string;
     empleado?: any;
-    constructor(cedula: string, nombre: string, primerApellido: string, segundoApellido: string, email: string, telefono?: string, direccion?: string, acudiente?: string);
+    constructor(cedula: string, nombre: string, primerApellido: string, segundoApellido: string, email?: string, telefono?: string, direccion?: string, acudiente?: string);
     get id(): string;
     toEstudianteData(): {
         cedula: string;

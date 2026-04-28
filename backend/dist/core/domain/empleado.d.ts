@@ -20,6 +20,6 @@ export declare class Empleado {
         email: string;
         telefono: string;
         direccion: string;
-        tipo: "estudiante" | "profesor";
+        tipo: "profesor" | "estudiante";
     };
 }

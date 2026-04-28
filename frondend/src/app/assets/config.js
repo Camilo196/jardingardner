@@ -1,11 +1,14 @@
 /**
- * LEARNSCAPE — Configuración centralizada
+ * LEARNSCAPE - Configuracion centralizada
  *
- * Para desplegar en producción, cambia API_URL por la URL real del servidor.
- * Ejemplo: window.LEARNSCAPE_API = 'https://learnscape.tu-colegio.com/graphql';
- *
- * También puedes sobreescribir el nombre de la institución aquí:
- * window.LEARNSCAPE_INSTITUCION = 'Colegio San José';
+ * Para produccion, cambia LEARNSCAPE_API por la URL real del backend.
+ * Ejemplo:
+ * window.LEARNSCAPE_API = 'https://api.tu-dominio.com/graphql';
  */
+
 window.LEARNSCAPE_API = window.LEARNSCAPE_API || 'http://localhost:4000/graphql';
-window.LEARNSCAPE_INSTITUCION = window.LEARNSCAPE_INSTITUCION || 'Jardín Infantil Gardner';
+window.LEARNSCAPE_INSTITUCION = window.LEARNSCAPE_INSTITUCION || 'Jardin Infantil Gardner';
+window.LEARNSCAPE_HOME = window.LEARNSCAPE_HOME || 'principal.html';
+window.LEARNSCAPE_GO_HOME = window.LEARNSCAPE_GO_HOME || function () {
+  window.location.href = window.LEARNSCAPE_HOME;
+};

@@ -4,12 +4,12 @@ export declare const EmpleadoModel: mongoose.Model<{
     updatedAt: NativeDate;
 } & {
     _id: any;
-    email: string;
     cedula: string;
     nombre: string;
     primerApellido: string;
-    tipo: "profesor" | "administrativo" | "otro";
+    tipo: "profesor" | "administrativo" | "estudiante" | "otro";
     segundoApellido?: string | null | undefined;
+    email?: string | null | undefined;
     telefono?: string | null | undefined;
     direccion?: string | null | undefined;
 }, {}, {}, {}, mongoose.Document<unknown, {}, {
@@ -17,12 +17,12 @@ export declare const EmpleadoModel: mongoose.Model<{
     updatedAt: NativeDate;
 } & {
     _id: any;
-    email: string;
     cedula: string;
     nombre: string;
     primerApellido: string;
-    tipo: "profesor" | "administrativo" | "otro";
+    tipo: "profesor" | "administrativo" | "estudiante" | "otro";
     segundoApellido?: string | null | undefined;
+    email?: string | null | undefined;
     telefono?: string | null | undefined;
     direccion?: string | null | undefined;
 }> & {
@@ -30,12 +30,12 @@ export declare const EmpleadoModel: mongoose.Model<{
     updatedAt: NativeDate;
 } & {
     _id: any;
-    email: string;
     cedula: string;
     nombre: string;
     primerApellido: string;
-    tipo: "profesor" | "administrativo" | "otro";
+    tipo: "profesor" | "administrativo" | "estudiante" | "otro";
     segundoApellido?: string | null | undefined;
+    email?: string | null | undefined;
     telefono?: string | null | undefined;
     direccion?: string | null | undefined;
 } & {
@@ -50,12 +50,12 @@ export declare const EmpleadoModel: mongoose.Model<{
     updatedAt: NativeDate;
 } & {
     _id: any;
-    email: string;
     cedula: string;
     nombre: string;
     primerApellido: string;
-    tipo: "profesor" | "administrativo" | "otro";
+    tipo: "profesor" | "administrativo" | "estudiante" | "otro";
     segundoApellido?: string | null | undefined;
+    email?: string | null | undefined;
     telefono?: string | null | undefined;
     direccion?: string | null | undefined;
 }, mongoose.Document<unknown, {}, mongoose.FlatRecord<{
@@ -63,12 +63,12 @@ export declare const EmpleadoModel: mongoose.Model<{
     updatedAt: NativeDate;
 } & {
     _id: any;
-    email: string;
     cedula: string;
     nombre: string;
     primerApellido: string;
-    tipo: "profesor" | "administrativo" | "otro";
+    tipo: "profesor" | "administrativo" | "estudiante" | "otro";
     segundoApellido?: string | null | undefined;
+    email?: string | null | undefined;
     telefono?: string | null | undefined;
     direccion?: string | null | undefined;
 }>> & mongoose.FlatRecord<{
@@ -76,12 +76,12 @@ export declare const EmpleadoModel: mongoose.Model<{
     updatedAt: NativeDate;
 } & {
     _id: any;
-    email: string;
     cedula: string;
     nombre: string;
     primerApellido: string;
-    tipo: "profesor" | "administrativo" | "otro";
+    tipo: "profesor" | "administrativo" | "estudiante" | "otro";
     segundoApellido?: string | null | undefined;
+    email?: string | null | undefined;
     telefono?: string | null | undefined;
     direccion?: string | null | undefined;
 }> & {

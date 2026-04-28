@@ -6,7 +6,7 @@ export class Estudiante {
         public nombre: string,
         public primerApellido: string,
         public segundoApellido: string,
-        public email: string,
+        public email: string = '',
         public telefono: string = '',
         public direccion: string = '',
         public acudiente: string = ''

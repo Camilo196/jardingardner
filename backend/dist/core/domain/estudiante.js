@@ -8,7 +8,7 @@ export class Estudiante {
     direccion;
     acudiente;
     empleado; // Para compatibilidad con los resolvers
-    constructor(cedula, nombre, primerApellido, segundoApellido, email, telefono = '', direccion = '', acudiente = '') {
+    constructor(cedula, nombre, primerApellido, segundoApellido, email = '', telefono = '', direccion = '', acudiente = '') {
         this.cedula = cedula;
         this.nombre = nombre;
         this.primerApellido = primerApellido;

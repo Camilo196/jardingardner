@@ -9,17 +9,18 @@ export class ProfesorRepositoryImpl {
         try {
             console.log("Datos recibidos en create profesor:", profesorData);
             if (!profesorData.cedula) {
-                throw new Error('La cédula es obligatoria');
+                throw new Error('La cÃ©dula es obligatoria');
             }
-            // Verificar si ya existe un profesor con esta cédula
+            // Verificar si ya existe un profesor con esta cÃ©dula
             const profesorExistente = await ProfesorModel.findOne({
                 cedula: profesorData.cedula
             }).session(session);
             if (profesorExistente) {
-                throw new Error(`Ya existe un profesor con la cédula ${profesorData.cedula}`);
+                throw new Error(`Ya existe un profesor con la cÃ©dula ${profesorData.cedula}`);
             }
-            // Crear empleado relacionado con enfoque seguro para _id
-            const empleadoData = {
+            // Paso 1: Crear el empleado con la cÃ©dula como ID
+            const empleado = new EmpleadoModel({
+                _id: profesorData.cedula, // Usar cÃ©dula como ID
                 cedula: profesorData.cedula,
                 nombre: profesorData.nombre,
                 primerApellido: profesorData.primerApellido,
@@ -28,25 +29,21 @@ export class ProfesorRepositoryImpl {
                 telefono: profesorData.telefono || '',
                 direccion: profesorData.direccion || '',
                 tipo: 'profesor'
-            };
-            // Asignar la cédula como _id explícitamente
-            const empleado = new EmpleadoModel({
-                ...empleadoData,
-                _id: profesorData.cedula // Forzar el uso de la cédula como ID
             });
-            console.log("Creando empleado con _id:", empleado._id);
+            console.log("Creando empleado con ID:", empleado._id);
             const savedEmpleado = await empleado.save({ session });
-            // Crear profesor usando la cédula como ID
+            console.log("Empleado creado con ID:", savedEmpleado._id);
+            // Paso 2: Crear el profesor usando la cÃ©dula como ID y empleadoId
             const nuevoProfesor = new ProfesorModel({
-                _id: profesorData.cedula, // Usar cédula como ID de MongoDB
+                _id: profesorData.cedula, // CÃ©dula como ID del profesor
                 cedula: profesorData.cedula,
-                empleadoId: savedEmpleado._id
+                empleadoId: savedEmpleado._id // Usar el mismo ID que el empleado
             });
-            console.log("Creando profesor con _id:", nuevoProfesor._id);
+            console.log("Creando profesor con ID:", nuevoProfesor._id);
             console.log("Relacionado con empleadoId:", savedEmpleado._id);
             const savedProfesor = await nuevoProfesor.save({ session });
             await session.commitTransaction();
-            console.log("Profesor creado con éxito. ID:", savedProfesor._id);
+            console.log("Profesor creado con Ã©xito. ID:", savedProfesor._id);
             return new Profesor(profesorData.cedula, profesorData.nombre, profesorData.primerApellido, profesorData.segundoApellido || '', profesorData.email, profesorData.telefono || '', profesorData.direccion || '');
         }
         catch (error) {
@@ -70,7 +67,7 @@ export class ProfesorRepositoryImpl {
                     console.error('Empleado no encontrado para profesor:', doc);
                     return null;
                 }
-                return new Profesor(doc.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido, empleado.email, empleado.telefono || '', empleado.direccion || '');
+                return new Profesor(doc.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido, empleado.email || "", empleado.telefono || '', empleado.direccion || '');
             }).filter(Boolean);
         }
         catch (error) {
@@ -81,15 +78,15 @@ export class ProfesorRepositoryImpl {
     async findById(id) {
         try {
             console.log("Buscando profesor con ID:", id);
-            // Primero intentar buscar por _id (que debería ser igual a la cédula)
+            // Primero intentar buscar por _id (que deberÃ­a ser igual a la cÃ©dula)
             let profesor = await ProfesorModel.findById(id).populate('empleadoId');
-            // Si no se encontró, buscar por el campo cédula
+            // Si no se encontrÃ³, buscar por el campo cÃ©dula
             if (!profesor) {
-                console.log("No se encontró profesor por _id, buscando por cédula:", id);
+                console.log("No se encontrÃ³ profesor por _id, buscando por cÃ©dula:", id);
                 profesor = await ProfesorModel.findOne({ cedula: id }).populate('empleadoId');
             }
             if (!profesor) {
-                console.log("No se encontró profesor con cédula/ID:", id);
+                console.log("No se encontrÃ³ profesor con cÃ©dula/ID:", id);
                 return null;
             }
             const empleado = profesor.empleadoId;
@@ -98,7 +95,7 @@ export class ProfesorRepositoryImpl {
                 return null;
             }
             console.log("Profesor encontrado:", profesor.cedula, "con empleado:", empleado.nombre);
-            return new Profesor(profesor.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido || '', empleado.email, empleado.telefono || '', empleado.direccion || '');
+            return new Profesor(profesor.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido || '', empleado.email || "", empleado.telefono || '', empleado.direccion || '');
         }
         catch (error) {
             console.error("Error en findById de profesor:", error);
@@ -107,23 +104,32 @@ export class ProfesorRepositoryImpl {
     }
     async findByCedula(cedula) {
         try {
-            // Intentar buscar tanto por _id como por cédula para mayor compatibilidad
             let profesor = await ProfesorModel.findOne({
-                $or: [
-                    { _id: cedula },
-                    { cedula: cedula }
-                ]
+                $or: [{ _id: cedula }, { cedula: cedula }]
             }).populate('empleadoId').lean().exec();
-            if (!profesor || !profesor.empleadoId) {
-                console.log("No se encontró profesor con cédula:", cedula);
+            if (!profesor || !profesor.empleadoId)
                 return null;
-            }
             const empleado = profesor.empleadoId;
-            return new Profesor(profesor.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido || '', empleado.email, empleado.telefono || '', empleado.direccion || '');
+            return new Profesor(profesor.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido || '', empleado.email || "", empleado.telefono || '', empleado.direccion || '');
         }
         catch (error) {
-            console.error('Error en findByCedula:', error);
             throw error;
+        }
+    }
+    async findByEmail(email) {
+        try {
+            const EmpleadoModel = mongoose.model('Empleado');
+            const empleado = await EmpleadoModel.findOne({ email }).lean();
+            if (!empleado)
+                return null;
+            const profesor = await ProfesorModel.findOne({ empleadoId: empleado._id }).populate('empleadoId').lean().exec();
+            if (!profesor || !profesor.empleadoId)
+                return null;
+            const emp = profesor.empleadoId;
+            return new Profesor(profesor.cedula, emp.nombre, emp.primerApellido, emp.segundoApellido || '', emp.email, emp.telefono || '', emp.direccion || '');
+        }
+        catch {
+            return null;
         }
     }
     async update(id, profesorData) {
@@ -138,11 +144,11 @@ export class ProfesorRepositoryImpl {
                 ]
             }).session(session);
             if (!profesor) {
-                throw new Error(`No se encontró un profesor con la cédula/ID ${id}`);
+                throw new Error(`No se encontrÃ³ un profesor con la cÃ©dula/ID ${id}`);
             }
             const empleado = await EmpleadoModel.findById(profesor.empleadoId).session(session);
             if (!empleado) {
-                throw new Error(`No se encontró un empleado relacionado con el profesor de cédula ${id}`);
+                throw new Error(`No se encontrÃ³ un empleado relacionado con el profesor de cÃ©dula ${id}`);
             }
             // Actualizar los datos del empleado
             if (profesorData.nombre)
@@ -159,7 +165,7 @@ export class ProfesorRepositoryImpl {
                 empleado.direccion = profesorData.direccion;
             await empleado.save({ session });
             await session.commitTransaction();
-            return new Profesor(profesor.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido || '', empleado.email, empleado.telefono || '', empleado.direccion || '');
+            return new Profesor(profesor.cedula, empleado.nombre, empleado.primerApellido, empleado.segundoApellido || '', empleado.email || "", empleado.telefono || '', empleado.direccion || '');
         }
         catch (error) {
             await session.abortTransaction();

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portal Acudiente — LEARNSCAPE</title>
+<title>Portal Acudiente — Gardner</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <script src="../assets/config.js"></script>
 <style>
@@ -28,7 +28,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 /* ── SIDEBAR ── */
 .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--ink2);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:200}
 .sb-logo{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:12px}
-.sb-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#0d9488,#0f766e);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sb-mark{width:46px;height:46px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;box-shadow:0 4px 12px rgba(15,23,42,.18);padding:4px}
+.sb-mark img{width:100%;height:100%;object-fit:contain;display:block}
 .sb-logo-text .name{font-size:16px;font-weight:900;color:#fff;letter-spacing:.5px}
 .sb-logo-text .sub{font-size:9px;color:rgba(255,255,255,.4);font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
 .sb-user{padding:14px 16px;margin:12px 12px 4px;background:rgba(255,255,255,.06);border-radius:10px;display:flex;align-items:center;gap:10px}
@@ -126,23 +127,39 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .toast.on{opacity:1;transform:translateY(0)}.toast.ok{border-left:4px solid var(--green)}.toast.er{border-left:4px solid var(--red)}
 
 /* ── RESPONSIVE ── */
-@media(max-width:768px){
-  .sidebar{width:60px}
-  .sb-logo-text,.sb-uname,.sb-urole,.sb-section,.sb-item span:not(.ico){display:none}
-  .sb-item{justify-content:center;padding:12px}
-  .kpis{grid-template-columns:1fr 1fr}
-  .content{padding:16px}
-}
-</style>
+  @media(max-width:768px){
+    body{display:block}
+    .sidebar{width:100%;min-height:auto;height:auto;position:relative;top:auto;overflow:visible}
+    .sb-logo{padding:16px}
+    .sb-user{margin:10px 12px 6px}
+    .sb-logo-text,.sb-uname,.sb-urole,.sb-section,.sb-item span:not(.ico){display:block}
+    .sb-menu{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 12px}
+    .sb-item{justify-content:flex-start;padding:12px 14px;border-radius:10px}
+    .sb-foot{padding:12px;display:grid;gap:8px}
+    .main{display:block}
+    .topbar{position:relative;height:auto;padding:16px;align-items:flex-start;justify-content:flex-start;flex-direction:column}
+    .topbar-right{width:100%;justify-content:flex-start;flex-wrap:wrap}
+    .content{padding:16px}
+    .kpis{grid-template-columns:1fr}
+  }
+  @media(max-width:520px){
+    .sb-menu{grid-template-columns:1fr}
+    .topbar-title{font-size:15px}
+    .topbar-sub{font-size:11px}
+    .child-banner{padding:18px}
+    .mbox{max-width:none}
+    .toast{left:16px;right:16px;bottom:16px;max-width:none}
+  }
+  </style>
 </head>
 <body>
 
 <!-- ══ SIDEBAR ══ -->
 <aside class="sidebar">
   <div class="sb-logo">
-    <div class="sb-mark">👨‍👩‍👧</div>
+    <div class="sb-mark"><img src="../assets/institution/pdf_image_2.jpg" alt="Logo Gardner"></div>
     <div class="sb-logo-text">
-      <div class="name">LEARNSCAPE</div>
+      <div class="name">GARDNER</div>
       <div class="sub">Portal Acudiente</div>
     </div>
   </div>

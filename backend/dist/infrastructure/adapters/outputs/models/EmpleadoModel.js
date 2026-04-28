@@ -26,9 +26,9 @@ const empleadoSchema = new Schema({
     },
     email: {
         type: String,
-        required: true,
         trim: true,
-        unique: true
+        unique: true,
+        sparse: true
     },
     telefono: {
         type: String,
@@ -40,7 +40,7 @@ const empleadoSchema = new Schema({
     },
     tipo: {
         type: String,
-        enum: ['profesor', 'administrativo', 'otro'],
+        enum: ['profesor', 'administrativo', 'estudiante', 'otro'], // Añadir 'estudiante' a la lista
         default: 'otro'
     }
 }, {
@@ -48,9 +48,10 @@ const empleadoSchema = new Schema({
     // Esto es crucial para permitir IDs personalizados que no sean ObjectId
     _id: false
 });
-// Este middleware hace que la cédula se use como _id para profesores
+// Este middleware hace que la cédula se use como _id para profesores y estudiantes
 empleadoSchema.pre('save', function (next) {
-    if (this.isNew && this.tipo === 'profesor' && this.cedula) {
+    // Aplicar la misma lógica para profesores y estudiantes
+    if (this.isNew && (this.tipo === 'profesor' || this.tipo === 'estudiante') && this.cedula) {
         this._id = this.cedula;
     }
     next();

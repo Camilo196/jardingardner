@@ -1,10 +1,11 @@
-import bcrypt from 'bcrypt';
+﻿import bcrypt from 'bcrypt';
 import { Matricula, CrearMatriculaInput, ActualizarMatriculaInput } from '../../../core/domain/matricula.js';
 import { EmpleadoModel } from '../outputs/models/EmpleadoModel';
 import mongoose from 'mongoose';
 import { EstudianteModel } from '../outputs/models/EstudianteModel.js';
 import { UserModel } from '../outputs/models/UserModel.js';
 import { MatriculaModel } from '../outputs/models/MatriculaModel.js';
+import { CalificacionModel } from '../outputs/models/CalificacionModel.js';
 import { IndicadoresModel } from '../outputs/models/Indicadoresmodel.js';
 import { PeriodoConfigModel } from '../outputs/models/PeriodoConfigModel.js';
 import { ComportamientoModel } from '../outputs/models/ComportamientoModel.js';
@@ -22,7 +23,7 @@ import {
 import { Asignatura } from '@core/domain/asignatura.js';
 import { pdfService } from '../../../core/services/pdfService.js';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function generarClaveAleatoria(longitud = 8): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -78,27 +79,290 @@ async function validarAccesoEstudiantePorMatricula(username: string): Promise<vo
     throw new Error(`Acceso bloqueado: tu matrícula está ${estadoLabel}. Contacta a la institución.`);
 }
 
-// ─── Helper: verificar que el periodo no esté cerrado ────────────────────────
+// â”€â”€â”€ Helper: verificar que el periodo no estÃ© cerrado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // Parsear periodo con formato "YYYY-N" o "N"
 function parsePeriodo(periodo: string): { anio: number; numeroPeriodo: number } {
     if (periodo.includes('-')) {
         const parts = periodo.split('-');
-        // Formato "2026-1": primer segmento es año, segundo es número de periodo
+        // Formato "2026-1": primer segmento es aÃ±o, segundo es nÃºmero de periodo
         const anio = parseInt(parts[0]);
         const numeroPeriodo = parseInt(parts[1]);
         if (!isNaN(anio) && !isNaN(numeroPeriodo) && anio > 2000) {
             return { anio, numeroPeriodo };
         }
     }
-    // Formato "1", "2", "3" — usar año actual
+    // Formato "1", "2", "3" â€” usar aÃ±o actual
     return { anio: new Date().getFullYear(), numeroPeriodo: parseInt(periodo) };
+}
+
+function mismoAnioYPrevios(periodoBase: string, periodoComparado?: string | null): boolean {
+    if (!periodoComparado) return false;
+    const base = parsePeriodo(periodoBase);
+    const actual = parsePeriodo(String(periodoComparado));
+    return actual.anio === base.anio && actual.numeroPeriodo <= base.numeroPeriodo;
+}
+
+function promedioNumeros(numeros: number[]): number | null {
+    if (!numeros.length) return null;
+    return numeros.reduce((s, n) => s + Number(n), 0) / numeros.length;
+}
+
+function valoracionDesdeNota(nota: number | null): string {
+    if (nota === null) return 'Sin nota';
+    if (nota >= 4.5) return 'Superior';
+    if (nota >= 4.0) return 'Alto';
+    if (nota >= 3.0) return 'Básico';
+    return 'Bajo';
+}
+
+async function calcularPuestoCurso(
+    cursoId: string,
+    periodo: string,
+    estudianteObjetivoId: string,
+    asigIdsCurso: Set<string>,
+): Promise<number | null> {
+    const matriculas = await MatriculaModel.find({
+        cursoId,
+        periodo,
+        estado: { $in: ['ACTIVA', 'FINALIZADA'] },
+    }).lean().catch(() => []);
+
+    const estudiantesCurso = [...new Set((matriculas as any[]).map((m: any) => String(m.estudianteId)).filter(Boolean))];
+    if (!estudiantesCurso.length || !asigIdsCurso.size) return null;
+
+    const calificaciones = await CalificacionModel.find({
+        estudianteId: { $in: estudiantesCurso },
+        asignaturaId: { $in: [...asigIdsCurso] },
+        nombreActividad: { $ne: '__boletin__' },
+    }).lean().catch(() => []);
+
+    const periodoObjetivo = parsePeriodo(periodo).numeroPeriodo;
+    const estudianteMap: Record<string, Record<string, Record<number, number[]>>> = {};
+
+    for (const cal of calificaciones as any[]) {
+        if (!mismoAnioYPrevios(periodo, cal.periodo)) continue;
+        const estId = String(cal.estudianteId);
+        const asigId = String(cal.asignaturaId);
+        const numeroPeriodo = parsePeriodo(String(cal.periodo || periodo)).numeroPeriodo;
+        estudianteMap[estId] ||= {};
+        estudianteMap[estId][asigId] ||= {};
+        estudianteMap[estId][asigId][numeroPeriodo] ||= [];
+        estudianteMap[estId][asigId][numeroPeriodo].push(Number(cal.nota));
+    }
+
+    const promedios = estudiantesCurso
+        .map((estId) => {
+            const asignaturas = estudianteMap[estId] || {};
+            const promediosMaterias = Object.values(asignaturas)
+                .map((notasPorPeriodo: any) => {
+                    const promediosPeriodos: Array<number | null> = [1, 2, 3].map((numeroPeriodo) =>
+                        promedioNumeros(notasPorPeriodo[numeroPeriodo] ?? []),
+                    );
+                    const acumulados = promediosPeriodos
+                        .slice(0, periodoObjetivo)
+                        .filter((nota): nota is number => nota !== null);
+                    return promedioNumeros(acumulados);
+                })
+                .filter((nota): nota is number => nota !== null);
+
+            const promedio = promedioNumeros(promediosMaterias);
+            return promedio === null ? null : { estId, promedio };
+        })
+        .filter((item): item is { estId: string; promedio: number } => item !== null)
+        .sort((a, b) => b.promedio - a.promedio);
+
+    if (!promedios.length) return null;
+
+    let puesto = 1;
+    let anterior: number | null = null;
+    for (let i = 0; i < promedios.length; i++) {
+        const actual = promedios[i];
+        if (anterior !== null && Math.abs(actual.promedio - anterior) > 0.0001) {
+            puesto = i + 1;
+        }
+        if (actual.estId === String(estudianteObjetivoId)) return puesto;
+        anterior = actual.promedio;
+    }
+
+    return null;
+}
+
+async function generarBoletinAcumuladoBase64(
+    repositories: any,
+    estudianteId: string,
+    periodo: string,
+    observacionGeneral = '',
+): Promise<string> {
+    const estudiantePorCedula = await repositories.estudianteRepository.findByCedula(estudianteId).catch(() => null);
+    const estudiante = estudiantePorCedula ??
+        await repositories.estudianteRepository.findById(estudianteId).catch(() => null);
+    if (!estudiante) throw new Error(`Estudiante ${estudianteId} no encontrado`);
+
+    const estIdBoletin = estudiante.cedula ?? estudianteId;
+    const matriculas = await repositories.matriculaRepository
+        .findByEstudianteId(estudiante.cedula ?? estudianteId).catch(() => []);
+    const mat = matriculas.find((m: any) => m.periodo === periodo) ?? matriculas[0];
+    const curso = mat ? await repositories.cursoRepository.findById(mat.cursoId).catch(() => null) : null;
+
+    const todasLasCalificaciones = await repositories.calificacionRepository.findByEstudianteId(estIdBoletin).catch(() => []);
+    const calsAcumuladasBase = (todasLasCalificaciones || []).filter((c: any) =>
+        c.nombreActividad !== '__boletin__' && mismoAnioYPrevios(periodo, c.periodo),
+    );
+
+    const asignaturasCurso = curso
+        ? await repositories.asignaturaRepository.findByCursoId(String(curso.id ?? curso._id)).catch(() => [])
+        : [];
+    const asigIdsCurso = new Set<string>((asignaturasCurso || []).map((a: any) => String(a.id ?? a._id)));
+
+    let calsAcumuladas = calsAcumuladasBase;
+    const calsCursoPeriodo = calsAcumuladasBase.filter((c: any) =>
+        asigIdsCurso.has(String(c.asignaturaId)) && String(c.periodo) === String(periodo),
+    );
+    if (asigIdsCurso.size && calsCursoPeriodo.length) {
+        calsAcumuladas = calsAcumuladasBase.filter((c: any) => asigIdsCurso.has(String(c.asignaturaId)));
+    }
+
+    const calsDelPeriodo = calsAcumuladas.filter((c: any) => String(c.periodo) === String(periodo));
+    if (!calsDelPeriodo.length) throw new Error('No hay calificaciones para este período');
+
+    const asigIdsUnicos = [...new Set(calsAcumuladas.map((c: any) => String(c.asignaturaId)))];
+    const asigsBatch: any[] = await repositories.asignaturaRepository.findByIds(asigIdsUnicos).catch(() => []);
+    const asigById: Record<string, any> = {};
+    for (const a of asigsBatch) asigById[String(a.id ?? a._id)] = a;
+
+    const asigMap: Record<string, { asig: any; notasPorPeriodo: Record<number, number[]> }> = {};
+    for (const cal of calsAcumuladas) {
+        const k = String(cal.asignaturaId);
+        if (!asigMap[k]) {
+            asigMap[k] = { asig: asigById[k] ?? null, notasPorPeriodo: {} };
+        }
+        const numeroPeriodo = parsePeriodo(String(cal.periodo || periodo)).numeroPeriodo;
+        if (!asigMap[k].notasPorPeriodo[numeroPeriodo]) asigMap[k].notasPorPeriodo[numeroPeriodo] = [];
+        asigMap[k].notasPorPeriodo[numeroPeriodo].push(Number(cal.nota));
+    }
+
+    const profIdSet = new Set<string>();
+    for (const { asig } of Object.values(asigMap)) {
+        if (asig?.profesorId) profIdSet.add(String(asig.profesorId));
+    }
+    const profIds = [...profIdSet];
+    const profsBatch: any[] = profIds.length
+        ? await Promise.all(profIds.map(id => repositories.profesorRepository.findById(id).catch(() => null)))
+        : [];
+    const profById: Record<string, any> = {};
+    profsBatch.forEach(p => { if (p) profById[String(p.id ?? p._id)] = p; });
+
+    const asigIdsList = Object.keys(asigMap);
+    const estIdStr = String(estudiante.cedula ?? estudiante.id);
+    const [indicadoresBatch, comportamientosBatch, asistenciasData] = await Promise.all([
+        IndicadoresModel.find({
+            $or: [
+                { asignaturaId: { $in: asigIdsList } },
+                { asignaturaId: { $in: asigIdsList.map(id => id.toString()) } },
+            ],
+            periodo,
+        }).lean().catch(() => []),
+        ComportamientoModel.find({
+            estudianteId: estIdStr,
+            asignaturaId: { $in: asigIdsList },
+            periodo,
+        }).lean().catch(() => []),
+        AsistenciaModel.aggregate([
+            { $match: { estudianteId: estIdStr, asignaturaId: { $in: asigIdsList }, periodo, estado: 'AUSENTE' } },
+            { $group: { _id: '$asignaturaId', count: { $sum: 1 } } },
+        ]).catch(() => []),
+    ]);
+
+    const indByAsig: Record<string, any> = {};
+    for (const ind of indicadoresBatch as any[]) indByAsig[String(ind.asignaturaId)] = ind;
+    const compByAsig: Record<string, any> = {};
+    for (const comp of comportamientosBatch as any[]) compByAsig[String(comp.asignaturaId)] = comp;
+    const faltasByAsig: Record<string, number> = {};
+    for (const row of asistenciasData as any[]) faltasByAsig[String(row._id)] = row.count;
+
+    const periodoObjetivo = parsePeriodo(periodo).numeroPeriodo;
+    const calificacionesBoletin = Object.entries(asigMap).map(([asignaturaId, { asig, notasPorPeriodo }]) => {
+        const promediosPeriodos: Array<number | null> = [1, 2, 3].map((numeroPeriodo) =>
+            promedioNumeros(notasPorPeriodo[numeroPeriodo] ?? []),
+        );
+        const promediosAcumulados = promediosPeriodos
+            .slice(0, periodoObjetivo)
+            .filter((nota): nota is number => nota !== null);
+        const prom = promedioNumeros(promediosAcumulados) ?? 0;
+        const valoracion = valoracionDesdeNota(prom);
+        const resumenNotas =
+            periodoObjetivo === 1
+                ? `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '—'}`
+                : periodoObjetivo === 2
+                    ? `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '—'} · P2: ${promediosPeriodos[1] !== null ? promediosPeriodos[1]!.toFixed(2) : '—'} · Promedio: ${prom.toFixed(2)}`
+                    : `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '—'} · P2: ${promediosPeriodos[1] !== null ? promediosPeriodos[1]!.toFixed(2) : '—'} · P3: ${promediosPeriodos[2] !== null ? promediosPeriodos[2]!.toFixed(2) : '—'} · Nota final: ${prom.toFixed(2)}`;
+
+        let docenteNombre = 'Docente';
+        if (asig?.profesorId) {
+            const doc = profById[String(asig.profesorId)];
+            if (doc) docenteNombre = `${doc.nombre} ${doc.primerApellido}`;
+        }
+
+        const ind = indByAsig[asignaturaId] ?? null;
+        const comp = compByAsig[asignaturaId] ?? null;
+        const faltasCount = faltasByAsig[asignaturaId] ?? 0;
+
+        return {
+            asignaturaId,
+            asignaturaNombre: asig?.nombre ?? asignaturaId,
+            docenteNombre,
+            valoracion,
+            nota: prom,
+            resumenNotas,
+            faltas: faltasCount,
+            observacion: '',
+            indicadores: {
+                saber: ind?.saber ?? [],
+                hacer: ind?.hacer ?? [],
+                ser:   ind?.ser   ?? [],
+            },
+            comportamiento: comp ? { nota: comp.nota, nivel: comp.nivel, descripcion: comp.descripcion } : undefined,
+        };
+    });
+
+    let directorNombre = 'Coordinación Académica';
+    if (curso?.profesorId) {
+        const dirProf = await repositories.profesorRepository.findById(curso.profesorId).catch(() => null);
+        if (dirProf) directorNombre = `${dirProf.nombre} ${dirProf.primerApellido}`;
+    }
+
+    const puestoCurso = curso
+        ? await calcularPuestoCurso(
+            String(curso.id ?? curso._id),
+            String(periodo),
+            String(estIdBoletin),
+            asigIdsCurso.size ? asigIdsCurso : new Set<string>(asigIdsList.map(String)),
+        )
+        : null;
+
+    const buf = await pdfService.generateBoletinGardner({
+        estudiante: {
+            nombre: estudiante.nombre,
+            primerApellido: estudiante.primerApellido,
+            segundoApellido: estudiante.segundoApellido,
+            cedula: estudiante.cedula,
+        },
+        curso: { nombre: curso?.nombre ?? 'Sin curso' },
+        director: directorNombre,
+        periodo,
+        anio: new Date().getFullYear().toString(),
+        calificaciones: calificacionesBoletin,
+        observacionGeneral,
+        puestoCurso,
+    });
+    return Buffer.from(buf).toString('base64');
 }
 
 async function verificarPeriodoAbierto(periodo: string): Promise<void> {
     const { anio, numeroPeriodo } = parsePeriodo(periodo);
     const config = await PeriodoConfigModel.findOne({ anio, numeroPeriodo });
-    if (!config) return; // sin configuración = abierto por defecto
+    if (!config) return; // sin configuraciÃ³n = abierto por defecto
     if (!config.abierto) {
         throw new Error(
             `El periodo ${periodo} está cerrado. Contacte al administrador para reactivarlo.`
@@ -107,18 +371,18 @@ async function verificarPeriodoAbierto(periodo: string): Promise<void> {
     if (config.fechaCierre && new Date() > config.fechaCierre) {
         await PeriodoConfigModel.updateOne({ anio, numeroPeriodo }, { abierto: false });
         throw new Error(
-            `El periodo ${periodo} cerró el ${config.fechaCierre.toLocaleDateString('es-CO')}. Contacte al administrador.`
+            `El periodo ${periodo} cerrÃ³ el ${config.fechaCierre.toLocaleDateString('es-CO')}. Contacte al administrador.`
         );
     }
 }
 
-// ─── Resolvers ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Resolvers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const resolvers = {
 
-    // ═══════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     //  QUERIES
-    // ═══════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     Query: {
 
         me: async (_: any, __: any, { user, repositories }: any) => {
@@ -185,7 +449,7 @@ export const resolvers = {
             return await IndicadoresModel.find({ asignaturaId: { $in: ids }, periodo }).lean();
         },
 
-        // Configuración de periodos
+        // ConfiguraciÃ³n de periodos
         periodoConfig: async (_: any, { anio, numeroPeriodo }: any) => {
             const config = await PeriodoConfigModel.findOne({ anio, numeroPeriodo }).lean();
             if (!config) return null;
@@ -252,13 +516,12 @@ export const resolvers = {
         exportarBoletin: async (_: any, { id }: { id: string }, { repositories }: any) => {
             const boletin = await repositories.boletinRepository.findById(id);
             if (!boletin) throw new Error(`Boletín ${id} no encontrado`);
-            const estudiante = await repositories.estudianteRepository.findById(boletin.estudianteId);
-            if (!estudiante) throw new Error(`Estudiante no encontrado`);
-            const curso = await repositories.cursoRepository.findById(boletin.cursoId);
-            if (!curso) throw new Error(`Curso no encontrado`);
-            const cals = await repositories.calificacionRepository.findByEstudianteId(estudiante.id);
-            const buf = await pdfService.generateBoletinPDF(boletin, estudiante, curso, cals);
-            return Buffer.from(buf).toString('base64');
+            return await generarBoletinAcumuladoBase64(
+                repositories,
+                String(boletin.estudianteId),
+                String(boletin.periodo),
+                String(boletin.observaciones ?? ''),
+            );
         },
 
         exportarBoletinEstudiante: async (
@@ -266,118 +529,12 @@ export const resolvers = {
             { estudianteId, periodo }: { estudianteId: string; periodo: string },
             { repositories }: any,
         ) => {
-            const estudiante =
-                (await repositories.estudianteRepository.findByCedula(estudianteId).catch(() => null)) ??
-                (await repositories.estudianteRepository.findById(estudianteId).catch(() => null));
-            if (!estudiante) throw new Error(`Estudiante ${estudianteId} no encontrado`);
-
-            const calsDelPeriodo = await repositories.calificacionRepository.findByEstudianteIdAndPeriodo(
-                estudianteId, periodo,
+            return await generarBoletinAcumuladoBase64(
+                repositories,
+                String(estudianteId),
+                String(periodo),
+                '',
             );
-            if (!calsDelPeriodo.length) throw new Error('No hay calificaciones para este período');
-
-            // Batch: collect unique asignaturaIds first
-            const asigIdsUnicosEst = [...new Set(calsDelPeriodo.map((c: any) => String(c.asignaturaId)))];
-            const asigsBatchEst: any[] = await repositories.asignaturaRepository
-                .findByIds(asigIdsUnicosEst).catch(() => []);
-            const asigByIdEst: Record<string, any> = {};
-            for (const a of asigsBatchEst) asigByIdEst[String(a.id ?? a._id)] = a;
-
-            // Agrupar por asignatura
-            const asigMap: Record<string, { asig: any; notas: number[] }> = {};
-            for (const cal of calsDelPeriodo) {
-                const k = String(cal.asignaturaId);
-                if (!asigMap[k]) {
-                    asigMap[k] = { asig: asigByIdEst[k] ?? null, notas: [] };
-                }
-                asigMap[k].notas.push(Number(cal.nota));
-            }
-
-            // Batch remaining queries
-            const profIdSetEst = new Set<string>();
-            for (const { asig } of Object.values(asigMap)) {
-                if (asig?.profesorId) profIdSetEst.add(String(asig.profesorId));
-            }
-            const profsBatchEst: any[] = profIdSetEst.size
-                ? await Promise.all([...profIdSetEst].map(id => repositories.profesorRepository.findById(id).catch(() => null)))
-                : [];
-            const profByIdEst: Record<string, any> = {};
-            profsBatchEst.forEach(p => { if (p) profByIdEst[String(p.id ?? p._id)] = p; });
-
-            const estIdStrEst = String(estudiante.cedula ?? estudiante.id);
-            const [indicadoresBatchEst, comportamientosBatchEst, asistenciasDataEst] = await Promise.all([
-                IndicadoresModel.find({ asignaturaId: { $in: asigIdsUnicosEst }, periodo }).lean().catch(() => []),
-                ComportamientoModel.find({
-                    estudianteId: estIdStrEst,
-                    asignaturaId: { $in: asigIdsUnicosEst },
-                    periodo,
-                }).lean().catch(() => []),
-                AsistenciaModel.aggregate([
-                    { $match: { estudianteId: estIdStrEst, asignaturaId: { $in: asigIdsUnicosEst }, periodo, estado: 'AUSENTE' } },
-                    { $group: { _id: '$asignaturaId', count: { $sum: 1 } } },
-                ]).catch(() => []),
-            ]);
-
-            const indByAsigEst: Record<string, any> = {};
-            for (const ind of indicadoresBatchEst as any[]) indByAsigEst[String(ind.asignaturaId)] = ind;
-            const compByAsigEst: Record<string, any> = {};
-            for (const comp of comportamientosBatchEst as any[]) compByAsigEst[String(comp.asignaturaId)] = comp;
-            const faltasByAsigEst: Record<string, number> = {};
-            for (const row of asistenciasDataEst as any[]) faltasByAsigEst[String(row._id)] = row.count;
-
-            const calificacionesBoletin = Object.entries(asigMap).map(([asignaturaId, { asig, notas }]) => {
-                    const prom = notas.reduce((s, n) => s + n, 0) / notas.length;
-                    const valoracion = prom >= 4.5 ? 'Superior' : prom >= 4.0 ? 'Alto' : prom >= 3.0 ? 'Básico' : 'Bajo';
-                    let docenteNombre = 'Docente';
-                    if (asig?.profesorId) {
-                        const doc = profByIdEst[String(asig.profesorId)];
-                        if (doc) docenteNombre = `${doc.nombre} ${doc.primerApellido}`;
-                    }
-                    const ind = indByAsigEst[asignaturaId] ?? null;
-                    const comp = compByAsigEst[asignaturaId] ?? null;
-                    const faltasCount = faltasByAsigEst[asignaturaId] ?? 0;
-                    return {
-                        asignaturaId,
-                        asignaturaNombre: asig?.nombre ?? asignaturaId,
-                        docenteNombre,
-                        valoracion,
-                        nota: prom,
-                        faltas: faltasCount,
-                        observacion: '',
-                        indicadores: ind ? { saber: ind.saber, hacer: ind.hacer, ser: ind.ser } : undefined,
-                        comportamiento: comp ? { nivel: comp.nivel, descripcion: comp.descripcion } : undefined,
-                    };
-                });
-
-            const matriculas = await repositories.matriculaRepository
-                .findByEstudianteId(estudiante.cedula ?? estudianteId)
-                .catch(() => []);
-            const mat = matriculas.find((m: any) => m.periodo === periodo) ?? matriculas[0];
-            const curso = mat
-                ? await repositories.cursoRepository.findById(mat.cursoId).catch(() => null)
-                : null;
-
-            // Bug 10 fix: Buscar el nombre del docente director del curso
-            let directorNombre = 'Coordinación Académica';
-            if (curso?.profesorId) {
-                const dirProf = await repositories.profesorRepository.findById(curso.profesorId).catch(() => null);
-                if (dirProf) directorNombre = `${dirProf.nombre} ${dirProf.primerApellido}`;
-            }
-
-            const buf = await pdfService.generateBoletinGardner({
-                estudiante: {
-                    nombre: estudiante.nombre,
-                    primerApellido: estudiante.primerApellido,
-                    segundoApellido: estudiante.segundoApellido,
-                    cedula: estudiante.cedula,
-                },
-                curso: { nombre: curso?.nombre ?? 'Sin curso' },
-                director: directorNombre,
-                periodo,
-                anio: new Date().getFullYear().toString(),
-                calificaciones: calificacionesBoletin,
-            });
-            return Buffer.from(buf).toString('base64');
         },
 
         boletinesPorCursoPeriodo: async (_: any, { cursoId, periodo }: any, { repositories }: any) => {
@@ -385,7 +542,7 @@ export const resolvers = {
             return await repositories.boletinRepository.findByCursoYPeriodo(cursoId, periodo);
         },
 
-        // Matrículas
+        // MatrÃ­culas
         matriculas: async (_: any, __: any, { repositories }: any) =>
             await repositories.matriculaRepository.findAll(),
 
@@ -497,15 +654,34 @@ export const resolvers = {
         },
     },
 
-    // ═══════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     //  MUTATIONS
-    // ═══════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     Mutation: {
 
-        // ── Auth ──────────────────────────────────────────────
+        // â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         login: async (_: any, { identifier, password }: any, { repositories }: any) => {
             const authService = new AuthService(repositories.userRepository);
-            const result = await authService.authenticate(identifier, password);
+            let result: any;
+            try {
+                result = await authService.authenticate(identifier, password);
+            } catch (error: any) {
+                const identificador = String(identifier ?? '').trim();
+                const clave = String(password ?? '').trim();
+                const intentoAutoProvision =
+                    identificador &&
+                    clave &&
+                    identificador === clave &&
+                    /^\d+$/.test(identificador);
+
+                if (!intentoAutoProvision) throw error;
+
+                const estudiante = await repositories.estudianteRepository.findByCedula(identificador).catch(() => null);
+                if (!estudiante) throw error;
+
+                await authService.createUserCredentials(identificador, 'ESTUDIANTE');
+                result = await authService.authenticate(identificador, clave);
+            }
             if (!result?.user) throw new Error('Credenciales inválidas');
 
             const user = result.user;
@@ -564,7 +740,7 @@ export const resolvers = {
         },
 
         cambiarPasswordPrimerLogin: async (_: any, { username, newPassword }: any, { user, repositories }: any): Promise<boolean> => {
-            // Requiere token válido y que el usuario solo pueda cambiar su propia contraseña
+            // Requiere token vÃ¡lido y que el usuario solo pueda cambiar su propia contraseÃ±a
             if (!user) throw new Error('No autenticado');
             if (user.username !== username) throw new Error('No autorizado: solo puedes cambiar tu propia contraseña');
             const dbUser = await repositories.userRepository.findByUsername(username);
@@ -579,7 +755,7 @@ export const resolvers = {
         olvidarPassword: async (_: any, { identifier }: any, { repositories }: any): Promise<boolean> => {
             let email = '', nombre = '', cedula = identifier;
 
-            // Fix N+1: buscar primero por cédula, luego por email directo en DB (sin findAll)
+            // Fix N+1: buscar primero por cÃ©dula, luego por email directo en DB (sin findAll)
             const est = await repositories.estudianteRepository.findByCedula(identifier).catch(() => null)
                 ?? await repositories.estudianteRepository.findByEmail(identifier).catch(() => null);
 
@@ -594,13 +770,13 @@ export const resolvers = {
             if (!email) throw new Error('No se encontró usuario con ese identificador');
             const clave = generarClaveAleatoria();
             const passwordReset = await repositories.userRepository.resetPassword(cedula, clave);
-            if (!passwordReset) throw new Error('No se pudo restablecer la contraseÃ±a');
+            if (!passwordReset) throw new Error('No se pudo restablecer la contraseña');
             const emailSent = await enviarPasswordRecuperacion({ email, nombre, cedula, passwordTemporal: clave });
-            if (!emailSent) throw new Error('La contraseÃ±a se restableciÃ³, pero no se pudo enviar el correo');
+            if (!emailSent) throw new Error('La contraseña se restableció, pero no se pudo enviar el correo');
             return true;
         },
 
-        // ── Credenciales ──────────────────────────────────────
+        // â”€â”€ Credenciales â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         enviarCrearCredenciales: async (
             _: any,
             { estudianteId, profesorId }: { estudianteId?: string; profesorId?: string },
@@ -620,14 +796,17 @@ export const resolvers = {
                 cedula = estudianteId!; email = est.email; nombre = est.nombre; apellido = est.primerApellido; role = 'ESTUDIANTE';
             }
 
-            if (!email) throw new Error('El usuario no tiene email registrado');
             const yaExiste = await repositories.userRepository.findByUsername(cedula);
             if (yaExiste) return true; // ya tiene credenciales, no generar duplicado
 
             const authService = new AuthService(repositories.userRepository);
             const password = await authService.createUserCredentials(cedula, role);
-            const emailSent = await enviarCredenciales({ email, nombre, apellido, cedula, password, rol: role });
-            if (!emailSent) throw new Error('Las credenciales se crearon, pero no se pudo enviar el correo');
+            if (email) {
+                const emailSent = await enviarCredenciales({ email, nombre, apellido, cedula, password, rol: role });
+                if (!emailSent) throw new Error('Las credenciales se crearon, pero no se pudo enviar el correo');
+            } else {
+                console.warn(`No se pudo enviar credenciales por email a ${cedula}: email no registrado`);
+            }
             return true;
         },
 
@@ -642,12 +821,12 @@ export const resolvers = {
 
             if (esProfesor) {
                 const prof = await repositories.profesorRepository.findByCedula(profesorId!);
-                if (!prof?.email) throw new Error('Profesor no encontrado o sin email');
-                cedula = profesorId!; email = prof.email; nombre = `${prof.nombre} ${prof.primerApellido}`; rolUsuario = 'PROFESOR';
+                if (!prof) throw new Error('Profesor no encontrado');
+                cedula = profesorId!; email = prof.email ?? ''; nombre = `${prof.nombre} ${prof.primerApellido}`; rolUsuario = 'PROFESOR';
             } else {
                 const est = await repositories.estudianteRepository.findByCedula(estudianteId!);
-                if (!est?.email) throw new Error('Estudiante no encontrado o sin email');
-                cedula = estudianteId!; email = est.email; nombre = `${est.nombre} ${est.primerApellido}`; rolUsuario = 'ESTUDIANTE';
+                if (!est) throw new Error('Estudiante no encontrado');
+                cedula = estudianteId!; email = est.email ?? ''; nombre = `${est.nombre} ${est.primerApellido}`; rolUsuario = 'ESTUDIANTE';
             }
 
             const clave = generarClaveAleatoria();
@@ -655,28 +834,42 @@ export const resolvers = {
             if (userExists) {
                 await repositories.userRepository.resetPassword(cedula, clave);
             } else {
-                await repositories.userRepository.create({ username: cedula, password: clave, role: rolUsuario, email });
+                await repositories.userRepository.create({ username: cedula, password: clave, role: rolUsuario, email: email || undefined });
             }
-            const emailSent = await enviarPasswordRecuperacion({ email, nombre: nombre.split(' ')[0], cedula, passwordTemporal: clave });
-            if (!emailSent) throw new Error('La clave provisional se generÃ³, pero no se pudo enviar el correo');
+            if (email) {
+                const emailSent = await enviarPasswordRecuperacion({ email, nombre: nombre.split(' ')[0], cedula, passwordTemporal: clave });
+                if (!emailSent) throw new Error('La clave provisional se generó, pero no se pudo enviar el correo');
+            } else {
+                console.warn(`No se pudo enviar la clave provisional por email a ${cedula}: email no registrado`);
+            }
             return true;
         },
 
-        // ── Limpieza ──────────────────────────────────────────
+        // â”€â”€ Limpieza â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         limpiarRegistrosProblematicos: async (_: any, __: any, { user }: any): Promise<boolean> => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
             await MatriculaModel.deleteMany({ $or: [{ estudianteId: null }, { estudianteId: '' }] }).exec();
             return true;
         },
 
-        // ── Indicadores ───────────────────────────────────────
+        // â”€â”€ Indicadores â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         guardarIndicadores: async (_: any, { asignaturaId, periodo, saber, hacer, ser }: any, { user }: any) => {
             const creadoPor = user?.username ?? 'sistema';
-            return await IndicadoresModel.findOneAndUpdate(
+            const doc = await IndicadoresModel.findOneAndUpdate(
                 { asignaturaId, periodo },
                 { asignaturaId, periodo, saber, hacer, ser, creadoPor },
                 { upsert: true, new: true, setDefaultsOnInsert: true },
-            ).lean();
+            ).exec();
+            if (!doc) return null;
+            return {
+                id: doc._id?.toString(),
+                asignaturaId: String(doc.asignaturaId),
+                periodo: doc.periodo,
+                saber: doc.saber || [],
+                hacer: doc.hacer || [],
+                ser: doc.ser || [],
+                creadoPor: doc.creadoPor,
+            };
         },
 
         eliminarIndicadores: async (_: any, { asignaturaId, periodo }: any): Promise<boolean> => {
@@ -684,7 +877,7 @@ export const resolvers = {
             return result.deletedCount > 0;
         },
 
-        // ── Boletín avanzado ──────────────────────────────────
+        // â”€â”€ BoletÃ­n avanzado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         guardarCalificacionBoletin: async (
             _: any,
             { estudianteId, asignaturaId, periodo, valoracion, nota, faltas, observacion }: any,
@@ -718,170 +911,21 @@ export const resolvers = {
             { estudianteId, periodo, observacionGeneral }: any,
             { repositories }: any,
         ): Promise<string> => {
-            // Fetch estudiante y calificaciones en paralelo
-            const [estudiantePorCedula, calsDelPeriodoRaw] = await Promise.all([
-                repositories.estudianteRepository.findByCedula(estudianteId).catch(() => null),
-                repositories.calificacionRepository.findByEstudianteIdAndPeriodo(estudianteId, periodo).catch(() => []),
-            ]);
-            const estudiante = estudiantePorCedula ??
-                await repositories.estudianteRepository.findById(estudianteId).catch(() => null);
-            if (!estudiante) throw new Error(`Estudiante ${estudianteId} no encontrado`);
-
-            const calsDelPeriodo = calsDelPeriodoRaw.filter((c: any) => c.nombreActividad !== '__boletin__');
-            if (!calsDelPeriodo.length) throw new Error('No hay calificaciones para este período');
-
-            // Batch: collect unique asignaturaIds first, then fetch all at once
-            const asigIdsUnicos = [...new Set(calsDelPeriodo.map((c: any) => String(c.asignaturaId)))];
-            const asigsBatch: any[] = await repositories.asignaturaRepository
-                .findByIds(asigIdsUnicos).catch(() => []);
-            const asigById: Record<string, any> = {};
-            for (const a of asigsBatch) asigById[String(a.id ?? a._id)] = a;
-
-            const asigMap: Record<string, { asig: any; notasPorCorte: Record<number, number[]> }> = {};
-            for (const cal of calsDelPeriodo) {
-                const k = String(cal.asignaturaId);
-                if (!asigMap[k]) {
-                    asigMap[k] = { asig: asigById[k] ?? null, notasPorCorte: {} };
-                }
-                const corte = (cal as any).corte ?? 1;
-                if (!asigMap[k].notasPorCorte[corte]) asigMap[k].notasPorCorte[corte] = [];
-                asigMap[k].notasPorCorte[corte].push(Number(cal.nota));
-            }
-
-            // Obtener config del periodo para pesos de cortes
-            const { anio: pAnio, numeroPeriodo: pNum } = parsePeriodo(periodo);
-            const periodoConfig = await PeriodoConfigModel.findOne({
-                anio: pAnio,
-                numeroPeriodo: pNum,
-            });
-            const numCortes = periodoConfig?.numCortes ?? 3;
-            const pesoPorCorte = 100 / numCortes;
-
-            // Pre-batch: collect all unique profesorIds to avoid per-asignatura queries
-            const profIdSet = new Set<string>();
-            for (const { asig } of Object.values(asigMap)) {
-                if (asig?.profesorId) profIdSet.add(String(asig.profesorId));
-            }
-            const profIds = [...profIdSet];
-            const profsBatch: any[] = profIds.length
-                ? await Promise.all(profIds.map(id => repositories.profesorRepository.findById(id).catch(() => null)))
-                : [];
-            const profById: Record<string, any> = {};
-            profsBatch.forEach(p => { if (p) profById[String(p.id ?? p._id)] = p; });
-
-            const asigIdsList = Object.keys(asigMap);
-            const estIdStr = String(estudiante.cedula ?? estudiante.id);
-
-            // Batch all supplementary queries in parallel
-            const [indicadoresBatch, comportamientosBatch, asistenciasData] = await Promise.all([
-                IndicadoresModel.find({
-                    $or: [
-                        { asignaturaId: { $in: asigIdsList } },
-                        { asignaturaId: { $in: asigIdsList.map(id => id.toString()) } },
-                    ],
-                    periodo,
-                }).lean().catch(() => []),
-                ComportamientoModel.find({
-                    estudianteId: estIdStr,
-                    asignaturaId: { $in: asigIdsList },
-                    periodo,
-                }).lean().catch(() => []),
-                AsistenciaModel.aggregate([
-                    { $match: { estudianteId: estIdStr, asignaturaId: { $in: asigIdsList }, periodo, estado: 'AUSENTE' } },
-                    { $group: { _id: '$asignaturaId', count: { $sum: 1 } } },
-                ]).catch(() => []),
-            ]);
-
-            const indByAsig: Record<string, any> = {};
-            for (const ind of indicadoresBatch as any[]) {
-                indByAsig[String(ind.asignaturaId)] = ind;
-            }
-            const compByAsig: Record<string, any> = {};
-            for (const comp of comportamientosBatch as any[]) {
-                compByAsig[String(comp.asignaturaId)] = comp;
-            }
-            const faltasByAsig: Record<string, number> = {};
-            for (const row of asistenciasData as any[]) {
-                faltasByAsig[String(row._id)] = row.count;
-            }
-
-            const calificacionesBoletin = Object.entries(asigMap).map(([asignaturaId, { asig, notasPorCorte }]) => {
-                    // Calcular promedio ponderado por cortes
-                    let notaFinal = 0;
-                    let pesoAcumulado = 0;
-                    for (let c = 1; c <= numCortes; c++) {
-                        const notas = notasPorCorte[c] ?? [];
-                        if (notas.length > 0) {
-                            const promCorte = notas.reduce((s, n) => s + n, 0) / notas.length;
-                            notaFinal += promCorte * (pesoPorCorte / 100);
-                            pesoAcumulado += pesoPorCorte;
-                        }
-                    }
-                    const todasNotas = Object.values(notasPorCorte).flat();
-                    const prom = pesoAcumulado > 0
-                        ? notaFinal / (pesoAcumulado / 100)
-                        : todasNotas.reduce((s, n) => s + n, 0) / (todasNotas.length || 1);
-
-                    const valoracion = prom >= 4.5 ? 'Superior' : prom >= 4.0 ? 'Alto' : prom >= 3.0 ? 'Básico' : 'Bajo';
-                    let docenteNombre = 'Docente';
-                    if (asig?.profesorId) {
-                        const doc = profById[String(asig.profesorId)];
-                        if (doc) docenteNombre = `${doc.nombre} ${doc.primerApellido}`;
-                    }
-
-                    const ind = indByAsig[asignaturaId] ?? null;
-                    const comp = compByAsig[asignaturaId] ?? null;
-                    const faltasCount = faltasByAsig[asignaturaId] ?? 0;
-
-                    return {
-                        asignaturaId,
-                        asignaturaNombre: asig?.nombre ?? asignaturaId,
-                        docenteNombre, valoracion, nota: prom, faltas: faltasCount, observacion: '',
-                        indicadores: {
-                            saber: ind?.saber ?? [],
-                            hacer: ind?.hacer ?? [],
-                            ser:   ind?.ser   ?? [],
-                        },
-                        comportamiento: comp ? { nivel: comp.nivel, descripcion: comp.descripcion } : undefined,
-                    };
-                });
-
-            const matriculas = await repositories.matriculaRepository
-                .findByEstudianteId(estudiante.cedula ?? estudianteId).catch(() => []);
-            const mat = matriculas.find((m: any) => m.periodo === periodo) ?? matriculas[0];
-            const curso = mat ? await repositories.cursoRepository.findById(mat.cursoId).catch(() => null) : null;
-
-            // Bug 10 fix: Buscar el nombre del docente director del curso
-            let directorNombre = 'Coordinación Académica';
-            if (curso?.profesorId) {
-                const dirProf = await repositories.profesorRepository.findById(curso.profesorId).catch(() => null);
-                if (dirProf) directorNombre = `${dirProf.nombre} ${dirProf.primerApellido}`;
-            }
-
-            const buf = await pdfService.generateBoletinGardner({
-                estudiante: {
-                    nombre: estudiante.nombre,
-                    primerApellido: estudiante.primerApellido,
-                    segundoApellido: estudiante.segundoApellido,
-                    cedula: estudiante.cedula,
-                },
-                curso: { nombre: curso?.nombre ?? 'Sin curso' },
-                director: directorNombre,
-                periodo,
-                anio: new Date().getFullYear().toString(),
-                calificaciones: calificacionesBoletin,
-                observacionGeneral,
-            });
-            return Buffer.from(buf).toString('base64');
+            return await generarBoletinAcumuladoBase64(
+                repositories,
+                String(estudianteId),
+                String(periodo),
+                String(observacionGeneral ?? ''),
+            );
         },
 
-        // ── Estudiantes ───────────────────────────────────────
+        // â”€â”€ Estudiantes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         crearEstudiante: async (_: any, { input }: any, { user, repositories }: any) => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
             const cedula = String(input.cedula ?? '').trim();
             if (!cedula) throw new Error('La cédula es obligatoria');
-            if (!input.nombre?.trim() || !input.primerApellido?.trim() || !input.email?.trim())
-                throw new Error('Nombre, primer apellido y email son obligatorios');
+            if (!input.nombre?.trim() || !input.primerApellido?.trim())
+                throw new Error('Nombre y primer apellido son obligatorios');
             const existe = await repositories.estudianteRepository.findByCedula(cedula);
             if (existe) throw new Error(`Ya existe un estudiante con cédula ${cedula}`);
             return await repositories.estudianteRepository.create({
@@ -889,7 +933,7 @@ export const resolvers = {
                 nombre: input.nombre.trim(),
                 primerApellido: input.primerApellido.trim(),
                 segundoApellido: (input.segundoApellido ?? '').trim(),
-                email: input.email.trim(),
+                email: (input.email ?? '').trim(),
                 telefono: (input.telefono ?? '').trim(),
                 direccion: (input.direccion ?? '').trim(),
                 acudiente: (input.acudiente ?? '').trim(),
@@ -898,28 +942,32 @@ export const resolvers = {
 
         actualizarEstudiante: async (_: any, { id, input }: any, { user, repositories }: any) => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
-            if (!input.cedula || !input.nombre || !input.primerApellido || !input.email)
-                throw new Error('Cedula, nombre, primer apellido y email son obligatorios');
-            const actualizado = await repositories.estudianteRepository.update(id, input);
+            if (!input.cedula || !input.nombre || !input.primerApellido)
+                throw new Error('Cedula, nombre y primer apellido son obligatorios');
+            const actualizado = await repositories.estudianteRepository.update(id, {
+                ...input,
+                email: (input.email ?? '').trim(),
+            });
             if (!actualizado) throw new Error(`No se pudo actualizar el estudiante ${id}`);
             return actualizado;
         },
 
+
         eliminarEstudiante: async (_: any, { id }: any, { user, repositories }: any) => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
-            // Obtener la cédula del estudiante para borrar el usuario asociado
+            // Obtener la cÃ©dula del estudiante para borrar el usuario asociado
             const estudiante = await repositories.estudianteRepository.findById(id).catch(() => null)
                 ?? await repositories.estudianteRepository.findByCedula(id).catch(() => null);
             const ok = await repositories.estudianteRepository.delete(id);
             if (!ok) throw new Error(`No se pudo eliminar el estudiante ${id}`);
-            // Eliminar el usuario del sistema (username = cédula)
+            // Eliminar el usuario del sistema (username = cÃ©dula)
             if (estudiante?.cedula) {
                 await UserModel.deleteOne({ username: estudiante.cedula }).catch(() => {});
             }
             return ok;
         },
 
-        // ── Profesores ────────────────────────────────────────
+        // â”€â”€ Profesores â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         crearProfesor: async (_: any, { input }: any, { user, repositories }: any) => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
             const cedula = String(input.cedula ?? '').trim();
@@ -937,7 +985,7 @@ export const resolvers = {
                 telefono: (input.telefono ?? '').trim(),
                 direccion: (input.direccion ?? '').trim(),
             });
-            // Crear credenciales automáticamente — best-effort
+            // Crear credenciales automÃ¡ticamente â€” best-effort
             await resolvers.Mutation.enviarCrearCredenciales(_, { profesorId: cedula }, { user, repositories });
             return profesor;
         },
@@ -951,19 +999,19 @@ export const resolvers = {
 
         eliminarProfesor: async (_: any, { id }: any, { user, repositories }: any) => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
-            // Obtener la cédula del profesor para borrar el usuario asociado
+            // Obtener la cÃ©dula del profesor para borrar el usuario asociado
             const profesor = await repositories.profesorRepository.findById(id).catch(() => null)
                 ?? await repositories.profesorRepository.findByCedula(id).catch(() => null);
             const ok = await repositories.profesorRepository.delete(id);
             if (!ok) throw new Error(`No se pudo eliminar el profesor ${id}`);
-            // Eliminar el usuario del sistema (username = cédula)
+            // Eliminar el usuario del sistema (username = cÃ©dula)
             if (profesor?.cedula) {
                 await UserModel.deleteOne({ username: profesor.cedula }).catch(() => {});
             }
             return ok;
         },
 
-        // ── Cursos ────────────────────────────────────────────
+        // â”€â”€ Cursos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         crearCurso: async (_: any, { input }: any, { user, repositories }: any) => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
             if (!input.id || !input.nombre) throw new Error('El ID y nombre del curso son obligatorios');
@@ -995,18 +1043,18 @@ export const resolvers = {
             return !!(await repositories.cursoRepository.delete(id));
         },
 
-        // ── Calificaciones ────────────────────────────────────
+        // â”€â”€ Calificaciones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         crearCalificacion: async (_: any, { input }: any, { user, repositories }: any) => {
             if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado: se requiere rol ADMIN o PROFESOR');
             if (!input.estudianteId) throw new Error('El estudianteId es requerido');
             if (!input.asignaturaId) throw new Error('El asignaturaId es requerido');
 
-            // Verificar que el periodo esté abierto
+            // Verificar que el periodo estÃ© abierto
             await verificarPeriodoAbierto(input.periodo);
 
             const cal = await repositories.calificacionRepository.create(input);
 
-            // Notificación email — best-effort, en background
+            // NotificaciÃ³n email â€” best-effort, en background
             (async () => {
                 try {
                     const estudiante = await repositories.estudianteRepository.findById(input.estudianteId);
@@ -1052,32 +1100,106 @@ export const resolvers = {
             return !!(await repositories.calificacionRepository.delete(id));
         },
 
-        // ── Boletines ─────────────────────────────────────────
+        // â”€â”€ Boletines â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         generarBoletin: async (_: any, { input }: any, { repositories }: any) => {
             if (!input.estudianteId || !input.cursoId || !input.periodo || !Array.isArray(input.calificaciones))
                 throw new Error('Datos incompletos para generar boletín');
             if (!input.calificaciones.length)
                 throw new Error('No se proporcionaron calificaciones');
-            const estudiante = await repositories.estudianteRepository.findById(input.estudianteId);
+
+            const estudiante =
+                (await repositories.estudianteRepository.findByCedula(input.estudianteId).catch(() => null)) ??
+                (await repositories.estudianteRepository.findById(input.estudianteId).catch(() => null));
             if (!estudiante) throw new Error('Estudiante no encontrado');
             const curso = await repositories.cursoRepository.findById(input.cursoId);
             if (!curso) throw new Error('Curso no encontrado');
-            const suma = input.calificaciones.reduce((acc: number, c: any) => acc + Number(c.nota), 0);
-            const promedio = suma / input.calificaciones.length;
-            if (isNaN(promedio)) throw new Error('No se pudo calcular el promedio');
-            return await repositories.boletinRepository.create({ ...input, promedio });
+
+            const asignaturasCurso = await repositories.asignaturaRepository.findByCursoId(input.cursoId).catch(() => []);
+            const asigIdsCurso = new Set((asignaturasCurso || []).map((a: any) => String(a.id ?? a._id)));
+            const estIdBoletin = estudiante.cedula ?? input.estudianteId;
+            const todasLasCalificaciones = await repositories.calificacionRepository.findByEstudianteId(estIdBoletin).catch(() => []);
+            const calsAcumuladas = (todasLasCalificaciones || []).filter((c: any) =>
+                mismoAnioYPrevios(input.periodo, c.periodo) && asigIdsCurso.has(String(c.asignaturaId)),
+            );
+            if (!calsAcumuladas.length) throw new Error('No se pudo calcular el promedio acumulado');
+
+            const asigMap: Record<string, Record<number, number[]>> = {};
+            for (const cal of calsAcumuladas) {
+                const k = String(cal.asignaturaId);
+                if (!asigMap[k]) asigMap[k] = {};
+                const numeroPeriodo = parsePeriodo(String(cal.periodo || input.periodo)).numeroPeriodo;
+                if (!asigMap[k][numeroPeriodo]) asigMap[k][numeroPeriodo] = [];
+                asigMap[k][numeroPeriodo].push(Number(cal.nota));
+            }
+
+            const periodoObjetivo = parsePeriodo(input.periodo).numeroPeriodo;
+            const promediosMaterias = Object.values(asigMap)
+                .map((notasPorPeriodo: Record<number, number[]>) => {
+                    const promediosAcumulados = [1, 2, 3]
+                        .slice(0, periodoObjetivo)
+                        .map((numeroPeriodo) => promedioNumeros(notasPorPeriodo[numeroPeriodo] ?? []))
+                        .filter((nota): nota is number => nota !== null);
+                    return promedioNumeros(promediosAcumulados);
+                })
+                .filter((nota): nota is number => nota !== null);
+
+            const promedio = promedioNumeros(promediosMaterias);
+            if (promedio === null || isNaN(promedio)) throw new Error('No se pudo calcular el promedio');
+
+            return await repositories.boletinRepository.create({ ...input, estudianteId: estIdBoletin, promedio });
         },
 
         actualizarBoletin: async (_: any, { id, input }: any, { repositories }: any) => {
-            const suma = input.calificaciones.reduce((acc: number, c: any) => acc + c.nota, 0);
-            const promedio = suma / input.calificaciones.length;
-            return await repositories.boletinRepository.update(id, { ...input, promedio });
-        },
+            if (!input.estudianteId || !input.cursoId || !input.periodo || !Array.isArray(input.calificaciones))
+                throw new Error('Datos incompletos para actualizar boletín');
+            if (!input.calificaciones.length)
+                throw new Error('No se proporcionaron calificaciones');
 
+            const estudiante =
+                (await repositories.estudianteRepository.findByCedula(input.estudianteId).catch(() => null)) ??
+                (await repositories.estudianteRepository.findById(input.estudianteId).catch(() => null));
+            if (!estudiante) throw new Error('Estudiante no encontrado');
+            const curso = await repositories.cursoRepository.findById(input.cursoId);
+            if (!curso) throw new Error('Curso no encontrado');
+
+            const asignaturasCurso = await repositories.asignaturaRepository.findByCursoId(input.cursoId).catch(() => []);
+            const asigIdsCurso = new Set((asignaturasCurso || []).map((a: any) => String(a.id ?? a._id)));
+            const estIdBoletin = estudiante.cedula ?? input.estudianteId;
+            const todasLasCalificaciones = await repositories.calificacionRepository.findByEstudianteId(estIdBoletin).catch(() => []);
+            const calsAcumuladas = (todasLasCalificaciones || []).filter((c: any) =>
+                mismoAnioYPrevios(input.periodo, c.periodo) && asigIdsCurso.has(String(c.asignaturaId)),
+            );
+            if (!calsAcumuladas.length) throw new Error('No se pudo calcular el promedio acumulado');
+
+            const asigMap: Record<string, Record<number, number[]>> = {};
+            for (const cal of calsAcumuladas) {
+                const k = String(cal.asignaturaId);
+                if (!asigMap[k]) asigMap[k] = {};
+                const numeroPeriodo = parsePeriodo(String(cal.periodo || input.periodo)).numeroPeriodo;
+                if (!asigMap[k][numeroPeriodo]) asigMap[k][numeroPeriodo] = [];
+                asigMap[k][numeroPeriodo].push(Number(cal.nota));
+            }
+
+            const periodoObjetivo = parsePeriodo(input.periodo).numeroPeriodo;
+            const promediosMaterias = Object.values(asigMap)
+                .map((notasPorPeriodo: Record<number, number[]>) => {
+                    const promediosAcumulados = [1, 2, 3]
+                        .slice(0, periodoObjetivo)
+                        .map((numeroPeriodo) => promedioNumeros(notasPorPeriodo[numeroPeriodo] ?? []))
+                        .filter((nota): nota is number => nota !== null);
+                    return promedioNumeros(promediosAcumulados);
+                })
+                .filter((nota): nota is number => nota !== null);
+
+            const promedio = promedioNumeros(promediosMaterias);
+            if (promedio === null || isNaN(promedio)) throw new Error('No se pudo calcular el promedio');
+
+            return await repositories.boletinRepository.update(id, { ...input, estudianteId: estIdBoletin, promedio });
+        },
         eliminarBoletin: async (_: any, { id }: any, { repositories }: any) =>
             !!(await repositories.boletinRepository.delete(id)),
 
-        // ── Matrículas ────────────────────────────────────────
+        // â”€â”€ MatrÃ­culas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         crearMatricula: async (_: any, { input }: any, { user, repositories }: any) => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
             if (!input.estudianteId || !input.cursoId)
@@ -1110,7 +1232,7 @@ export const resolvers = {
                 asignaturas: input.asignaturas ?? [],
             });
 
-            // Credenciales y confirmación — best-effort
+            // Credenciales y confirmaciÃ³n â€” best-effort
             (async () => {
                 try {
                     const yaExiste = await repositories.userRepository.findByUsername(estudiante.cedula);
@@ -1140,7 +1262,7 @@ export const resolvers = {
         eliminarMatricula: async (_: any, { id }: any, { repositories }: any) =>
             await repositories.matriculaRepository.delete(id),
 
-        // ── Asignaturas ───────────────────────────────────────
+        // â”€â”€ Asignaturas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         crearAsignatura: async (_: any, { input }: any, { user, repositories }: any) => {
             if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
             const profesor = await repositories.profesorRepository.findById(input.profesorId);
@@ -1155,7 +1277,7 @@ export const resolvers = {
             });
         },
 
-        // ── Nueva feature: crear la misma asignatura en varios cursos a la vez ──
+        // â”€â”€ Nueva feature: crear la misma asignatura en varios cursos a la vez â”€â”€
         crearAsignaturaEnVariosCursos: async (
             _: any,
             { input }: { input: { nombre: string; profesorId: string; cursos: Array<{ cursoId: string; horario: string }> } },
@@ -1203,7 +1325,7 @@ export const resolvers = {
             return !!(await repositories.asignaturaRepository.delete(id));
         },
 
-        // ── Asistencias ───────────────────────────────────────
+        // â”€â”€ Asistencias â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         registrarLista: async (_: any, { input }: any, { repositories }: any) => {
             const registros = input.estudiantes.map((est: any) => ({
                 estudianteId:  est.estudianteId,
@@ -1226,7 +1348,7 @@ export const resolvers = {
         eliminarAsistencia: async (_: any, { id }: any, { repositories }: any) =>
             await repositories.asistenciaRepository.delete(id),
 
-        // ── Periodos ─────────────────────────────────────────
+        // â”€â”€ Periodos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         configurarPeriodo: async (_: any, { input }: any, { user }: any) => {
             if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
             const doc = await PeriodoConfigModel.findOneAndUpdate(
@@ -1262,13 +1384,13 @@ export const resolvers = {
             return { ...(doc as any), id: (doc as any)._id?.toString(), pesoPorCorte: 100 / (doc as any).numCortes };
         },
 
-        // ── Comportamiento ───────────────────────────────────
+        // â”€â”€ Comportamiento â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         guardarComportamiento: async (_: any, { input }: any, { user, repositories }: any) => {
             if (!user) throw new Error('No autenticado');
             const profesor = await repositories.profesorRepository.findByCedula(user.username).catch(() => null);
             if (!profesor) throw new Error('Solo profesores pueden registrar comportamiento');
 
-            // Calcular nivel automáticamente desde la nota si se proporciona
+            // Calcular nivel automÃ¡ticamente desde la nota si se proporciona
             let nivel = input.nivel;
             if (input.nota !== undefined && input.nota !== null) {
                 const n = parseFloat(input.nota);
@@ -1286,7 +1408,7 @@ export const resolvers = {
             return { ...(doc as any), id: (doc as any)._id?.toString() };
         },
 
-        // ── Cronograma ───────────────────────────────────────
+        // â”€â”€ Cronograma â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         crearEventoCronograma: async (_: any, { input }: any, { user }: any) => {
             if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
             const doc = await CronogramaModel.create({ ...input, creadoPor: user.username });
@@ -1318,9 +1440,9 @@ export const resolvers = {
         },
     },
 
-    // ═══════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     //  TYPE RESOLVERS
-    // ═══════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     User: {
         id: (user: any) => user._id ?? user.id,
     },
@@ -1427,6 +1549,13 @@ export const resolvers = {
         },
     },
 
+    Indicadores: {
+        id: (indicador: any) => indicador?.id ?? indicador?._id?.toString() ?? null,
+        asignaturaId: (indicador: any) => indicador?.asignaturaId ? String(indicador.asignaturaId) : null,
+        saber: (indicador: any) => Array.isArray(indicador?.saber) ? indicador.saber : [],
+        hacer: (indicador: any) => Array.isArray(indicador?.hacer) ? indicador.hacer : [],
+        ser: (indicador: any) => Array.isArray(indicador?.ser) ? indicador.ser : [],
+    },
     Boletin: {
         fecha: (boletin: any) => {
             if (!boletin?.fecha) return new Date().toISOString();
@@ -1450,3 +1579,10 @@ export const resolvers = {
             await repositories.cursoRepository.findById(boletin.cursoId),
     },
 };
+
+
+
+
+
+
+

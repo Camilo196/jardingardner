@@ -161,7 +161,8 @@ export class AuthService {
     async createUserCredentials(userId: string, role: string = 'ESTUDIANTE'): Promise<string> {
         try {
             console.log(`Generando credenciales para ${role.toLowerCase()} ${userId}`);
-            const password = this.generateRandomPassword();
+            const normalizedRole = role.toUpperCase();
+            const password = normalizedRole === 'ESTUDIANTE' ? userId : this.generateRandomPassword();
 
             
             // Buscar si ya existe un usuario con este username
@@ -176,8 +177,7 @@ export class AuthService {
                 await this.userRepository.create({
                     username: userId,
                     password: password,
-                    role: role,  // Usar el rol proporcionado en lugar de hardcodear ESTUDIANTE
-                    email: userId // Usar la cédula como email temporalmente si no tienes otro
+                    role: role,
                 });
             }
             

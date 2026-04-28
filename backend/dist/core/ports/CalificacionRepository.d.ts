@@ -6,6 +6,7 @@ export interface CalificacionRepository {
     findByCursoId(cursoId: string): Promise<Calificacion[]>;
     findByBoletinId(boletinId: string): Promise<Calificacion[]>;
     findByEstudianteIdAndPeriodo(estudianteId: string, periodo: string): Promise<Calificacion[]>;
+    findByAsignaturaYPeriodo(asignaturaId: string, periodo: string): Promise<Calificacion[]>;
     create(calificacion: Omit<Calificacion, 'id'>): Promise<Calificacion>;
     update(id: string, calificacion: Partial<Calificacion>): Promise<Calificacion | null>;
     delete(id: string): Promise<boolean>;

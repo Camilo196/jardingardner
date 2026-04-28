@@ -3,76 +3,435 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEARNSCAPE — Jardín Infantil</title>
+    <title>Jardin Infantil Gardner | Portal institucional</title>
     <link rel="stylesheet" href="../assets/styles/styleprincipal.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<script src="../assets/config.js"></script>
+    <script src="../assets/config.js"></script>
 </head>
 <body>
 
-<header>
-    <div class="header-logo">
-        <div class="logo-bubble">🎒</div>
-        <div>
-            <div class="logo-name">LEARNSCAPE</div>
-            <div class="logo-tagline">Gestión Educativa</div>
-        </div>
+<header class="site-header">
+    <div class="header-shell">
+        <a class="brand" href="#inicio">
+            <img class="brand-logo" src="../assets/institution/pdf_image_2.jpg" alt="Logo Jardin Infantil Gardner">
+            <div class="brand-copy">
+                <span class="brand-kicker"></span>
+                <strong id="institutionName">Jardin Infantil Gardner</strong>
+                <small>Sabiduria &middot; Excelencia &middot; Gracia</small>
+            </div>
+        </a>
+
+        <nav class="site-nav">
+            <a href="#inicio">Inicio</a>
+            <a href="#nosotros">Nosotros</a>
+            <a href="#mision">Mision y Vision</a>
+            <a href="#matricula">Matricula</a>
+            <a href="#plataforma">Plataforma</a>
+            <a href="#contacto">Contacto</a>
+        </nav>
+
+        <a class="header-cta js-open-access" href="#plataforma">Ingresar aqui</a>
     </div>
-    <div class="header-right">Año lectivo 2026</div>
 </header>
 
 <main>
-    <section class="hero">
-        <div class="hero-badge"><span></span> Sistema activo</div>
-        <h1>Bienvenidos al<br><em>jardín infantil</em></h1>
-        <p>Selecciona tu perfil para ingresar al sistema. Juntos construimos el futuro de nuestros niños.</p>
+    <section class="hero" id="inicio">
+        <div class="hero-backdrop"></div>
+        <div class="hero-grid">
+            <div class="hero-copy">
+                <div class="hero-badge">
+                    <span></span>
+                    Institucion educativa activa
+                </div>
+
+                <h1>
+                    Educacion integral con
+                    <span>identidad, valores y futuro</span>
+                </h1>
+
+                <p class="hero-lead">
+                    Bienvenidos al Jardin Infantil Gardner, una institucion comprometida
+                    con el desarrollo de las inteligencias multiples, la convivencia
+                    armonica y el crecimiento socio-cognitivo de ninos y ninas.
+                </p>
+
+                <p class="hero-text">
+                    Nuestra propuesta acompana a cada familia desde los primeros pasos,
+                    fortaleciendo aprendizajes, habilidades, principios y sentido de
+                    comunidad en el contexto de Ipiales.
+                </p>
+
+                <div class="hero-actions">
+                    <a class="btn btn-primary" href="#galeria">Ver galeria institucional</a>
+                    <a class="btn btn-secondary" href="#nosotros">Conocer la institucion</a>
+                </div>
+
+                <div class="hero-summary">
+                    <article class="summary-card">
+                        <strong>Educacion integral e inclusiva</strong>
+                        <span>Procesos pedagogicos orientados al desarrollo humano y academico.</span>
+                    </article>
+                    <article class="summary-card">
+                        <strong>Trabajo con familia y comunidad</strong>
+                        <span>Vinculacion permanente con el entorno social y cultural de Ipiales.</span>
+                    </article>
+                </div>
+            </div>
+
+            <aside class="hero-panel">
+                <div class="panel-card">
+                    <div class="panel-image-wrap">
+                        <img class="hero-logo" src="../assets/institution/pdf_image_2.jpg" alt="Logo Jardin Infantil Gardner">
+                    </div>
+                    <div class="panel-copy">
+                        <span>Institucion</span>
+                        <h2>Jardin Infantil Gardner</h2>
+                        <p>
+                            Formamos con cercania, excelencia y una vision educativa enfocada
+                            en el bienestar integral de la primera infancia.
+                        </p>
+                    </div>
+                    <div class="panel-points">
+                        <div class="panel-point">
+                            <i class="fas fa-brain"></i>
+                            <span>Inteligencias multiples</span>
+                        </div>
+                        <div class="panel-point">
+                            <i class="fas fa-heart"></i>
+                            <span>Convivencia y valores</span>
+                        </div>
+                        <div class="panel-point">
+                            <i class="fas fa-seedling"></i>
+                            <span>Desarrollo integral</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
     </section>
 
-    <section class="cards-section">
-        <div class="cards-grid">
+    <section class="values-band">
+        <div class="value-pill">Inteligencias multiples</div>
+        <div class="value-pill">Valores y convivencia</div>
+        <div class="value-pill">Desarrollo integral</div>
+        <div class="value-pill">Familia y comunidad</div>
+        <div class="value-pill">Crecimiento socio-cognitivo</div>
+    </section>
 
-            <div class="role-card" data-role="student">
-                <div class="card-icon">🎓</div>
-                <h2 class="card-title">Estudiante</h2>
-                <p class="card-desc">Consulta tus calificaciones, horarios y asignaturas del período actual.</p>
-                <button class="card-btn">Ingresar <i class="fas fa-arrow-right" style="font-size:11px"></i></button>
+    <section class="section section-gallery" id="galeria">
+        <div class="section-head">
+            <span class="section-tag">Vida institucional</span>
+            <h2>Asi se vive Gardner en cada actividad</h2>
+            <p>
+                Compartimos algunos momentos reales de nuestra comunidad educativa:
+                aprendizaje, juego, expresion y acompanamiento en cada etapa.
+            </p>
+        </div>
+
+        <div class="gallery-grid">
+            <article class="gallery-card">
+                <img class="gallery-media" src="../assets/institution/gardner-foto-1.jpeg" alt="Grupo de estudiantes Gardner en actividad institucional">
+                <div class="gallery-body">
+                    <strong>Identidad y alegria escolar</strong>
+                    <p>Experiencias que fortalecen la convivencia, la confianza y el sentido de pertenencia.</p>
+                </div>
+            </article>
+
+            <article class="gallery-card">
+                <img class="gallery-media" src="../assets/institution/gardner-foto-2.jpeg" alt="Estudiantes Gardner compartiendo en una salida pedagogica">
+                <div class="gallery-body">
+                    <strong>Acompanamiento cercano</strong>
+                    <p>El cuidado y la amistad tambien hacen parte del proceso formativo.</p>
+                </div>
+            </article>
+
+            <article class="gallery-card">
+                <img class="gallery-media" src="../assets/institution/gardner-foto-3.jpeg" alt="Estudiantes Gardner celebrando el dia del idioma">
+                <div class="gallery-body">
+                    <strong>Fechas pedagogicas significativas</strong>
+                    <p>Celebramos proyectos de aula que conectan cultura, lenguaje y creatividad.</p>
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+    <section class="section section-light" id="nosotros">
+        <div class="section-head">
+            <span class="section-tag">Nuestra identidad</span>
+            <h2>Una institucion enfocada en educar para una mejor sociedad</h2>
+            <p>
+                El Jardin Infantil Gardner promueve una formacion cercana, organizada e
+                innovadora, donde cada estudiante desarrolla sus capacidades en un entorno
+                seguro, humano y conectado con su comunidad.
+            </p>
+        </div>
+
+        <div class="identity-grid">
+            <article class="info-card">
+                <span class="info-tag">Enfoque pedagogico</span>
+                <h3>Educacion integral e inclusiva</h3>
+                <p>
+                    Potenciamos aptitudes, habilidades y destrezas mediante experiencias
+                    que reconocen la diversidad y fortalecen el aprendizaje significativo.
+                </p>
+            </article>
+
+            <article class="info-card">
+                <span class="info-tag">Formacion humana</span>
+                <h3>Principios, valores y convivencia</h3>
+                <p>
+                    Acompanamos el crecimiento de ninos y ninas con una cultura basada en
+                    el respeto, la armonia, la paz y la construccion de relaciones sanas.
+                </p>
+            </article>
+
+            <article class="info-card">
+                <span class="info-tag">Comunidad educativa</span>
+                <h3>Escuela, familia y entorno</h3>
+                <p>
+                    Impulsamos proyectos que integran familia, institucion y contexto
+                    local para fortalecer identidad, pertenencia y desarrollo social.
+                </p>
+            </article>
+        </div>
+    </section>
+
+    <section class="section" id="mision">
+        <div class="section-head">
+            <span class="section-tag">Mision y Vision</span>
+            <h2>La base que orienta nuestro proyecto educativo</h2>
+        </div>
+
+        <div class="mission-grid">
+            <article class="statement-card statement-card-mision">
+                <div class="statement-top">
+                    <span>Mision</span>
+                    <div class="statement-line"></div>
+                </div>
+                <h3>Nuestra mision</h3>
+                <p>
+                    La institucion educativa Gardner promueve una educacion integral e
+                    inclusiva enfocada en el desarrollo de las inteligencias multiples,
+                    fortaleciendo principios y valores que garantizan una convivencia
+                    pacifica y armonica, al mismo tiempo que estimula el crecimiento
+                    socio-cognitivo de los ninos y ninas para la construccion de una
+                    mejor sociedad.
+                </p>
+            </article>
+
+            <article class="statement-card statement-card-vision" id="vision">
+                <div class="statement-top">
+                    <span>Vision</span>
+                    <div class="statement-line"></div>
+                </div>
+                <h3>Nuestra vision</h3>
+                <p>
+                    Para el ano 2029, la institucion educativa Gardner sera reconocida por
+                    su excelencia en el servicio educativo, destacandose como lider en
+                    educacion integral. A traves de proyectos pedagogicos innovadores,
+                    potenciara las aptitudes, habilidades y destrezas de sus estudiantes,
+                    contribuyendo al fortalecimiento y desarrollo de nuestra sociedad.
+                </p>
+            </article>
+        </div>
+    </section>
+
+    <section class="section section-soft" id="matricula">
+        <div class="section-head">
+            <span class="section-tag">Proceso de admision</span>
+            <h2>Requisitos de matricula</h2>
+            <p>
+                Para iniciar el proceso de ingreso en el Jardin Infantil Gardner, prepara
+                con anticipacion los siguientes documentos.
+            </p>
+        </div>
+
+        <div class="requirements-grid">
+            <article class="requirement-card"><div class="requirement-number">01</div><p>Copia del registro civil o tarjeta de identidad.</p></article>
+            <article class="requirement-card"><div class="requirement-number">02</div><p>Liberacion de cupo.</p></article>
+            <article class="requirement-card"><div class="requirement-number">03</div><p>Paz y salvo de la institucion anterior.</p></article>
+            <article class="requirement-card"><div class="requirement-number">04</div><p>Certificados de estudio de los dos ultimos anos escolares.</p></article>
+            <article class="requirement-card"><div class="requirement-number">05</div><p>Copia del carne de vacunas.</p></article>
+            <article class="requirement-card"><div class="requirement-number">06</div><p>Copia de la cedula de los padres.</p></article>
+            <article class="requirement-card"><div class="requirement-number">07</div><p>Dos fotografias tamano carne fondo azul.</p></article>
+            <article class="requirement-card"><div class="requirement-number">08</div><p>Copia del ultimo control de crecimiento y desarrollo de la entidad de salud.</p></article>
+            <article class="requirement-card"><div class="requirement-number">09</div><p>Certificado medico.</p></article>
+            <article class="requirement-card"><div class="requirement-number">10</div><p>Certificado de afiliacion a regimen de salud.</p></article>
+        </div>
+    </section>
+
+    <section class="section section-platform" id="plataforma">
+        <div class="section-head">
+            <span class="section-tag">Plataforma academica</span>
+            <h2>Ingresa al modulo institucional</h2>
+            <p>
+                Ademas de la informacion institucional, este portal permite el acceso por
+                perfil a los modulos del estudiante, profesor, administrador y acudiente.
+            </p>
+        </div>
+
+        <div class="platform-entry">
+            <div class="platform-copy">
+                <span class="platform-kicker">Acceso al sistema</span>
+                <h3>Selecciona tu perfil</h3>
+                <p>
+                    Elige directamente el rol con el que deseas iniciar sesion dentro
+                    de la plataforma academica.
+                </p>
+                <div class="platform-highlights">
+                    <div class="platform-highlight"><i class="fas fa-user-graduate"></i> Estudiantes</div>
+                    <div class="platform-highlight"><i class="fas fa-chalkboard-teacher"></i> Profesores</div>
+                    <div class="platform-highlight"><i class="fas fa-building"></i> Administracion</div>
+                    <div class="platform-highlight"><i class="fas fa-people-roof"></i> Acudientes</div>
+                </div>
+                <div class="platform-inline-note">
+                    <i class="fas fa-circle-check"></i>
+                    <span>Los accesos quedan visibles para ingresar sin pasos intermedios.</span>
+                </div>
             </div>
 
-            <div class="role-card" data-role="teacher">
-                <div class="card-icon">📚</div>
-                <h2 class="card-title">Profesor</h2>
-                <p class="card-desc">Gestiona tus asignaturas, registra notas y revisa la lista de estudiantes.</p>
-                <button class="card-btn">Ingresar <i class="fas fa-arrow-right" style="font-size:11px"></i></button>
+            <div class="platform-panel is-open" id="accessPanel">
+                <button class="role-card role-card-compact" data-role="student" type="button">
+                    <div class="role-icon"><i class="fas fa-user-graduate"></i></div>
+                    <div class="role-copy">
+                        <strong>Estudiante</strong>
+                        <span>Consulta calificaciones, horarios y seguimiento academico.</span>
+                    </div>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+
+                <button class="role-card role-card-compact" data-role="teacher" type="button">
+                    <div class="role-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                    <div class="role-copy">
+                        <strong>Profesor</strong>
+                        <span>Gestiona asignaturas, asistencia y procesos pedagogicos.</span>
+                    </div>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+
+                <button class="role-card role-card-compact" data-role="admin" type="button">
+                    <div class="role-icon"><i class="fas fa-building"></i></div>
+                    <div class="role-copy">
+                        <strong>Administrador</strong>
+                        <span>Administra usuarios, cursos, reportes y configuracion.</span>
+                    </div>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+
+                <button class="role-card role-card-compact" data-role="acudiente" type="button">
+                    <div class="role-icon"><i class="fas fa-people-roof"></i></div>
+                    <div class="role-copy">
+                        <strong>Acudiente</strong>
+                        <span>Consulta la informacion academica del estudiante vinculado.</span>
+                    </div>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section class="section section-contact" id="contacto">
+        <div class="contact-shell">
+            <div class="contact-info">
+                <div class="section-tag">Comuniquese con nosotros</div>
+                <h2>Contactenos</h2>
+                <p>
+                    Estamos listos para orientar a las familias en procesos de matricula,
+                    informacion institucional y acompanamiento dentro de la comunidad educativa.
+                </p>
+
+                <div class="contact-stack">
+                    <article class="contact-card">
+                        <div class="contact-icon-box"><i class="fas fa-phone"></i></div>
+                        <div>
+                            <label>Telefonos</label>
+                            <strong>317 424 4065</strong>
+                            <span>315 581 7651</span>
+                        </div>
+                    </article>
+
+                    <article class="contact-card">
+                        <div class="contact-icon-box"><i class="fas fa-map-marker-alt"></i></div>
+                        <div>
+                            <label>Ubicacion</label>
+                            <strong>Ipiales</strong>
+                            <span>Narino, Colombia</span>
+                        </div>
+                    </article>
+
+                    <article class="contact-card">
+                        <div class="contact-icon-box"><i class="fas fa-school"></i></div>
+                        <div>
+                            <label>Proyecto educativo</label>
+                            <strong>PEI Gardner</strong>
+                            <span>Propuesta integral para la primera infancia.</span>
+                        </div>
+                    </article>
+                </div>
             </div>
 
-            <div class="role-card" data-role="admin">
-                <div class="card-icon">⭐</div>
-                <h2 class="card-title">Administrativo</h2>
-                <p class="card-desc">Administra profesores, estudiantes, cursos y matrículas del colegio.</p>
-                <button class="card-btn">Ingresar <i class="fas fa-arrow-right" style="font-size:11px"></i></button>
-            </div>
+            <div class="contact-form-card">
+                <span class="form-kicker">Atencion institucional</span>
+                <h3>Escribenos</h3>
+                <p>
+                    Usa estos canales para iniciar contacto con la institucion y recibir
+                    orientacion segun tu necesidad.
+                </p>
 
-            <div class="role-card" data-role="acudiente" style="border-top:4px solid #2d9e5f">
-                <div class="card-icon">👨‍👩‍👧</div>
-                <h2 class="card-title">Acudiente / Padre</h2>
-                <p class="card-desc">Consulta notas, asistencia y boletines de tu hijo/a. Mantente siempre informado.</p>
-                <button class="card-btn" style="background:#2d9e5f">Ingresar <i class="fas fa-arrow-right" style="font-size:11px"></i></button>
-            </div>
+                <div class="contact-form-grid">
+                    <div class="contact-mini-card">
+                        <i class="fas fa-phone-volume"></i>
+                        <strong>Llamadas y WhatsApp</strong>
+                        <span>Atencion directa para familias y procesos de ingreso.</span>
+                    </div>
+                    <div class="contact-mini-card">
+                        <i class="fas fa-users"></i>
+                        <strong>Escuela y familia</strong>
+                        <span>Acompanamiento cercano a la comunidad educativa.</span>
+                    </div>
+                </div>
 
+                <a class="btn btn-primary contact-cta" href="#plataforma">Ir al acceso institucional</a>
+            </div>
         </div>
     </section>
 </main>
 
-<!-- ─── MODAL LOGIN ─── -->
+<footer class="site-footer">
+    <div class="footer-grid">
+        <div>
+            <span class="footer-tag">Institucion</span>
+            <strong id="institutionFooter">Jardin Infantil Gardner</strong>
+            <p>Educacion integral desde sus primeros pasos.</p>
+        </div>
+        <div>
+            <span class="footer-tag">Navegacion</span>
+            <a href="#nosotros">Nosotros</a>
+            <a href="#mision">Mision y Vision</a>
+            <a href="#matricula">Matricula</a>
+            <a href="#plataforma">Plataforma</a>
+        </div>
+        <div>
+            <span class="footer-tag">Contacto</span>
+            <p>317 424 4065</p>
+            <p>315 581 7651</p>
+            <p>Ipiales, Narino</p>
+        </div>
+    </div>
+    <p class="footer-copy">&copy; 2026 Jardin Infantil Gardner - Portal institucional.</p>
+</footer>
+
 <div class="modal" id="loginModal">
     <div class="modal-content">
         <div class="modal-head">
             <div class="modal-head-left">
-                <div class="modal-head-icon">🔐</div>
+                <div class="modal-head-icon"><i class="fas fa-lock"></i></div>
                 <div>
-                    <div class="modal-title" id="modalTitle">Iniciar Sesión</div>
+                    <div class="modal-title" id="modalTitle">Iniciar sesion</div>
                     <div class="modal-subtitle">Ingresa tus credenciales para continuar</div>
                 </div>
             </div>
@@ -81,41 +440,43 @@
         <div class="modal-body">
             <form id="loginForm">
                 <div class="form-group">
-                    <label id="identifierLabel">Cédula o Correo</label>
-                    <input type="text" id="identifier" placeholder="Tu cédula o correo electrónico" required>
-                    <div class="help-text" id="identifierHelp">Puedes usar tu número de cédula o correo</div>
+                    <label id="identifierLabel">Cedula o correo</label>
+                    <input type="text" id="identifier" placeholder="Tu cedula o correo electronico" required>
+                    <div class="help-text" id="identifierHelp">Puedes usar tu numero de cedula o correo.</div>
                 </div>
-                <!-- Aviso acudiente: solo visible cuando rol = acudiente -->
-                <div id="acudienteNotice" style="display:none; background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:13px; color:#166534;">
-                    <i class="fas fa-info-circle" style="margin-right:6px;"></i>
-                    Ingresa la <strong>cédula del estudiante</strong>. La contraseña es la misma cédula.
+                <div id="acudienteNotice" class="notice-box" style="display:none;">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Ingresa la <strong>cedula del estudiante</strong>. La contrasena es la misma cedula.</span>
+                </div>
+                <div id="studentNotice" class="notice-box" style="display:none;">
+                    <i class="fas fa-circle-check"></i>
+                    <span>Para estudiantes, el <strong>usuario</strong> y la <strong>contrasena inicial</strong> son la misma <strong>cedula</strong>.</span>
                 </div>
                 <div class="form-group" id="passwordGroup">
-                    <label>Contraseña</label>
+                    <label>Contrasena</label>
                     <div class="input-wrap">
-                        <input type="password" id="password" name="password" placeholder="••••••••">
+                        <input type="password" id="password" name="password" placeholder="Tu contrasena">
                         <button class="toggle-vis" type="button" id="togglePassword">
                             <i class="fas fa-eye" id="eyeIcon"></i>
                         </button>
                     </div>
                 </div>
                 <div id="forgotPasswordContainer">
-                    <a href="#" class="forgot-password-link" id="forgotPasswordLink">¿Olvidaste tu contraseña?</a>
+                    <a href="#" class="forgot-password-link" id="forgotPasswordLink">Olvide mi contrasena</a>
                 </div>
-                <button type="submit" class="submit-btn">Iniciar Sesión</button>
+                <button type="submit" class="submit-btn">Iniciar sesion</button>
             </form>
         </div>
     </div>
 </div>
 
-<!-- ─── MODAL CAMBIAR CONTRASEÑA ─── -->
 <div class="modal" id="changePasswordModal">
     <div class="modal-content">
         <div class="modal-head">
             <div class="modal-head-left">
-                <div class="modal-head-icon">🔑</div>
+                <div class="modal-head-icon"><i class="fas fa-key"></i></div>
                 <div>
-                    <div class="modal-title">Crea tu contraseña</div>
+                    <div class="modal-title">Crea tu contrasena</div>
                     <div class="modal-subtitle">Primer ingreso al sistema</div>
                 </div>
             </div>
@@ -124,46 +485,45 @@
         <div class="modal-body">
             <div class="alert alert-info">
                 <i class="fas fa-shield-alt"></i>
-                <span>Por seguridad debes crear una contraseña personal antes de continuar.</span>
+                <span>Por seguridad debes crear una contrasena personal antes de continuar.</span>
             </div>
             <form id="changePasswordForm">
                 <div class="form-group">
-                    <label>Nueva Contraseña</label>
+                    <label>Nueva contrasena</label>
                     <div class="input-wrap">
-                        <input type="password" id="newPassword" placeholder="Mínimo 6 caracteres" minlength="6" required>
+                        <input type="password" id="newPassword" placeholder="Minimo 6 caracteres" minlength="6" required>
                         <button type="button" class="toggle-vis" id="toggleNewPassword">
                             <i class="fas fa-eye" id="newEyeIcon"></i>
                         </button>
                     </div>
-                    <div class="help-text">Al menos 6 caracteres</div>
+                    <div class="help-text">Al menos 6 caracteres.</div>
                 </div>
                 <div class="form-group">
-                    <label>Confirmar Contraseña</label>
+                    <label>Confirmar contrasena</label>
                     <div class="input-wrap">
-                        <input type="password" id="confirmPassword" placeholder="Repite la contraseña" required>
+                        <input type="password" id="confirmPassword" placeholder="Repite la contrasena" required>
                         <button type="button" class="toggle-vis" id="toggleConfirmPassword">
                             <i class="fas fa-eye" id="confirmEyeIcon"></i>
                         </button>
                     </div>
                 </div>
                 <div id="passwordError" class="alert alert-danger" style="display:none;">
-                    <i class="fas fa-exclamation-circle"></i> Las contraseñas no coinciden
+                    <i class="fas fa-exclamation-circle"></i> Las contrasenas no coinciden.
                 </div>
-                <button type="submit" class="submit-btn">Establecer Contraseña</button>
+                <button type="submit" class="submit-btn">Establecer contrasena</button>
             </form>
         </div>
     </div>
 </div>
 
-<!-- ─── MODAL RECUPERAR CONTRASEÑA ─── -->
 <div class="modal" id="forgotPasswordModal">
     <div class="modal-content">
         <div class="modal-head">
             <div class="modal-head-left">
-                <div class="modal-head-icon">📧</div>
+                <div class="modal-head-icon"><i class="fas fa-envelope"></i></div>
                 <div>
                     <div class="modal-title">Recuperar acceso</div>
-                    <div class="modal-subtitle">Te enviamos una contraseña temporal</div>
+                    <div class="modal-subtitle">Te enviaremos una contrasena temporal</div>
                 </div>
             </div>
             <button class="close-btn" id="closeForgotPasswordBtn">&times;</button>
@@ -171,13 +531,13 @@
         <div class="modal-body">
             <form id="forgotPasswordForm">
                 <div class="form-group">
-                    <label>Cédula o Correo</label>
-                    <input type="text" id="forgotIdentifier" placeholder="Tu cédula o correo registrado" required>
+                    <label>Cedula o correo</label>
+                    <input type="text" id="forgotIdentifier" placeholder="Tu cedula o correo registrado" required>
                 </div>
                 <div id="forgotError" class="alert alert-danger" style="display:none;"></div>
                 <div id="forgotSuccess" class="alert alert-success" style="display:none;">
                     <i class="fas fa-check-circle"></i>
-                    Si el usuario existe, recibirás un correo con tu contraseña temporal.
+                    Si el usuario existe, recibira un correo con su contrasena temporal.
                 </div>
                 <button type="submit" class="submit-btn" id="forgotSubmitBtn">Enviar instrucciones</button>
             </form>
@@ -185,14 +545,36 @@
     </div>
 </div>
 
-<footer>
-    <p>© 2025 LEARNSCAPE — Todos los derechos reservados</p>
-</footer>
-
-<!-- ═══════ SCRIPTS (lógica sin cambios) ═══════ -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.role-card').forEach(card => {
+    const institutionName = window.LEARNSCAPE_INSTITUCION || 'Jardin Infantil Gardner';
+    document.title = `${institutionName} | Portal institucional`;
+
+    ['institutionName', 'institutionFooter'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = institutionName;
+    });
+
+    const accessPanel = document.getElementById('accessPanel');
+    const openAccessPanel = document.getElementById('openAccessPanel');
+    const openAccessLinks = document.querySelectorAll('.js-open-access');
+
+    if (openAccessPanel && accessPanel) {
+        openAccessPanel.addEventListener('click', function() {
+            accessPanel.classList.toggle('is-open');
+            accessPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+    }
+
+    if (accessPanel && openAccessLinks.length) {
+        openAccessLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                accessPanel.classList.add('is-open');
+            });
+        });
+    }
+
+    document.querySelectorAll('.role-card[data-role]').forEach(card => {
         card.addEventListener('click', function() {
             const role = this.dataset.role;
             sessionStorage.setItem('selectedRole', role);
@@ -204,9 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const identifier = document.getElementById('identifier').value.trim();
         const role       = sessionStorage.getItem('selectedRole');
-
-        // Para acudiente la contraseña es la misma cédula
-        const password = (role === 'acudiente') ? identifier : document.getElementById('password').value;
+        const password   = (role === 'acudiente') ? identifier : document.getElementById('password').value;
 
         try {
             const response = await fetch(window.LEARNSCAPE_API, {
@@ -227,7 +607,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const result = await response.json();
             if (result.errors) throw new Error(result.errors[0].message);
-            if (!result.data?.login) throw new Error('Respuesta inválida del servidor');
+            if (!result.data?.login) throw new Error('Respuesta invalida del servidor');
 
             const { token, user, expiresAt } = result.data.login;
 
@@ -238,22 +618,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 'ACUDIENTE': 'acudiente', 'acudiente': 'acudiente'
             };
 
-            // Para acudiente: el login es con credenciales del estudiante,
-            // por eso el backend devuelve rol ESTUDIANTE — se fuerza el rol acudiente
             const isAcudienteFlow = (role === 'acudiente');
             const mappedRole = isAcudienteFlow ? 'acudiente' : (roleMapping[user.role.toUpperCase()] || roleMapping[user.role]);
 
             if (!mappedRole) throw new Error('Rol no reconocido: ' + user.role);
 
-            // Verificar rol solo si NO es flujo acudiente
             if (!isAcudienteFlow && mappedRole.toLowerCase() !== role.toLowerCase())
                 throw new Error(`Acceso denegado. Esta cuenta no tiene permisos de ${role}`);
 
-            // Si alguien con rol real de admin/profesor/estudiante intenta entrar por el portal acudiente, bloquearlo
             if (isAcudienteFlow) {
                 const realRole = roleMapping[user.role.toUpperCase()] || roleMapping[user.role];
                 if (realRole && realRole !== 'student')
-                    throw new Error('Solo puedes consultar con la cédula de un estudiante');
+                    throw new Error('Solo puedes consultar con la cedula de un estudiante');
             }
 
             sessionStorage.setItem('token', token);
@@ -263,7 +639,6 @@ document.addEventListener('DOMContentLoaded', function() {
             sessionStorage.setItem('currentUsername', user.username || identifier);
             if (expiresAt) sessionStorage.setItem('tokenExpiresAt', expiresAt);
 
-            // Para acudiente: guardar la cédula del estudiante consultado
             if (isAcudienteFlow) {
                 sessionStorage.setItem('estudianteCedula', identifier);
                 sessionStorage.setItem('estudianteId', user.id);
@@ -277,7 +652,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.href = redirects[mappedRole.toLowerCase()];
             }
         } catch (error) {
-            alert(error.message || 'Error al iniciar sesión');
+            alert(error.message || 'Error al iniciar sesion');
         }
     });
 
@@ -292,22 +667,29 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function openModal(role) {
-    const labels = { student: 'Estudiante', teacher: 'Profesor', admin: 'Administrativo', acudiente: 'Acudiente' };
-    document.getElementById('modalTitle').textContent = `Acceso — ${labels[role] || role}`;
-
+    const labels = { student: 'Estudiante', teacher: 'Profesor', admin: 'Administrador', acudiente: 'Acudiente' };
+    document.getElementById('modalTitle').textContent = `Acceso - ${labels[role] || role}`;
+  
     const isAcudiente = role === 'acudiente';
+    const isStudent = role === 'student';
+  
+    document.getElementById('identifierLabel').textContent = isAcudiente ? 'Cedula del estudiante' : 'Cedula o correo';
+    document.getElementById('identifierHelp').textContent  = isAcudiente
+        ? 'Ingresa la cedula del estudiante que deseas consultar.'
+        : isStudent
+            ? 'Como estudiante puedes ingresar con tu numero de cedula.'
+            : 'Puedes usar tu numero de cedula o correo.';
+    document.getElementById('identifier').placeholder      = isAcudiente
+        ? 'Ej: 1234567890'
+        : isStudent
+            ? 'Tu numero de cedula'
+            : 'Tu cedula o correo electronico';
+  
+    document.getElementById('acudienteNotice').style.display         = isAcudiente ? 'flex' : 'none';
+    document.getElementById('studentNotice').style.display           = isStudent ? 'flex' : 'none';
+    document.getElementById('passwordGroup').style.display           = isAcudiente ? 'none' : 'block';
+    document.getElementById('forgotPasswordContainer').style.display = isAcudiente ? 'none' : 'block';
 
-    // Cambiar label e hint del identificador
-    document.getElementById('identifierLabel').textContent = isAcudiente ? 'Cédula del estudiante' : 'Cédula o Correo';
-    document.getElementById('identifierHelp').textContent  = isAcudiente ? 'Ingresa la cédula del estudiante que deseas consultar' : 'Puedes usar tu número de cédula o correo';
-    document.getElementById('identifier').placeholder      = isAcudiente ? 'Ej: 1234567890' : 'Tu cédula o correo electrónico';
-
-    // Mostrar/ocultar secciones
-    document.getElementById('acudienteNotice').style.display         = isAcudiente ? 'block' : 'none';
-    document.getElementById('passwordGroup').style.display            = isAcudiente ? 'none'  : 'block';
-    document.getElementById('forgotPasswordContainer').style.display  = isAcudiente ? 'none'  : 'block';
-
-    // Limpiar campos
     document.getElementById('identifier').value = '';
     document.getElementById('password').value   = '';
 
@@ -337,11 +719,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const errorDiv   = document.getElementById('forgotError');
             const successDiv = document.getElementById('forgotSuccess');
 
-            errorDiv.style.display = 'none'; successDiv.style.display = 'none';
-            btn.textContent = 'Enviando…'; btn.disabled = true;
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            btn.textContent = 'Enviando...';
+            btn.disabled = true;
 
             try {
-                // olvidarPassword busca al usuario por cédula o email en estudiantes y profesores
                 const response = await fetch(window.LEARNSCAPE_API, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -357,19 +740,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 successDiv.style.display = 'flex';
                 document.getElementById('forgotIdentifier').value = '';
-                setTimeout(() => { forgotModal.style.display = 'none'; successDiv.style.display = 'none'; }, 4000);
+                setTimeout(() => {
+                    forgotModal.style.display = 'none';
+                    successDiv.style.display = 'none';
+                }, 4000);
             } catch (error) {
-                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Ocurrió un error. Intenta de nuevo.';
+                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Ocurrio un error. Intenta de nuevo.';
                 errorDiv.style.display = 'flex';
             } finally {
-                btn.textContent = 'Enviar instrucciones'; btn.disabled = false;
+                btn.textContent = 'Enviar instrucciones';
+                btn.disabled = false;
             }
         });
     }
 
     if (document.getElementById('closeChangePasswordBtn')) {
         document.getElementById('closeChangePasswordBtn').addEventListener('click', function() {
-            if (confirm('¿Seguro que deseas cancelar? Es necesario crear tu contraseña.')) {
+            if (confirm('Es necesario crear tu contrasena. Deseas cancelar?')) {
                 document.getElementById('changePasswordModal').style.display = 'none';
                 sessionStorage.clear();
                 window.location.href = 'principal.html';
@@ -390,10 +777,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const username        = sessionStorage.getItem('currentUsername');
 
             if (newPassword !== confirmPassword) {
-                document.getElementById('passwordError').style.display = 'flex'; return;
+                document.getElementById('passwordError').style.display = 'flex';
+                return;
             }
             document.getElementById('passwordError').style.display = 'none';
-            if (newPassword.length < 6) { alert('La contraseña debe tener al menos 6 caracteres'); return; }
+            if (newPassword.length < 6) {
+                alert('La contrasena debe tener al menos 6 caracteres');
+                return;
+            }
 
             try {
                 const response = await fetch(window.LEARNSCAPE_API, {
@@ -412,9 +803,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('changePasswordModal').style.display = 'none';
                     const redirects = { admin: 'administrativo.html', teacher: 'profesor.html', student: 'estudiante.html', acudiente: 'acudiente.html' };
                     window.location.href = redirects[sessionStorage.getItem('userRole').toLowerCase()];
-                } else throw new Error('No se pudo cambiar la contraseña');
+                } else {
+                    throw new Error('No se pudo cambiar la contrasena');
+                }
             } catch (error) {
-                alert(error.message || 'Error al cambiar la contraseña');
+                alert(error.message || 'Error al cambiar la contrasena');
             }
         });
     }

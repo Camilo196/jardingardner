@@ -1,12 +1,16 @@
 import mongoose, { Schema } from 'mongoose';
 const EstudianteSchema = new Schema({
+    _id: {
+        type: String,
+        required: true
+    },
     cedula: {
         type: String,
         required: true,
         unique: true
     },
     empleadoId: {
-        type: Schema.Types.ObjectId,
+        type: String,
         ref: 'Empleado',
         required: true
     },
@@ -15,7 +19,8 @@ const EstudianteSchema = new Schema({
         required: false
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    _id: false
 });
 export const EstudianteModel = mongoose.model('Estudiante', EstudianteSchema);
 //# sourceMappingURL=EstudianteModel.js.map

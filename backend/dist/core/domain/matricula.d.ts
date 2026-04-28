@@ -3,23 +3,23 @@ export declare class Matricula {
     estudianteId: string;
     cursoId: string;
     asignaturas: string[];
-    estado: 'ACTIVA' | 'CANCELADA' | 'FINALIZADA';
+    estado: 'ACTIVA' | 'CANCELADA' | 'FINALIZADA' | 'SIN_PAGAR';
     periodo: string;
     fechaMatricula: Date;
     constructor(id: string, estudianteId: string, cursoId: string, asignaturas: string[], // IDs de las asignaturas
-    estado: 'ACTIVA' | 'CANCELADA' | 'FINALIZADA', periodo: string, fechaMatricula: Date);
+    estado: 'ACTIVA' | 'CANCELADA' | 'FINALIZADA' | 'SIN_PAGAR', periodo: string, fechaMatricula: Date);
 }
 export interface CrearMatriculaInput {
     estudianteId: string;
     cursoId: string;
     asignaturas: string[];
-    estado: 'ACTIVA' | 'CANCELADA' | 'FINALIZADA';
+    estado: 'ACTIVA' | 'CANCELADA' | 'FINALIZADA' | 'SIN_PAGAR';
     periodo: string;
 }
 export interface ActualizarMatriculaInput {
     estudianteId?: string;
     cursoId?: string;
     asignaturas?: string[];
-    estado?: 'ACTIVA' | 'CANCELADA' | 'FINALIZADA';
+    estado?: 'ACTIVA' | 'CANCELADA' | 'FINALIZADA' | 'SIN_PAGAR';
     periodo?: string;
 }

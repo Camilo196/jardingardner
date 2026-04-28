@@ -4,7 +4,7 @@ export interface CursoDocument extends Document {
     nombre: string;
     duracion: string;
     cantidadMax: number;
-    profesorId: mongoose.Types.ObjectId;
+    profesorId: string | mongoose.Types.ObjectId;
 }
 declare const CursoModel: mongoose.Model<CursoDocument, {}, {}, {}, mongoose.Document<unknown, {}, CursoDocument> & CursoDocument & Required<{
     _id: string;

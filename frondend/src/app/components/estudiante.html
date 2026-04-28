@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mi Panel — LEARNSCAPE</title>
+<title>Panel Estudiante - Gardner</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
 <script src="../assets/config.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -25,10 +26,11 @@
 }
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;font-size:14px}
 
-/* ── SIDEBAR ── */
+/* â”€â”€ SIDEBAR â”€â”€ */
 .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--ink2);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:200}
 .sb-logo{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:12px}
-.sb-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--blue-dark));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sb-mark{width:46px;height:46px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;box-shadow:0 4px 12px rgba(15,23,42,.18);padding:4px}
+.sb-mark img{width:100%;height:100%;object-fit:contain;display:block}
 .sb-logo-text .name{font-size:16px;font-weight:900;color:#fff;letter-spacing:.5px}
 .sb-logo-text .sub{font-size:9px;color:rgba(255,255,255,.4);font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
 .sb-user{padding:14px 16px;margin:12px 12px 4px;background:rgba(255,255,255,.06);border-radius:10px;display:flex;align-items:center;gap:10px}
@@ -44,7 +46,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .sb-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.65);padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;font-family:inherit;width:100%;text-align:left}
 .sb-btn:hover{background:rgba(255,255,255,.15);color:#fff}
 
-/* ── MAIN ── */
+/* â”€â”€ MAIN â”€â”€ */
 .main{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column}
 .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-xs)}
 .topbar-left{display:flex;align-items:center;gap:12px}
@@ -55,7 +57,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .content{padding:24px 28px;flex:1}
 .section{display:none}.section.active{display:block}
 
-/* ── STATS ── */
+/* â”€â”€ STATS â”€â”€ */
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
 .kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;box-shadow:var(--shadow-xs);transition:.2s;position:relative;overflow:hidden}
 .kpi:hover{box-shadow:var(--shadow-sm);transform:translateY(-1px)}
@@ -67,7 +69,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .kpi-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px}
 .kpi-val{font-size:28px;font-weight:900;color:var(--ink)}
 
-/* ── CARDS & PANELS ── */
+/* â”€â”€ CARDS & PANELS â”€â”€ */
 .pcard{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow-xs);overflow:hidden;margin-bottom:20px}
 .pcard-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:linear-gradient(to right,var(--white),var(--bg))}
 .pcard-title{font-size:15px;font-weight:800;color:var(--blue)}
@@ -86,7 +88,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .ame{font-size:12px;color:var(--muted);margin-top:3px;font-weight:600}
 .aacts{display:flex;gap:8px;align-items:center;flex-shrink:0}
 
-/* ── PILLS / BTNS ── */
+/* â”€â”€ PILLS / BTNS â”€â”€ */
 .pill{display:inline-flex;align-items:center;padding:4px 12px;border-radius:24px;font-weight:800;font-size:12px;gap:4px}
 .pill.g{background:var(--green-lt);color:var(--green)}
 .pill.a{background:var(--amber-lt);color:#854d0e}
@@ -98,7 +100,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .btn-o{background:transparent;color:var(--blue);border:1.5px solid var(--border)}.btn-o:hover{background:var(--blue-lt)}
 .btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed}
 
-/* ── HORARIO ── */
+/* â”€â”€ HORARIO â”€â”€ */
 .hscroll{overflow-x:auto}
 .hgrid{display:grid;grid-template-columns:70px repeat(5,1fr);min-width:520px}
 .dhd{padding:12px 8px;text-align:center;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.6px}
@@ -121,7 +123,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .ld{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .ld{width:10px;height:10px;border-radius:3px}
 
-/* ── NOTAS ── */
+/* â”€â”€ NOTAS â”€â”€ */
 .ntbl{width:100%;border-collapse:collapse;font-size:13px}
 .ntbl th,.ntbl td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
 .ntbl th{background:var(--surface);font-weight:800;font-size:12px;color:var(--muted);letter-spacing:.3px;text-transform:uppercase}
@@ -133,12 +135,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .asig-blk-h span{font-weight:800;color:var(--ink)}
 .asig-blk-h small{font-size:11px;color:var(--muted);font-weight:700}
 
-/* ── BOLETÍN ── */
+/* â”€â”€ BOLETÃN â”€â”€ */
 .bcard{background:linear-gradient(135deg,var(--blue-lt),#e0e7ff);border:1px solid #c7d2fe;border-radius:var(--r);padding:28px;text-align:center}
 .bcard h3{color:var(--blue-dark);font-size:20px;font-weight:900;margin-bottom:8px}
 .bcard p{color:var(--muted);font-size:14px;margin-bottom:24px;max-width:480px;margin-inline:auto}
 
-/* ── CRONOGRAMA ── */
+/* â”€â”€ CRONOGRAMA â”€â”€ */
 .cal-wrap{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow-xs);overflow:hidden}
 .cal-top{background:linear-gradient(135deg,var(--blue),var(--blue-dark));color:#fff;padding:16px 22px;display:flex;align-items:center;justify-content:space-between}
 .cal-top h3{margin:0;font-size:16px;font-weight:800}
@@ -156,11 +158,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .cal-ev{font-size:10px;font-weight:700;padding:2px 5px;border-radius:4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .ev-EXAMEN{background:var(--amber-lt);color:#92400e}.ev-REUNION{background:var(--blue-lt);color:#1e40af}
 .ev-FESTIVO{background:var(--green-lt);color:#166534}.ev-CULTURAL{background:#fce7f3;color:#9d174d}.ev-OTRO{background:var(--surface);color:#475569}
+.ev-ACTIVIDAD{background:#fee2e2;color:#b91c1c}
 .leyenda{display:flex;gap:10px;flex-wrap:wrap;padding:12px 20px;border-top:1px solid var(--border);background:var(--surface)}
 .leg-it{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700}
 .leg-dot{width:10px;height:10px;border-radius:3px}
 
-/* ── MODAL ── */
+/* â”€â”€ MODAL â”€â”€ */
 .mover{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:1000;justify-content:center;align-items:flex-start;padding:48px 20px;overflow-y:auto;backdrop-filter:blur(4px)}
 .mover.o{display:flex}
 .mbox{background:#fff;border-radius:16px;width:100%;max-width:680px;box-shadow:var(--shadow);animation:slideUp .25s ease}
@@ -171,7 +174,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .mclose:hover{background:var(--surface);color:var(--ink)}
 .mbody{padding:22px}
 
-/* ── ESTADOS ── */
+/* â”€â”€ ESTADOS â”€â”€ */
 .empty{text-align:center;padding:60px 20px;color:var(--muted)}
 .empty-ico{font-size:48px;margin-bottom:12px;opacity:.6}
 .spin-w{display:flex;justify-content:center;padding:60px}
@@ -180,25 +183,41 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .toast{position:fixed;bottom:28px;right:28px;background:var(--ink);color:#fff;padding:13px 22px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;opacity:0;transform:translateY(16px);transition:.3s;pointer-events:none;max-width:340px}
 .toast.on{opacity:1;transform:translateY(0)}.toast.ok{border-left:4px solid var(--green)}.toast.er{border-left:4px solid var(--red)}
 
-/* ── RESPONSIVE ── */
-@media(max-width:768px){
-  .sidebar{width:60px}
-  .sb-logo-text,.sb-uname,.sb-urole,.sb-section,.sb-item span:not(.ico){display:none}
-  .sb-item{justify-content:center;padding:12px}
-  .kpis{grid-template-columns:1fr 1fr}
-  .content{padding:16px}
-}
-</style>
+/* â”€â”€ RESPONSIVE â”€â”€ */
+  @media(max-width:768px){
+    body{display:block}
+    .sidebar{width:100%;min-height:auto;height:auto;position:relative;top:auto;overflow:visible}
+    .sb-logo{padding:16px}
+    .sb-user{margin:10px 12px 6px}
+    .sb-logo-text,.sb-uname,.sb-urole,.sb-section,.sb-item span:not(.ico){display:block}
+    .sb-menu{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 12px}
+    .sb-item{justify-content:flex-start;padding:12px 14px;border-radius:10px}
+    .sb-foot{padding:12px;display:grid;gap:8px}
+    .main{display:block}
+    .topbar{position:relative;height:auto;padding:16px;align-items:flex-start;justify-content:flex-start;flex-direction:column}
+    .topbar-right{width:100%;justify-content:flex-start;flex-wrap:wrap}
+    .content{padding:16px}
+    .kpis{grid-template-columns:1fr}
+  }
+  @media(max-width:520px){
+    .sb-menu{grid-template-columns:1fr}
+    .topbar-title{font-size:15px}
+    .topbar-sub{font-size:11px}
+    .child-banner{padding:18px}
+    .mbox{max-width:none}
+    .toast{left:16px;right:16px;bottom:16px;max-width:none}
+  }
+  </style>
 </head>
 <body>
 
-<!-- ══ SIDEBAR ══ -->
+<!-- â•â• SIDEBAR â•â• -->
 <aside class="sidebar">
   <div class="sb-logo">
-    <div class="sb-mark">🎒</div>
+    <div class="sb-mark"><img src="../assets/institution/pdf_image_2.jpg" alt="Logo Gardner"></div>
     <div class="sb-logo-text">
-      <div class="name">LEARNSCAPE</div>
-      <div class="sub">Mi Panel</div>
+      <div class="name">GARDNER</div>
+      <div class="sub">Panel Estudiante</div>
     </div>
   </div>
 
@@ -212,33 +231,36 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
   <div class="sb-section">Principal</div>
   <button class="sb-item active" onclick="showSection('resumen',this)">
-    <span class="ico">📊</span><span>Resumen</span>
+        <span class="ico"><i class="fa-solid fa-chart-line"></i></span><span>Resumen</span>
   </button>
 
-  <div class="sb-section">Académico</div>
+    <div class="sb-section">Académico</div>
   <button class="sb-item" onclick="showSection('horario',this)">
-    <span class="ico">🗓️</span><span>Mi Horario</span>
+        <span class="ico"><i class="fa-regular fa-calendar"></i></span><span>Mi Horario</span>
   </button>
   <button class="sb-item" onclick="showSection('notas',this)">
-    <span class="ico">📝</span><span>Mis Notas</span>
+        <span class="ico"><i class="fa-regular fa-note-sticky"></i></span><span>Mis Notas</span>
   </button>
   <button class="sb-item" onclick="showSection('asistencia',this)">
-    <span class="ico">📋</span><span>Asistencia</span>
+        <span class="ico"><i class="fa-solid fa-clipboard-check"></i></span><span>Asistencia</span>
   </button>
   <button class="sb-item" onclick="showSection('cronograma',this)">
     <span class="ico">&#128197;</span><span>Cronograma</span>
   </button>
+  <button class="sb-item" onclick="showSection('actividades',this)">
+        <span class="ico"><i class="fa-regular fa-calendar-days"></i></span><span>Calendario de Actividades</span>
+  </button>
   <button class="sb-item" onclick="showSection('boletin',this)">
-    <span class="ico">📄</span><span>Boletín PDF</span>
+        <span class="ico"><i class="fa-regular fa-file-pdf"></i></span><span>Boletín PDF</span>
   </button>
 
   <div class="sb-footer">
-    <button class="sb-btn" onclick="abrirCambioPass()">🔑 Cambiar clave</button>
-    <button class="sb-btn" onclick="salir()">← Cerrar sesión</button>
+    <button class="sb-btn" onclick="abrirCambioPass()">Cambiar clave</button>
+    <button class="sb-btn" onclick="salir()">Cerrar sesión</button>
   </div>
 </aside>
 
-<!-- ══ MAIN ══ -->
+<!-- â•â• MAIN â•â• -->
 <div class="main">
   <div class="topbar">
     <div class="topbar-left">
@@ -254,37 +276,37 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
   <div class="content">
 
-    <!-- ═══ RESUMEN ═══ -->
+    <!-- â•â•â• RESUMEN â•â•â• -->
     <div id="sec-resumen" class="section active">
       <div class="kpis">
-        <div class="kpi blue"><div class="kpi-lbl">Cursos</div><div class="kpi-val" id="stC">—</div></div>
-        <div class="kpi green"><div class="kpi-lbl">Asignaturas</div><div class="kpi-val" id="stA">—</div></div>
-        <div class="kpi amber"><div class="kpi-lbl">Promedio General</div><div class="kpi-val" id="stP">—</div></div>
-        <div class="kpi purple"><div class="kpi-lbl">Estado</div><div class="kpi-val" id="stE" style="font-size:16px">—</div></div>
+        <div class="kpi blue"><div class="kpi-lbl">Cursos</div><div class="kpi-val" id="stC">-</div></div>
+        <div class="kpi green"><div class="kpi-lbl">Asignaturas</div><div class="kpi-val" id="stA">-</div></div>
+        <div class="kpi amber"><div class="kpi-lbl">Promedio General</div><div class="kpi-val" id="stP">-</div></div>
+        <div class="kpi purple"><div class="kpi-lbl">Estado</div><div class="kpi-val" id="stE" style="font-size:16px">-</div></div>
       </div>
       <div class="pcard">
-        <div class="pcard-head"><span class="pcard-title">📚 Mis Cursos y Asignaturas</span></div>
+      <div class="pcard-head"><span class="pcard-title">Mis Cursos y Asignaturas</span></div>
         <div class="pcard-body" id="cursosC"><div class="spin-w"><div class="spin"></div></div></div>
       </div>
     </div>
 
-    <!-- ═══ HORARIO ═══ -->
+    <!-- â•â•â• HORARIO â•â•â• -->
     <div id="sec-horario" class="section">
       <div class="pcard">
-        <div class="pcard-head"><span class="pcard-title">🗓️ Mi Horario Semanal</span></div>
+      <div class="pcard-head"><span class="pcard-title">Mi Horario Semanal</span></div>
         <div id="horarioC"><div class="spin-w"><div class="spin"></div></div></div>
       </div>
     </div>
 
-    <!-- ═══ NOTAS ═══ -->
+    <!-- â•â•â• NOTAS â•â•â• -->
     <div id="sec-notas" class="section">
       <div class="pcard">
         <div class="pcard-head" style="flex-wrap:wrap;gap:12px">
-          <span class="pcard-title">📝 Detalle de Notas por Asignatura</span>
+            <span class="pcard-title">Detalle de Notas por Asignatura</span>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <label style="font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.3px">PERÍODO:</label>
+            <label style="font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.3px">PERIODO:</label>
             <select id="notasPeriodoSel" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;background:#fff;cursor:pointer;outline:none" onchange="renderNotas()">
-              <option value="">Todos los períodos</option>
+              <option value="">Todos los periodos</option>
             </select>
           </div>
         </div>
@@ -292,15 +314,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       </div>
     </div>
 
-    <!-- ═══ ASISTENCIA ═══ -->
+    <!-- â•â•â• ASISTENCIA â•â•â• -->
     <div id="sec-asistencia" class="section">
       <div class="pcard">
         <div class="pcard-head" style="flex-wrap:wrap;gap:12px">
-          <span class="pcard-title">📋 Mi Asistencia</span>
+          <span class="pcard-title">Mi Asistencia</span>
           <div style="display:flex;align-items:center;gap:10px">
-            <label style="font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.3px">PERÍODO:</label>
+            <label style="font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.3px">PERIODO:</label>
             <select id="asistPeriodoSel" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;background:#fff;cursor:pointer;outline:none" onchange="renderAsistencia()">
-              <option value="">Todos los períodos</option>
+              <option value="">Todos los periodos</option>
             </select>
           </div>
         </div>
@@ -308,7 +330,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       </div>
     </div>
 
-    <!-- ═══ CRONOGRAMA ═══ -->
+    <!-- â•â•â• CRONOGRAMA â•â•â• -->
     <div id="sec-cronograma" class="section">
       <div class="cal-wrap">
         <div class="cal-top">
@@ -322,7 +344,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="cal-grid" id="calGrid"></div>
         <div class="leyenda">
           <span class="leg-it"><span class="leg-dot ev-EXAMEN"></span>Examen</span>
-          <span class="leg-it"><span class="leg-dot ev-REUNION"></span>Reunion</span>
+          <span class="leg-it"><span class="leg-dot ev-REUNION"></span>Reunión</span>
           <span class="leg-it"><span class="leg-dot ev-FESTIVO"></span>Festivo</span>
           <span class="leg-it"><span class="leg-dot ev-CULTURAL"></span>Cultural</span>
           <span class="leg-it"><span class="leg-dot ev-OTRO"></span>Otro</span>
@@ -330,16 +352,33 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       </div>
     </div>
 
+    <div id="sec-actividades" class="section">
+      <div class="cal-wrap">
+        <div class="cal-top">
+          <h3>Calendario de Actividades</h3>
+          <div class="cal-nav">
+            <button onclick="actMes(-1)">&lt;</button>
+            <span class="cal-mes" id="actMesTxt"></span>
+            <button onclick="actMes(1)">&gt;</button>
+          </div>
+        </div>
+        <div class="cal-grid" id="actCalGrid"></div>
+        <div class="leyenda">
+          <span class="leg-it"><span class="leg-dot ev-ACTIVIDAD"></span>Actividad de profesor</span>
+        </div>
+      </div>
+    </div>
+
     <div id="sec-boletin" class="section">
       <div class="pcard">
-        <div class="pcard-head"><span class="pcard-title">📄 Boletín de Calificaciones</span></div>
+      <div class="pcard-head"><span class="pcard-title">Boletín de Calificaciones</span></div>
         <div class="pcard-body">
           <div class="bcard">
-            <div style="font-size:48px;margin-bottom:12px">📋</div>
-            <h3>Descarga tu Boletín Oficial</h3>
-            <p>El boletín se habilita cuando el administrador cierra el período académico. Solo puedes descargar los períodos que ya han sido cerrados.</p>
+        <div style="font-size:48px;margin-bottom:12px">PDF</div>
+        <h3>Descarga tu Boletín Oficial</h3>
+        <p>El boletín se habilita cuando el administrador cierra el período académico. Solo puedes descargar los períodos que ya han sido cerrados.</p>
             <div id="periodosBoletinWrap" style="width:100%;max-width:440px;margin:0 auto 16px"><div class="spin-w" style="padding:20px"><div class="spin"></div></div></div>
-            <button class="btn btn-p" id="btnDl" disabled onclick="descargar()" style="margin:0 auto;padding:12px 28px;font-size:14px">⬇️ Descargar PDF</button>
+        <button class="btn btn-p" id="btnDl" disabled onclick="descargar()" style="margin:0 auto;padding:12px 28px;font-size:14px">Descargar PDF</button>
             <p id="dlMsg" style="margin-top:14px;font-size:13px;font-weight:700"></p>
           </div>
         </div>
@@ -349,18 +388,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   </div>
 </div>
 
-<!-- Modal notas rápidas -->
+<!-- Modal notas rÃ¡pidas -->
 <div class="mover" id="mNotas" onclick="if(event.target===this)cerrarM()">
   <div class="mbox">
-    <div class="mh"><h3 id="mTit">Calificaciones</h3><button class="mclose" onclick="cerrarM()">✕</button></div>
+    <div class="mh"><h3 id="mTit">Calificaciones</h3><button class="mclose" onclick="cerrarM()">x</button></div>
     <div class="mbody" id="mBody"></div>
   </div>
 </div>
 
-<!-- Modal cambiar contraseña -->
+<!-- Modal cambiar contrasena -->
 <div class="mover" id="mPass" onclick="if(event.target===this)cerrarPass()">
   <div class="mbox" style="max-width:420px">
-    <div class="mh"><h3>🔑 Cambiar contraseña</h3><button class="mclose" onclick="cerrarPass()">✕</button></div>
+    <div class="mh"><h3>Cambiar contraseña</h3><button class="mclose" onclick="cerrarPass()">x</button></div>
     <div class="mbody">
       <div style="display:flex;flex-direction:column;gap:14px">
         <div><label style="font-size:12px;font-weight:800;color:var(--muted)">CONTRASEÑA ACTUAL</label><input type="password" id="passActual" placeholder="Tu contraseña actual" style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none"></div>
@@ -377,27 +416,49 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 <script>
 const API=window.LEARNSCAPE_API;
-const SECTION_LABELS={resumen:['Resumen','Tus cursos y estado académico'],horario:['Mi Horario','Horario semanal de clases'],notas:['Mis Notas','Calificaciones por asignatura'],asistencia:['Mi Asistencia','Registro de asistencia'],cronograma:['Cronograma','Calendario institucional'],boletin:['Boletín PDF','Descarga tus boletines']};
+const SECTION_LABELS={resumen:['Resumen','Tus cursos y estado académico'],horario:['Mi Horario','Horario semanal de clases'],notas:['Mis Notas','Calificaciones por asignatura'],asistencia:['Mi Asistencia','Registro de asistencia'],cronograma:['Cronograma','Calendario institucional'],actividades:['Calendario de actividades','Actividades asignadas por tus profesores'],boletin:['Boletín PDF','Descarga tus boletines']};
 const DIAS=['lunes','martes','miercoles','jueves','viernes'];
 const DLAB={lunes:'Lunes',martes:'Martes',miercoles:'Miércoles',jueves:'Jueves',viernes:'Viernes'};
 const FRANJAS=[{id:'F1',h:6,l:'6:00'},{id:'F2',h:7,l:'7:00'},{id:'F3',h:8,l:'8:00'},{id:'F4',h:9,l:'9:00'},{id:'F5',h:10,l:'10:00'},{id:'F6',h:11,l:'11:00'},{id:'F7',h:12,l:'12:00'},{id:'F8',h:13,l:'13:00'},{id:'F9',h:14,l:'14:00'},{id:'FA',h:15,l:'15:00'},{id:'FB',h:16,l:'16:00'},{id:'FC',h:17,l:'17:00'}];
 const DIA_MAP={lun:'lunes',lunes:'lunes',mar:'martes',martes:'martes',mie:'miercoles',mié:'miercoles',miercoles:'miercoles',miércoles:'miercoles',jue:'jueves',jueves:'jueves',vie:'viernes',viernes:'viernes'};
 const DCLS={lunes:'lun',martes:'mar',miercoles:'mie',jueves:'jue',viernes:'vie'};
-const G={id:null,email:'',nombre:'',cursos:[],cals:[],asistencias:[],cargado:false,calMesActual:new Date().getMonth(),calAnioActual:new Date().getFullYear(),calEventos:[]};
+const G={id:null,email:'',nombre:'',cursos:[],cals:[],asistencias:[],cargado:false,calMesActual:new Date().getMonth(),calAnioActual:new Date().getFullYear(),calEventos:[],actMesActual:new Date().getMonth(),actAnioActual:new Date().getFullYear(),actEventos:[]};
 
-function showSection(id,btn){ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active')); document.getElementById('sec-'+id).classList.add('active'); if(btn)btn.classList.add('active'); const lbl=SECTION_LABELS[id]||[id,'']; document.getElementById('topTitle').textContent=lbl[0]; document.getElementById('topSub').textContent=lbl[1]; if(id==='horario'&&G.cargado)cargarHorario(); if(id==='notas'&&G.cargado)renderNotas(); if(id==='asistencia'&&G.cargado)cargarAsistencia(); if(id==='cronograma'&&G.cargado)iniciarCronograma(); if(id==='boletin'&&G.cargado)renderBoletin(); }
+function showSection(id,btn){ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active')); document.getElementById('sec-'+id).classList.add('active'); if(btn)btn.classList.add('active'); const lbl=SECTION_LABELS[id]||[id,'']; document.getElementById('topTitle').textContent=lbl[0]; document.getElementById('topSub').textContent=lbl[1]; if(id==='horario'&&G.cargado)cargarHorario(); if(id==='notas'&&G.cargado)renderNotas(); if(id==='asistencia'&&G.cargado)cargarAsistencia(); if(id==='cronograma'&&G.cargado)iniciarCronograma(); if(id==='actividades'&&G.cargado)iniciarCalendarioActividades(); if(id==='boletin'&&G.cargado)renderBoletin(); }
 
 function tk(){return sessionStorage.getItem('token');}
 function jwt(t){ try{return JSON.parse(decodeURIComponent(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')));}catch{return null;} }
-async function gql(q,v={}){ const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk()},body:JSON.stringify({query:q,variables:v})}); const j=await r.json(); if(j.errors){const msg=j.errors[0].message;if(msg.includes('jwt expired')||msg.includes('invalid token')||msg.includes('No autenticado')){sessionStorage.clear();alert('Tu sesión ha expirado.');window.location.href='principal.html';return;}throw new Error(msg);}return j.data; }
-function salir(){sessionStorage.removeItem('token');window.location.href='principal.html';}
+async function gql(q,v={}){
+  if(!API) throw new Error('La configuracion de la API no esta disponible.');
+  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk()},body:JSON.stringify({query:q,variables:v})});
+  if(!r.ok){ throw new Error(`Error de servidor (${r.status}).`); }
+  let j;
+  try{ j=await r.json(); }catch{ throw new Error('La respuesta del servidor no es valida.'); }
+  if(j.errors){
+    const msg=j.errors[0].message;
+    if(msg.includes('jwt expired')||msg.includes('invalid token')||msg.includes('No autenticado')){
+      sessionStorage.clear();
+alert('Tu sesión ha expirado.');
+      window.LEARNSCAPE_GO_HOME();
+      return;
+    }
+    throw new Error(msg);
+  }
+  return j.data;
+}
+function salir(){sessionStorage.removeItem('token');window.LEARNSCAPE_GO_HOME();}
 function showT(m,t='ok',d=3500){ const el=document.getElementById('toast');el.textContent=m;el.className=`toast on ${t}`;setTimeout(()=>el.className='toast',d); }
 
 async function init(){
-  const t=tk();if(!t){window.location.href='principal.html';return;}
-  const d=jwt(t);if(!d?.username){window.location.href='principal.html';return;}
-  G.id=d.username; G.email=d.email||'';
-  await cargar();
+  try{
+    const t=tk();if(!t){window.LEARNSCAPE_GO_HOME();return;}
+    const d=jwt(t);if(!d?.username){window.LEARNSCAPE_GO_HOME();return;}
+    G.id=d.username; G.email=d.email||'';
+    await cargar();
+  }catch(err){
+    const cursosC=document.getElementById('cursosC');
+    cursosC.innerHTML=`<div class="empty"><div class="empty-ico">!</div><p style="font-size:14px;color:var(--red)">${err.message||'No se pudo cargar el panel del estudiante.'}</p><button onclick="init()" class="btn btn-p" style="margin:14px auto 0;display:flex">Reintentar</button></div>`;
+  }
 }
 
 async function cargar(){
@@ -413,7 +474,19 @@ async function cargar(){
     try{ const dc=await gql(`query{calificacionesPorEstudiante(estudianteId:"${G.id}"){id asignaturaId nota periodo observaciones fecha tipoActividad nombreActividad corte}}`); G.cals=(dc.calificacionesPorEstudiante||[]).map(c=>({...c,asignaturaId:String(c.asignaturaId)})); }catch(e){ G.cals=[]; }
     G.cargado=true;
     renderResumen();
-  }catch(err){ cursosC.innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p style="font-size:14px;color:var(--red)">${err.message}</p><button onclick="cargar()" class="btn btn-p" style="margin:14px auto 0;display:flex">Reintentar</button></div>`; }
+    renderNotas();
+    cargarAsistencia();
+  }catch(err){ cursosC.innerHTML=`<div class="empty"><div class="empty-ico">!</div><p style="font-size:14px;color:var(--red)">${err.message}</p><button onclick="cargar()" class="btn btn-p" style="margin:14px auto 0;display:flex">Reintentar</button></div>`; }
+}
+
+function getAsignaturaLookup(){
+  const map={};
+  (G.cursos||[]).forEach(cu=>{
+    (cu.asignaturas||[]).forEach(a=>{
+      map[String(a.id)]={...a,cursoNombre:cu.nombre,cursoPeriodo:cu.periodo};
+    });
+  });
+  return map;
 }
 
 function renderResumen(){
@@ -421,35 +494,35 @@ function renderResumen(){
   document.getElementById('stC').textContent=G.cursos.length;
   document.getElementById('stA').textContent=asigIds.size;
   const pg=promGen();
-  document.getElementById('stP').textContent=pg>0?pg.toFixed(2):'—';
+  document.getElementById('stP').textContent=pg>0?pg.toFixed(2):'-';
   const el=document.getElementById('stE');
-  if(pg>0){el.innerHTML=pg>=3?'<span style="color:var(--green)">✅ Al día</span>':'<span style="color:var(--red)">⚠ Revisar</span>';}else el.textContent='—';
+  if(pg>0){el.innerHTML=pg>=3?'<span style="color:var(--green)">Al dia</span>':'<span style="color:var(--red)">Revisar</span>';}else el.textContent='-';
   const c=document.getElementById('cursosC');
-  if(!G.cursos.length){c.innerHTML='<div class="empty"><div class="empty-ico">📚</div><p>No estás inscrito en ningún curso aún.</p></div>';return;}
+  if(!G.cursos.length){c.innerHTML='<div class="empty"><div class="empty-ico">Cursos</div><p>No estas inscrito en ningun curso aun.</p></div>';return;}
   c.innerHTML=G.cursos.map((cu,i)=>{
-    const asigs=cu.asignaturas.map(a=>{ const cals=G.cals.filter(x=>String(x.asignaturaId)===String(a.id)); const p=promAsig(cals); const ps=p!==null?p.toFixed(2):'—'; const pc=p===null?'n':p>=4?'g':p>=3?'a':'r';
-      const horTexto=parsearSlots(a.horario).map(p=>p.dia.charAt(0).toUpperCase()+p.dia.slice(1)+' '+FRANJAS.find(f=>f.id===p.fId)?.l).join(', ')||a.horario||'Sin horario'; return `<div class="arow"><div><div class="anm">${a.nombre}</div><div class="ame">👤 ${a.prof} &nbsp;•&nbsp; 🕐 ${horTexto}</div></div><div class="aacts"><span class="pill ${pc}">⭐ ${ps}</span><button class="btn btn-o" onclick="abrirModal('${a.id}','${a.nombre.replace(/'/g,"\\'")}')">Ver Notas</button></div></div>`; }).join('');
-    return `<div class="cc"><div class="ch" onclick="togCurso('cb${i}','ct${i}')"><div><h3>${cu.nombre}</h3><div class="ch-meta">📅 ${periodoLabel(cu.periodo)} &nbsp;•&nbsp; ${cu.asignaturas.length} asignatura(s)</div></div><span class="ctog" id="ct${i}">▼</span></div><div class="cbody" id="cb${i}">${asigs||'<p style="padding:14px;color:var(--muted)">Sin asignaturas.</p>'}</div></div>`;
+    const asigs=cu.asignaturas.map(a=>{ const cals=G.cals.filter(x=>String(x.asignaturaId)===String(a.id)); const p=promAsig(cals); const ps=p!==null?p.toFixed(2):'-'; const pc=p===null?'n':p>=4?'g':p>=3?'a':'r';
+      const horTexto=parsearSlots(a.horario).map(p=>p.dia.charAt(0).toUpperCase()+p.dia.slice(1)+' '+FRANJAS.find(f=>f.id===p.fId)?.l).join(', ')||a.horario||'Sin horario'; return `<div class="arow"><div><div class="anm">${a.nombre}</div><div class="ame">Docente: ${a.prof} &nbsp;|&nbsp; Horario: ${horTexto}</div></div><div class="aacts"><span class="pill ${pc}">Nota ${ps}</span><button class="btn btn-o" onclick="abrirModal('${a.id}','${a.nombre.replace(/'/g,"\\'")}')">Ver notas</button></div></div>`; }).join('');
+    return `<div class="cc"><div class="ch" onclick="togCurso('cb${i}','ct${i}')"><div><h3>${cu.nombre}</h3><div class="ch-meta">Periodo: ${periodoLabel(cu.periodo)} &nbsp;|&nbsp; ${cu.asignaturas.length} asignatura(s)</div></div><span class="ctog" id="ct${i}">v</span></div><div class="cbody" id="cb${i}">${asigs||'<p style="padding:14px;color:var(--muted)">Sin asignaturas.</p>'}</div></div>`;
   }).join('');
 }
 function togCurso(b,t){document.getElementById(b).classList.toggle('o');document.getElementById(t).classList.toggle('o');}
 
 // Parsea el formato del admin: "Lunes__7:00,Martes__9:00"
-// Devuelve array de {dia, hora} para múltiples slots
+// Devuelve array de {dia, hora} para multiples slots
 function parsearSlots(s){
   if(!s) return [];
-  const norm = str => str.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-  // El admin guarda: "Lunes 7:00,Martes 9:00" (múltiples slots separados por coma)
-  // También puede ser formato viejo con __ : "Lunes__7:00"
+  const norm = str => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  // El admin guarda: "Lunes 7:00,Martes 9:00" (multiples slots separados por coma)
+  // Tambien puede ser formato viejo con __ : "Lunes__7:00"
   return s.split(',').map(t=>{
-    const part = t.trim().replace('__',' '); // normalizar __ → espacio
+    const part = t.trim().replace('__',' '); // normalizar __ a espacio
     if(!part) return null;
     const lo = norm(part);
-    // Buscar día
+    // Buscar dia
     let dia = null;
     for(const [k,v] of Object.entries(DIA_MAP)){ if(lo.startsWith(norm(k))||lo.includes(norm(k)+' ')||lo.includes(norm(k))){ dia=v; break; } }
     if(!dia) return null;
-    // Buscar hora: número seguido de :MM opcional
+    // Buscar hora: numero seguido de :MM opcional
     const m = lo.match(/(\d{1,2})(?::(\d{2}))?/);
     if(!m) return null;
     const h = parseInt(m[1]);
@@ -472,19 +545,19 @@ async function cargarHorario(){
         cursoNombre:m.curso?.nombre||''
       }))
     );
-    // Actualizar también el cache G.cursos con horarios frescos
+    // Actualizar tambien el cache G.cursos con horarios frescos
     todas.forEach(af=>{
       G.cursos.forEach(cu=>{ cu.asignaturas.forEach(a=>{ if(String(a.id)===String(af.id)) a.horario=af.horario; }); });
     });
     renderHorario(todas);
-  }catch(e){ c.innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p style="color:var(--red)">${e.message}</p></div>`; }
+  }catch(e){ c.innerHTML=`<div class="empty"><div class="empty-ico">!</div><p style="color:var(--red)">${e.message}</p></div>`; }
 }
 
-// Paleta de colores por asignatura — cada materia tiene su propio color
+// Paleta de colores por asignatura - cada materia tiene su propio color
 const ASIG_PALETTE = [
   {bg:'#ede9fe',fg:'#5b21b6',border:'#7c3aed'},  // violeta
   {bg:'#dcfce7',fg:'#14532d',border:'#16a34a'},  // verde
-  {bg:'#fef3c7',fg:'#78350f',border:'#d97706'},  // ámbar
+  {bg:'#fef3c7',fg:'#78350f',border:'#d97706'},  // ambar
   {bg:'#dbeafe',fg:'#1e3a8a',border:'#2563eb'},  // azul
   {bg:'#fce7f3',fg:'#831843',border:'#db2777'},  // rosa
   {bg:'#ccfbf1',fg:'#134e4a',border:'#0d9488'},  // teal
@@ -499,9 +572,9 @@ const ASIG_PALETTE = [
 function renderHorario(todas){
   const c=document.getElementById('horarioC');
   if(!todas) todas=G.cursos.flatMap(cu=>cu.asignaturas.map(a=>({...a,cursoNombre:cu.nombre})));
-  if(!todas.length){c.innerHTML='<div class="empty"><div class="empty-ico">🗓️</div><p>Sin asignaturas registradas.</p></div>';return;}
+  if(!todas.length){c.innerHTML='<div class="empty"><div class="empty-ico">Horario</div><p>Sin asignaturas registradas.</p></div>';return;}
 
-  // Asignar color único por asignatura (por nombre para que sea consistente)
+  // Asignar color unico por asignatura (por nombre para que sea consistente)
   const asigNombresUnicos=[...new Set(todas.map(a=>a.nombre))];
   const colorMap={};
   asigNombresUnicos.forEach((nombre,i)=>{ colorMap[nombre]=ASIG_PALETTE[i%ASIG_PALETTE.length]; });
@@ -514,7 +587,7 @@ function renderHorario(todas){
     slots.forEach(p=>{if(grid[p.dia]?.[p.fId]!==undefined)grid[p.dia][p.fId].push(a);});
   });
   const usadas=FRANJAS.filter(f=>DIAS.some(d=>grid[d][f.id].length>0));
-  if(!usadas.length&&!sinH.length){c.innerHTML='<div class="empty"><div class="empty-ico">📅</div><p>Las asignaturas no tienen horarios definidos aún.</p></div>';return;}
+  if(!usadas.length&&!sinH.length){c.innerHTML='<div class="empty"><div class="empty-ico">Horario</div><p>Las asignaturas no tienen horarios definidos aun.</p></div>';return;}
   const filas=usadas.length?usadas:FRANJAS.slice(0,6);
 
   let h='<div class="hscroll"><div class="hgrid">';
@@ -530,9 +603,9 @@ function renderHorario(todas){
       } else {
         asigs.forEach(a=>{
           const col=colorMap[a.nombre]||ASIG_PALETTE[0];
-          h+=`<div class="ablk" style="background:${col.bg};color:${col.fg};border-left-color:${col.border}" title="${a.nombre} — ${a.cursoNombre||a.prof}">
+          h+=`<div class="ablk" style="background:${col.bg};color:${col.fg};border-left-color:${col.border}" title="${a.nombre} - ${a.cursoNombre||a.prof}">
             <div class="abn">${a.nombre}</div>
-            <div class="abp">📚 ${a.cursoNombre||''}</div>
+            <div class="abp">${a.cursoNombre||''}</div>
           </div>`;
         });
       }
@@ -553,36 +626,77 @@ function renderHorario(todas){
     h+=`</div>`;
   }
 
-  if(sinH.length)h+=`<div style="padding:12px 22px;background:#fffbeb;border-top:1px solid #fde68a;font-size:12px;color:#92400e;font-weight:700">⚠ Sin horario asignado aún: ${[...new Set(sinH.map(a=>a.nombre))].join(', ')}</div>`;
+  if(sinH.length)h+=`<div style="padding:12px 22px;background:#fffbeb;border-top:1px solid #fde68a;font-size:12px;color:#92400e;font-weight:700">Sin horario asignado aun: ${[...new Set(sinH.map(a=>a.nombre))].join(', ')}</div>`;
   c.innerHTML=h;
 }
 
 function renderNotas(){
   const c=document.getElementById('notasC');
-  if(!G.cursos.length){c.innerHTML='<div class="empty"><div class="empty-ico">📝</div><p>Sin cursos registrados.</p></div>';return;}
   const sel=document.getElementById('notasPeriodoSel');
   const periodos=[...new Set([...G.cursos.map(c=>c.periodo),...G.cals.map(c=>c.periodo)])].filter(Boolean).sort().reverse();
-  const selVal=sel.value; sel.innerHTML='<option value="">Todos los períodos</option>'+periodos.map(p=>`<option value="${p}" ${p===selVal?'selected':''}>${periodoLabel(p)}</option>`).join('');
-  const filtroPeriodo=sel.value; let h='';
-  G.cursos.forEach(cu=>{ if(filtroPeriodo&&cu.periodo&&cu.periodo!==filtroPeriodo)return; h+=`<div style="margin-bottom:28px"><h3 style="font-size:15px;color:var(--blue);margin-bottom:14px;font-weight:800">📚 ${cu.nombre} <span style="font-weight:600;font-size:13px;color:var(--muted)">— ${periodoLabel(cu.periodo)}</span></h3>`; if(!cu.asignaturas.length)h+=`<p style="color:var(--muted);font-size:14px">Sin asignaturas.</p>`; else cu.asignaturas.forEach(a=>{ const calsFiltradas=G.cals.filter(x=>String(x.asignaturaId)===String(a.id)&&(!filtroPeriodo||x.periodo===filtroPeriodo)); h+=bloqueAsig(a,calsFiltradas); }); h+=`</div>`; });
-  if(!h)h='<div class="empty"><div class="empty-ico">📝</div><p>Sin datos para el período seleccionado.</p></div>';
+  const selVal=sel.value;
+  sel.innerHTML='<option value="">Todos los períodos</option>'+periodos.map(p=>`<option value="${p}" ${p===selVal?'selected':''}>${periodoLabel(p)}</option>`).join('');
+  const filtroPeriodo=sel.value;
+  const asigLookup=getAsignaturaLookup();
+  const agrupadas={};
+  (G.cals||[]).forEach(cal=>{
+    if(filtroPeriodo && cal.periodo!==filtroPeriodo) return;
+    const id=String(cal.asignaturaId);
+    if(!agrupadas[id]){
+      const ref=asigLookup[id];
+      agrupadas[id]={
+        asignatura: ref || { id, nombre:`Asignatura ${id.slice(-4)}`, prof:'Sin docente', cursoNombre:'Sin curso', cursoPeriodo:cal.periodo||'' },
+        calificaciones:[]
+      };
+    }
+    agrupadas[id].calificaciones.push(cal);
+  });
+
+  // incluir asignaturas inscritas aunque no tengan notas
+  Object.values(asigLookup).forEach(a=>{
+    const id=String(a.id);
+    if(!agrupadas[id] && !filtroPeriodo){
+      agrupadas[id]={ asignatura:a, calificaciones:[] };
+    }
+  });
+
+  const gruposCurso={};
+  Object.values(agrupadas).forEach(({asignatura,calificaciones})=>{
+    const key=`${asignatura.cursoNombre||'Sin curso'}__${asignatura.cursoPeriodo||''}`;
+    if(!gruposCurso[key]) gruposCurso[key]={ cursoNombre:asignatura.cursoNombre||'Sin curso', cursoPeriodo:asignatura.cursoPeriodo||'', items:[] };
+    gruposCurso[key].items.push({asignatura,calificaciones});
+  });
+
+  let h='';
+  Object.values(gruposCurso).forEach(grupo=>{
+    h+=`<div style="margin-bottom:28px"><h3 style="font-size:15px;color:var(--blue);margin-bottom:14px;font-weight:800">${grupo.cursoNombre} <span style="font-weight:600;font-size:13px;color:var(--muted)">- ${periodoLabel(grupo.cursoPeriodo)}</span></h3>`;
+    grupo.items.forEach(({asignatura,calificaciones})=>{
+      h+=bloqueAsig(asignatura,calificaciones);
+    });
+    h+=`</div>`;
+  });
+
+  if(!h){
+    if(!G.cals.length && !G.cursos.length) h='<div class="empty"><div class="empty-ico">Notas</div><p>Sin cursos ni calificaciones registradas.</p></div>';
+    else h='<div class="empty"><div class="empty-ico">Notas</div><p>Sin datos para el periodo seleccionado.</p></div>';
+  }
   c.innerHTML=h;
 }
 function bloqueAsig(a,cals){
-  const plbl=p=>{ const m=(p||'').match(/^(\d{4})-(\d)$/); return m?`${{1:'1er',2:'2do',3:'3er',4:'4to'}[m[2]]||'P'+m[2]} Período ${m[1]}`:p; };
-  const rp=p=>p!==null?`<span class="pill ${p>=4?'g':p>=3?'a':'r'}" style="font-size:11px">${p.toFixed(1)}</span>`:`<span class="pill n" style="font-size:11px">—</span>`;
+  const plbl=p=>{ const m=(p||'').match(/^(\d{4})-(\d)$/); return m?`${{1:'1er',2:'2do',3:'3er',4:'4to'}[m[2]]||'P'+m[2]} Periodo ${m[1]}`:p; };
+  const rp=p=>p!==null?`<span class="pill ${p>=4?'g':p>=3?'a':'r'}" style="font-size:11px">${p.toFixed(1)}</span>`:`<span class="pill n" style="font-size:11px">-</span>`;
   const pg=cals.length?cals.reduce((s,c)=>s+Number(c.nota),0)/cals.length:null;
-  let h=`<div class="asig-blk"><div class="asig-blk-h"><div><span>${a.nombre}</span> <small>— 👤 ${a.prof}</small></div>${pg!==null?`<span class="pill ${pg>=4?'g':pg>=3?'a':'r'}">Prom: ${pg.toFixed(2)} ${pg>=3?'✅':'❌'}</span>`:''}</div>`;
+  let h=`<div class="asig-blk"><div class="asig-blk-h"><div><span>${a.nombre}</span> <small>- Docente: ${a.prof}</small></div>${pg!==null?`<span class="pill ${pg>=4?'g':pg>=3?'a':'r'}">Prom: ${pg.toFixed(2)} ${pg>=3?'OK':'Revisar'}</span>`:''}</div>`;
   if(!cals.length){
     h+=`<p style="padding:14px;color:var(--muted);font-style:italic;font-size:13px">Sin calificaciones registradas.</p>`;
   } else {
-    const periodos=[...new Set(cals.map(c=>c.periodo||'Sin período'))].sort();
+    const periodos=[...new Set(cals.map(c=>c.periodo||'Sin periodo'))].sort();
     periodos.forEach(per=>{
-      const acts=cals.filter(c=>(c.periodo||'Sin período')===per);
+      const acts=cals.filter(c=>(c.periodo||'Sin periodo')===per);
       const avg=acts.length?acts.reduce((s,c)=>s+Number(c.nota),0)/acts.length:null;
-      h+=`<div style="padding:8px 14px 4px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:700;color:#475569">📅 ${plbl(per)}</span>${rp(avg)}</div>`;
+      h+=`<div style="padding:8px 14px 4px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:700;color:#475569">Periodo: ${plbl(per)}</span>${rp(avg)}</div>`;
       h+=`<table class="ntbl"><thead><tr><th>Actividad</th><th>Tipo</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>`;
-      acts.forEach(c=>{const n=Number(c.nota);const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'—'; h+=`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.tipoActividad||'—'}</span></td><td><span class="pill ${n>=4?'g':n>=3?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`;});
+      acts.forEach(c=>{const n=Number(c.nota);const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'-'; h+=`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.tipoActividad||'-'}</span></td><td><span class="pill ${n>=4?'g':n>=3?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`;});
       h+=`</tbody></table>`;
     });
   }
@@ -594,30 +708,31 @@ async function cargarAsistencia(){
   try{
     const sel=document.getElementById('asistPeriodoSel');
     const periodos=[...new Set([...G.cursos.map(x=>x.periodo),...G.cals.map(x=>x.periodo)])].filter(Boolean).sort().reverse();
-    const selVal=sel.value; sel.innerHTML='<option value="">Todos los períodos</option>'+periodos.map(p=>`<option value="${p}" ${p===selVal?'selected':''}>${periodoLabel(p)}</option>`).join('');
+    const selVal=sel.value; sel.innerHTML='<option value="">Todos los periodos</option>'+periodos.map(p=>`<option value="${p}" ${p===selVal?'selected':''}>${periodoLabel(p)}</option>`).join('');
     const periodo=sel.value||undefined;
     const varStr=periodo?`(estudianteId:"${G.id}",periodo:"${periodo}")`:`(estudianteId:"${G.id}")`;
     const d=await gql(`query{asistenciasPorEstudiante${varStr}{id asignaturaId fecha estado periodo observaciones}}`);
     G.asistencias=d.asistenciasPorEstudiante||[]; renderAsistencia();
-  }catch(e){ document.getElementById('asistC').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p style="color:var(--red)">${e.message}</p></div>`; }
+  }catch(e){ document.getElementById('asistC').innerHTML=`<div class="empty"><div class="empty-ico">!</div><p style="color:var(--red)">${e.message}</p></div>`; }
 }
 
 function renderAsistencia(){
   const c=document.getElementById('asistC'); const regs=G.asistencias||[];
-  if(!regs.length){c.innerHTML='<div class="empty"><div class="empty-ico">📋</div><p>No hay registros de asistencia para este período.</p></div>';return;}
+  if(!regs.length){c.innerHTML='<div class="empty"><div class="empty-ico">Asistencia</div><p>No hay registros de asistencia para este periodo.</p></div>';return;}
   const asigMap={}; for(const r of regs){const k=String(r.asignaturaId);if(!asigMap[k])asigMap[k]=[];asigMap[k].push(r);}
   const nombreAsig=id=>{for(const cu of G.cursos){const a=cu.asignaturas.find(x=>String(x.id)===String(id));if(a)return a.nombre;}return`Asignatura ${id}`;};
-  const estadoClase={PRESENTE:'g',AUSENTE:'r',TARDE:'a',EXCUSA:'n'}; const estadoEmoji={PRESENTE:'✅',AUSENTE:'❌',TARDE:'⏰',EXCUSA:'📝'};
+  const estadoClase={PRESENTE:'g',AUSENTE:'r',TARDE:'a',EXCUSA:'n'}; const estadoEmoji={PRESENTE:'Presente',AUSENTE:'Ausente',TARDE:'Tarde',EXCUSA:'Excusa'};
   let h='';
   for(const[asigId,rs] of Object.entries(asigMap)){ const nombre=nombreAsig(asigId); const total=rs.length; const pres=rs.filter(r=>r.estado==='PRESENTE').length; const aus=rs.filter(r=>r.estado==='AUSENTE').length; const tard=rs.filter(r=>r.estado==='TARDE').length; const exc=rs.filter(r=>r.estado==='EXCUSA').length; const pct=total>0?Math.round(((pres+exc)/total)*1000)/10:0; const pctColor=pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--red)';
-    h+=`<div class="asig-blk" style="margin-bottom:18px"><div class="asig-blk-h" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>${nombre}</span><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="pill n">🏫 ${total} clases</span><span class="pill g">✅ ${pres}</span>${tard?`<span class="pill a">⏰ ${tard}</span>`:''} ${exc?`<span class="pill n">📝 ${exc}</span>`:''} ${aus?`<span class="pill r">❌ ${aus}</span>`:''}<span style="font-size:13px;font-weight:800;color:${pctColor}">${pct}% asistencia</span></div></div><div style="overflow-x:auto"><table class="ntbl"><thead><tr><th>Fecha</th><th>Estado</th><th>Período</th><th>Observación</th></tr></thead><tbody>`;
+    h+=`<div class="asig-blk" style="margin-bottom:18px"><div class="asig-blk-h" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>${nombre}</span><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="pill n">${total} clases</span><span class="pill g">Presente ${pres}</span>${tard?`<span class="pill a">Tarde ${tard}</span>`:''} ${exc?`<span class="pill n">Excusa ${exc}</span>`:''} ${aus?`<span class="pill r">Ausente ${aus}</span>`:''}<span style="font-size:13px;font-weight:800;color:${pctColor}">${pct}% asistencia</span></div></div><div style="overflow-x:auto"><table class="ntbl"><thead><tr><th>Fecha</th><th>Estado</th><th>Periodo</th><th>Observacion</th></tr></thead><tbody>`;
     const sorted=[...rs].sort((a,b)=>new Date(b.fecha).getTime()-new Date(a.fecha).getTime());
-    for(const r of sorted){ const f=r.fecha?new Date(r.fecha).toLocaleDateString('es-CO'):'—'; h+=`<tr><td style="font-weight:700">${f}</td><td><span class="pill ${estadoClase[r.estado]||'n'}">${estadoEmoji[r.estado]||''} ${r.estado}</span></td><td style="font-size:12px;color:var(--muted)">${periodoLabel(r.periodo)}</td><td style="font-size:12px;color:var(--muted)">${r.observaciones||'—'}</td></tr>`; }
+    for(const r of sorted){ const f=r.fecha?new Date(r.fecha).toLocaleDateString('es-CO'):'-'; h+=`<tr><td style="font-weight:700">${f}</td><td><span class="pill ${estadoClase[r.estado]||'n'}">${estadoEmoji[r.estado]||r.estado}</span></td><td style="font-size:12px;color:var(--muted)">${periodoLabel(r.periodo)}</td><td style="font-size:12px;color:var(--muted)">${r.observaciones||'-'}</td></tr>`; }
     h+=`</tbody></table></div></div>`;
   }
   c.innerHTML=h;
 }
 
+function soloFecha(v){return String(v||'').split('T')[0];}
 async function iniciarCronograma(){ await cargarEventosCronograma(); renderCalendario(); }
 async function cargarEventosCronograma(){ try{ const d=await gql(`query{cronograma(anio:${G.calAnioActual}){id titulo tipo fechaInicio fechaFin color descripcion}}`); G.calEventos=d.cronograma||[]; }catch(e){ G.calEventos=[]; } }
 function calMes(delta){ G.calMesActual+=delta; if(G.calMesActual>11){G.calMesActual=0;G.calAnioActual++;} if(G.calMesActual<0){G.calMesActual=11;G.calAnioActual--;} cargarEventosCronograma().then(()=>renderCalendario()); }
@@ -631,8 +746,40 @@ function renderCalendario(){
   for(let i=inicioSem-1;i>=0;i--) html+=`<div class="cal-cel otro-mes"><div class="cal-num">${mesPrev-i}</div></div>`;
   for(let d=1;d<=ultimoDia;d++){
     const fecha=new Date(G.calAnioActual,G.calMesActual,d); const esHoy=fecha.toDateString()===hoy.toDateString(); const fechaStr=fecha.toISOString().split('T')[0];
-    const evs=G.calEventos.filter(e=>{const fi=e.fechaInicio.split('T')[0];const ff=e.fechaFin?e.fechaFin.split('T')[0]:fi;return fechaStr>=fi&&fechaStr<=ff;});
+    const evs=G.calEventos.filter(e=>{const fi=soloFecha(e.fechaInicio);const ff=e.fechaFin?soloFecha(e.fechaFin):fi;return fechaStr>=fi&&fechaStr<=ff;});
     html+=`<div class="cal-cel${esHoy?' hoy':''}"><div class="cal-num">${d}</div>${evs.slice(0,3).map(e=>`<div class="cal-ev ev-${e.tipo}" title="${e.titulo}">${e.titulo}</div>`).join('')}${evs.length>3?`<div style="font-size:9px;color:var(--muted)">+${evs.length-3} más</div>`:''}</div>`;
+  }
+  const total=inicioSem+ultimoDia; const resto=total%7===0?0:7-(total%7);
+  for(let i=1;i<=resto;i++) html+=`<div class="cal-cel otro-mes"><div class="cal-num">${i}</div></div>`;
+  grid.innerHTML=html;
+}
+
+function cargarEventosActividades(){
+  G.actEventos=(G.cals||[])
+    .filter(c=>c.fecha)
+    .map(c=>({
+      id:c.id,
+      titulo:c.nombreActividad||'Actividad',
+      tipo:'ACTIVIDAD',
+      fechaInicio:soloFecha(c.fecha),
+      fechaFin:soloFecha(c.fecha),
+      descripcion:[c.tipoActividad,c.observaciones].filter(Boolean).join(' - ')
+    }));
+}
+async function iniciarCalendarioActividades(){ cargarEventosActividades(); renderCalendarioActividades(); }
+function actMes(delta){ G.actMesActual+=delta; if(G.actMesActual>11){G.actMesActual=0;G.actAnioActual++;} if(G.actMesActual<0){G.actMesActual=11;G.actAnioActual--;} renderCalendarioActividades(); }
+function renderCalendarioActividades(){
+  const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('actMesTxt').textContent=`${meses[G.actMesActual]} ${G.actAnioActual}`;
+  const grid=document.getElementById('actCalGrid'); const dias=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  let html=dias.map(d=>`<div class="cal-dh">${d}</div>`).join('');
+  const hoy=new Date(); const primero=new Date(G.actAnioActual,G.actMesActual,1); let inicioSem=primero.getDay(); inicioSem=inicioSem===0?6:inicioSem-1;
+  const ultimoDia=new Date(G.actAnioActual,G.actMesActual+1,0).getDate(); const mesPrev=new Date(G.actAnioActual,G.actMesActual,0).getDate();
+  for(let i=inicioSem-1;i>=0;i--) html+=`<div class="cal-cel otro-mes"><div class="cal-num">${mesPrev-i}</div></div>`;
+  for(let d=1;d<=ultimoDia;d++){
+    const fecha=new Date(G.actAnioActual,G.actMesActual,d); const esHoy=fecha.toDateString()===hoy.toDateString(); const fechaStr=fecha.toISOString().split('T')[0];
+    const evs=G.actEventos.filter(e=>fechaStr>=e.fechaInicio&&fechaStr<=e.fechaFin);
+    html+=`<div class="cal-cel${esHoy?' hoy':''}"><div class="cal-num">${d}</div>${evs.slice(0,3).map(e=>`<div class="cal-ev ev-${e.tipo}" title="${e.titulo}${e.descripcion ? ' - ' + e.descripcion : ''}">${e.titulo}</div>`).join('')}${evs.length>3?`<div style="font-size:9px;color:var(--muted)">+${evs.length-3} más</div>`:''}</div>`;
   }
   const total=inicioSem+ultimoDia; const resto=total%7===0?0:7-(total%7);
   for(let i=1;i<=resto;i++) html+=`<div class="cal-cel otro-mes"><div class="cal-num">${i}</div></div>`;
@@ -648,19 +795,19 @@ async function renderBoletin(){
     const configs=(dp.periodosConfig||[]);
     const periodosConNotas=[...new Set(G.cals.map(c=>c.periodo))].filter(Boolean);
     const tarjetas=[1,2,3].map(n=>{ const valor=`${anio}-${n}`; const cfg=configs.find(c=>c.numeroPeriodo===n); const abierto=cfg?cfg.abierto:true; const tieneNotas=periodosConNotas.includes(valor); const labels={1:'1er Período',2:'2do Período',3:'3er Período'}; const fc=cfg?.fechaCierre?new Date(cfg.fechaCierre).toLocaleDateString('es-CO'):null;
-      if(!abierto) return `<div style="border:2px solid #bbf7d0;border-radius:10px;padding:14px 18px;background:#f0fdf4;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px"><div><div style="font-weight:800;font-size:14px;color:#166534">✅ ${labels[n]} <span style="font-size:12px;background:var(--green-lt);color:var(--green);padding:2px 8px;border-radius:12px;margin-left:6px">CERRADO</span></div>${fc?`<div style="font-size:11px;color:#4ade80;margin-top:3px">Cerrado el ${fc}</div>`:''}</div><button class="btn" style="background:var(--green);color:#fff;padding:8px 16px;font-size:12px;white-space:nowrap" onclick="seleccionarPeriodoBoletin('${valor}',this)">⬇ Descargar</button></div>`;
-      else if(tieneNotas) return `<div style="border:2px solid #fde68a;border-radius:10px;padding:14px 18px;background:#fffbeb;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px"><div><div style="font-weight:800;font-size:14px;color:#92400e">⏳ ${labels[n]} <span style="font-size:12px;background:var(--amber-lt);color:#92400e;padding:2px 8px;border-radius:12px;margin-left:6px">EN CURSO</span></div><div style="font-size:11px;color:#b45309;margin-top:3px">Disponible cuando el período sea cerrado por el administrador</div></div><button class="btn" disabled style="background:var(--border);color:var(--muted);padding:8px 16px;font-size:12px;cursor:not-allowed;white-space:nowrap">🔒 No disponible</button></div>`;
-      else return `<div style="border:2px solid var(--border);border-radius:10px;padding:14px 18px;background:var(--surface);display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;opacity:.6"><div><div style="font-weight:800;font-size:14px;color:var(--muted)">⬜ ${labels[n]} <span style="font-size:12px;background:var(--surface);color:var(--muted);padding:2px 8px;border-radius:12px;margin-left:6px">SIN DATOS</span></div></div><button class="btn" disabled style="background:var(--border);color:var(--muted);padding:8px 16px;font-size:12px;cursor:not-allowed;white-space:nowrap">— No disponible</button></div>`;
+      if(!abierto) return `<div style="border:2px solid #bbf7d0;border-radius:10px;padding:14px 18px;background:#f0fdf4;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px"><div><div style="font-weight:800;font-size:14px;color:#166534">Cerrado · ${labels[n]} <span style="font-size:12px;background:var(--green-lt);color:var(--green);padding:2px 8px;border-radius:12px;margin-left:6px">CERRADO</span></div>${fc?`<div style="font-size:11px;color:#4ade80;margin-top:3px">Cerrado el ${fc}</div>`:''}</div><button class="btn" style="background:var(--green);color:#fff;padding:8px 16px;font-size:12px;white-space:nowrap" onclick="seleccionarPeriodoBoletin('${valor}',this)">Descargar</button></div>`;
+      else if(tieneNotas) return `<div style="border:2px solid #fde68a;border-radius:10px;padding:14px 18px;background:#fffbeb;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px"><div><div style="font-weight:800;font-size:14px;color:#92400e">En curso · ${labels[n]} <span style="font-size:12px;background:var(--amber-lt);color:#92400e;padding:2px 8px;border-radius:12px;margin-left:6px">EN CURSO</span></div><div style="font-size:11px;color:#b45309;margin-top:3px">Disponible cuando el período sea cerrado por el administrador</div></div><button class="btn" disabled style="background:var(--border);color:var(--muted);padding:8px 16px;font-size:12px;cursor:not-allowed;white-space:nowrap">No disponible</button></div>`;
+      else return `<div style="border:2px solid var(--border);border-radius:10px;padding:14px 18px;background:var(--surface);display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;opacity:.6"><div><div style="font-weight:800;font-size:14px;color:var(--muted)">Sin datos · ${labels[n]} <span style="font-size:12px;background:var(--surface);color:var(--muted);padding:2px 8px;border-radius:12px;margin-left:6px">SIN DATOS</span></div></div><button class="btn" disabled style="background:var(--border);color:var(--muted);padding:8px 16px;font-size:12px;cursor:not-allowed;white-space:nowrap">No disponible</button></div>`;
     }).join('');
     wrap.innerHTML=tarjetas; btnDl.style.display='none';
-  }catch(err){ wrap.innerHTML=`<p style="color:var(--red);font-size:13px">⚠ Error: ${err.message}</p>`; }
+  }catch(err){ wrap.innerHTML=`<p style="color:var(--red);font-size:13px">Error: ${err.message}</p>`; }
 }
 
 function seleccionarPeriodoBoletin(periodo,btn){ G._periodoSelBoletin=periodo; descargar(btn); }
 async function descargar(btnOrigen){
   const per=G._periodoSelBoletin;if(!per)return;
   const msg=document.getElementById('dlMsg');
-  if(btnOrigen){btnOrigen.disabled=true;btnOrigen.textContent='⏳ Generando...';}
+  if(btnOrigen){btnOrigen.disabled=true;btnOrigen.textContent='Generando...';}
   msg.textContent='';
   try{
     const timeoutP=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Tiempo de espera agotado.')),30000));
@@ -668,36 +815,36 @@ async function descargar(btnOrigen){
     const b64=d.exportarBoletinEstudiante;if(!b64)throw new Error('Sin datos');
     const bytes=new Uint8Array(atob(b64).split('').map(c=>c.charCodeAt(0))); const blob=new Blob([bytes],{type:'application/pdf'}); const url=URL.createObjectURL(blob);
     const a=document.createElement('a');a.href=url;a.download=`Boletin_${G.nombre.replace(/\s+/g,'_')}_${per}.pdf`;a.click(); URL.revokeObjectURL(url);
-    msg.textContent=`✅ Boletín ${per} descargado correctamente`;msg.style.color='var(--green)'; showT('✅ Boletín descargado');
-  }catch(err){ msg.textContent=`⚠ ${err.message}`;msg.style.color='var(--red)'; showT(err.message,'er'); }
-  finally{ if(btnOrigen){btnOrigen.disabled=false;btnOrigen.textContent='⬇ Descargar';} }
+msg.textContent=`Boletín ${per} descargado correctamente`;msg.style.color='var(--green)'; showT('Boletín descargado');
+  }catch(err){ msg.textContent=`Error: ${err.message}`;msg.style.color='var(--red)'; showT(err.message,'er'); }
+  finally{ if(btnOrigen){btnOrigen.disabled=false;btnOrigen.textContent='Descargar';} }
 }
 
 function abrirModal(id,nombre){
-  // Sin filtro de período: mostrar todas las notas de la asignatura
+  // Sin filtro de periodo: mostrar todas las notas de la asignatura
   const cals=G.cals.filter(c=>String(c.asignaturaId)===String(id));
-  document.getElementById('mTit').textContent=`📝 ${nombre}`;
+  document.getElementById('mTit').textContent=`${nombre}`;
   let h='';
 
   if(!cals.length){
-    h='<div class="empty"><div class="empty-ico">📭</div><p>Sin calificaciones registradas.</p></div>';
+    h='<div class="empty"><div class="empty-ico">Notas</div><p>Sin calificaciones registradas.</p></div>';
   } else {
-    // Agrupar por período
-    const periodos=[...new Set(cals.map(c=>c.periodo||'Sin período'))].sort();
-    const rp=p=>p!==null?`<span class="pill ${p>=4?'g':p>=3?'a':'r'}">${p.toFixed(2)}</span>`:`<span class="pill n">—</span>`;
-    const plabel=p=>{ const m=p.match(/^(\d{4})-(\d)$/); return m?`${{1:'1er',2:'2do',3:'3er',4:'4to'}[m[2]]||'P'+m[2]} Período ${m[1]}`:p; };
+    // Agrupar por periodo
+    const periodos=[...new Set(cals.map(c=>c.periodo||'Sin periodo'))].sort();
+    const rp=p=>p!==null?`<span class="pill ${p>=4?'g':p>=3?'a':'r'}">${p.toFixed(2)}</span>`:`<span class="pill n">-</span>`;
+    const plabel=p=>{ const m=p.match(/^(\d{4})-(\d)$/); return m?`${{1:'1er',2:'2do',3:'3er',4:'4to'}[m[2]]||'P'+m[2]} Periodo ${m[1]}`:p; };
 
     periodos.forEach(per=>{
-      const acts=cals.filter(c=>(c.periodo||'Sin período')===per);
+      const acts=cals.filter(c=>(c.periodo||'Sin periodo')===per);
       const avg=acts.length?acts.reduce((s,c)=>s+Number(c.nota),0)/acts.length:null;
       const ap=avg!==null&&avg>=3;
       h+=`<div style="margin-bottom:20px">
         <div style="display:flex;justify-content:space-between;align-items:center;background:${ap?'#f0fdf4':'#f8fafc'};border:1px solid ${ap?'#86efac':'#e2e8f0'};border-radius:10px;padding:12px 16px;margin-bottom:10px">
-          <div><div style="font-weight:800;font-size:14px">📅 ${plabel(per)}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${acts.length} actividad(es)</div></div>
-          <div style="text-align:right">${rp(avg)}<div style="font-size:11px;font-weight:700;color:${ap?'var(--green)':'var(--red)'};margin-top:3px">${avg!==null?(ap?'✅ Aprobado':'❌ Reprobado'):'—'}</div></div>
+          <div><div style="font-weight:800;font-size:14px">${plabel(per)}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${acts.length} actividad(es)</div></div>
+          <div style="text-align:right">${rp(avg)}<div style="font-size:11px;font-weight:700;color:${ap?'var(--green)':'var(--red)'};margin-top:3px">${avg!==null?(ap?'Aprobado':'Reprobado'):'-'}</div></div>
         </div>
         <table class="ntbl"><thead><tr><th>Actividad</th><th>Tipo</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>
-        ${acts.map(c=>{ const n=Number(c.nota);const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'—'; return`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);font-weight:700">${c.tipoActividad||'—'}</span></td><td><span class="pill ${n>=4?'g':n>=3?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`; }).join('')}
+        ${acts.map(c=>{ const n=Number(c.nota);const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'-'; return`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);font-weight:700">${c.tipoActividad||'-'}</span></td><td><span class="pill ${n>=4?'g':n>=3?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`; }).join('')}
         </tbody></table>
       </div>`;
     });
@@ -707,7 +854,7 @@ function abrirModal(id,nombre){
     h+=`<div style="background:${pg>=3?'#f0fdf4':'#fff1f2'};border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border:1px solid ${pg>=3?'#86efac':'#fca5a5'}">
       <span style="font-weight:800;font-size:14px">Promedio General</span>
       <div><span class="pill ${pg>=4?'g':pg>=3?'a':'r'}" style="font-size:15px">${pg.toFixed(2)}</span>
-      <span style="font-size:12px;margin-left:8px;font-weight:700;color:${pg>=3?'var(--green)':'var(--red)'}">${pg>=3?'✅ APROBADO':'❌ REPROBADO'}</span></div>
+      <span style="font-size:12px;margin-left:8px;font-weight:700;color:${pg>=3?'var(--green)':'var(--red)'}">${pg>=3?'APROBADO':'REPROBADO'}</span></div>
     </div>`;
   }
 
@@ -721,7 +868,7 @@ function pArr(arr){if(!arr||!arr.length)return null;return arr.reduce((s,n)=>s+N
 function pPond(p1,p2,p3){let s=0,w=0;if(p1!==null){s+=p1*.3;w+=.3;}if(p2!==null){s+=p2*.3;w+=.3;}if(p3!==null){s+=p3*.4;w+=.4;}return w>0?s/w:null;}
 function promAsig(cals){return pPond(pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===1).map(c=>c.nota)),pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===2).map(c=>c.nota)),pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===3).map(c=>c.nota)));}
 function promGen(){const ids=[...new Set(G.cursos.flatMap(c=>c.asignaturas.map(a=>a.id)))];if(!ids.length)return 0;const ps=ids.map(id=>promAsig(G.cals.filter(c=>c.asignaturaId===id))).filter(p=>p!==null);return ps.length?ps.reduce((s,p)=>s+p,0)/ps.length:0;}
-function periodoLabel(p){if(!p)return'—';const m=p.match(/^(\d{4})-(\d)$/);if(m){const labs={1:'1er Período',2:'2do Período',3:'3er Período',4:'4to Período'};return`${labs[m[2]]||'Período '+m[2]} ${m[1]}`;}return p;}
+function periodoLabel(p){if(!p)return'-';const m=p.match(/^(\d{4})-(\d)$/);if(m){const labs={1:'1er Periodo',2:'2do Periodo',3:'3er Periodo',4:'4to Periodo'};return`${labs[m[2]]||'Periodo '+m[2]} ${m[1]}`;}return p;}
 
 function abrirCambioPass(){ ['passActual','passNueva','passConfirm'].forEach(id=>document.getElementById(id).value=''); document.getElementById('passError').style.display='none'; document.getElementById('mPass').classList.add('o'); }
 function cerrarPass(){ document.getElementById('mPass').classList.remove('o'); }
@@ -729,13 +876,14 @@ async function guardarNuevaPass(){
   const actual=document.getElementById('passActual').value; const nueva=document.getElementById('passNueva').value; const confirma=document.getElementById('passConfirm').value;
   const errDiv=document.getElementById('passError'); const btn=document.getElementById('btnCambiarPass'); errDiv.style.display='none';
   if(!actual||!nueva||!confirma){errDiv.textContent='Completa todos los campos.';errDiv.style.display='block';return;}
-  if(nueva!==confirma){errDiv.textContent='Las contraseñas no coinciden.';errDiv.style.display='block';return;}
-  if(nueva.length<6){errDiv.textContent='La contraseña debe tener al menos 6 caracteres.';errDiv.style.display='block';return;}
+if(nueva!==confirma){errDiv.textContent='Las contraseñas no coinciden.';errDiv.style.display='block';return;}
+if(nueva.length<6){errDiv.textContent='La contraseña debe tener al menos 6 caracteres.';errDiv.style.display='block';return;}
   btn.disabled=true;btn.textContent='Guardando...';
-  try{ await gql(`mutation CP($u:String!,$o:String!,$n:String!){cambiarPassword(username:$u,oldPassword:$o,newPassword:$n)}`,{u:sessionStorage.getItem('currentUsername')||G.id,o:actual,n:nueva}); cerrarPass(); showT('✅ Contraseña actualizada correctamente'); }catch(e){ errDiv.textContent=e.message||'Error al cambiar la contraseña.'; errDiv.style.display='block'; }finally{btn.disabled=false;btn.textContent='Guardar nueva contraseña';}
+try{ await gql(`mutation CP($u:String!,$o:String!,$n:String!){cambiarPassword(username:$u,oldPassword:$o,newPassword:$n)}`,{u:sessionStorage.getItem('currentUsername')||G.id,o:actual,n:nueva}); cerrarPass(); showT('Contraseña actualizada correctamente'); }catch(e){ errDiv.textContent=e.message||'Error al cambiar la contraseña.'; errDiv.style.display='block'; }finally{btn.disabled=false;btn.textContent='Guardar nueva contraseña';}
 }
 
 document.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
 </html>
+

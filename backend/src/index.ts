@@ -130,6 +130,9 @@ const server = new ApolloServer({
   }
 });
 const app = express();
+const projectRoot = path.resolve(__dirname, '../..');
+const frontendAppPath = path.join(projectRoot, 'frondend', 'src', 'app');
+const frontendComponentsPath = path.join(frontendAppPath, 'components');
 
 app.use((req, res, next) => {
   // Solo loguear en desarrollo — nunca en producción (contiene tokens y contraseñas)
@@ -151,6 +154,13 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+
+// Servir frontend local para pruebas en localhost
+app.use(express.static(frontendAppPath));
+app.use(express.static(frontendComponentsPath));
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(frontendComponentsPath, 'principal.html'));
+});
 
 // Middleware de depuración solo en desarrollo
 app.use('/graphql', (req, res, next) => {

@@ -3,10 +3,26 @@ import { Boletin } from '../../../core/domain/boletin.js';
 import { BoletinModel } from '../outputs/models/BoletinModel.js';
 import { Calificacion } from '../../../core/domain/calificacion.js'; // Asegúrate de importar la clase Calificacion
 export class BoletinRepositoryImpl {
-    // Obtener todos los boletines
     async findAll() {
         const boletinesDoc = await BoletinModel.find().exec();
         return boletinesDoc.map(this.mapToEntity);
+    }
+    async findByCursoYPeriodo(cursoId, periodo) {
+        const docs = await BoletinModel.find({ cursoId, periodo }).lean().exec();
+        return docs.map(this.mapToEntity);
+    }
+    async findByEstudianteId(estudianteId) {
+        try {
+            const boletines = await BoletinModel.find({ estudianteId })
+                .populate('curso')
+                .sort({ periodo: -1 })
+                .exec();
+            return boletines.map(boletinDoc => this.mapToEntity(boletinDoc));
+        }
+        catch (error) {
+            console.error('Error al buscar boletines por estudianteId:', error);
+            return [];
+        }
     }
     // Obtener boletín por ID
     async findById(id) {
@@ -39,7 +55,8 @@ export class BoletinRepositoryImpl {
     mapToEntity(doc) {
         // Asegúrate de que calificaciones tiene los datos correctos en el documento de MongoDB
         const calificaciones = doc.calificaciones.map((calificacion) => {
-            return new Calificacion(calificacion.id, doc.estudianteId, doc.cursoId, doc._id.toString(), calificacion.nota, calificacion.periodo);
+            return new Calificacion(calificacion.id, doc.estudianteId, doc.cursoId, calificacion.nota, calificacion.periodo, // 👈 Si es `undefined`, usa la fecha actual
+            calificacion.observaciones || '');
         });
         return new Boletin(doc._id.toString(), // El id del boletín
         doc.estudianteId, // Estudiante asociado

@@ -783,7 +783,8 @@ function renderTopEstudiantes(cals) {
   // Por matrícula: obtener promedios por estudiante real
   const estudianteNotas = {};
   DATA.matriculas.forEach(m => {
-    const estId = m.estudianteId;
+    const estId = String(m?.estudiante?.cedula || m?.estudiante?.id || '');
+    if (!estId) return;
     if (!estudianteNotas[estId]) estudianteNotas[estId] = [];
     (m.asignaturas || []).forEach(a => {
       const asigCals = cals.filter(c => String(c.asignaturaId) === String(a.id));

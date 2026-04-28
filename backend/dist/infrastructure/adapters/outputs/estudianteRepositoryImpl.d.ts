@@ -4,7 +4,9 @@ export declare class EstudianteRepositoryImpl {
     create(estudianteData: any): Promise<Estudiante>;
     findAll(): Promise<Estudiante[]>;
     findById(id: string | mongoose.Types.ObjectId): Promise<Estudiante | null>;
+    findByIds(ids: string[]): Promise<any[]>;
     findByCedula(cedula: any): Promise<Estudiante | null>;
+    findByEmail(email: string): Promise<Estudiante | null>;
     update(id: string, estudianteData: Partial<Estudiante>): Promise<Estudiante | null>;
     delete(id: string): Promise<boolean>;
 }

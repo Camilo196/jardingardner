@@ -1,15 +1,52 @@
-import mongoose, { Document } from 'mongoose';
-export interface MatriculaDocument extends Document {
+import mongoose from 'mongoose';
+export declare const MatriculaModel: mongoose.Model<{
     estudianteId: string;
     cursoId: string;
-    asignaturas: string[];
-    estado: 'ACTIVA' | 'CANCELADA' | 'FINALIZADA';
+    asignaturas: mongoose.Types.ObjectId[];
+    estado: "ACTIVA" | "CANCELADA" | "FINALIZADA" | "SIN_PAGAR";
     periodo: string;
-    fechaMatricula: Date;
-}
-declare const MatriculaModel: mongoose.Model<MatriculaDocument, {}, {}, {}, mongoose.Document<unknown, {}, MatriculaDocument> & MatriculaDocument & Required<{
-    _id: unknown;
+    fechaMatricula: NativeDate;
+}, {}, {}, {}, mongoose.Document<unknown, {}, {
+    estudianteId: string;
+    cursoId: string;
+    asignaturas: mongoose.Types.ObjectId[];
+    estado: "ACTIVA" | "CANCELADA" | "FINALIZADA" | "SIN_PAGAR";
+    periodo: string;
+    fechaMatricula: NativeDate;
 }> & {
+    estudianteId: string;
+    cursoId: string;
+    asignaturas: mongoose.Types.ObjectId[];
+    estado: "ACTIVA" | "CANCELADA" | "FINALIZADA" | "SIN_PAGAR";
+    periodo: string;
+    fechaMatricula: NativeDate;
+} & {
+    _id: mongoose.Types.ObjectId;
+} & {
     __v: number;
-}, any>;
-export { MatriculaModel };
+}, mongoose.Schema<any, mongoose.Model<any, any, any, any, any, any>, {}, {}, {}, {}, mongoose.DefaultSchemaOptions, {
+    estudianteId: string;
+    cursoId: string;
+    asignaturas: mongoose.Types.ObjectId[];
+    estado: "ACTIVA" | "CANCELADA" | "FINALIZADA" | "SIN_PAGAR";
+    periodo: string;
+    fechaMatricula: NativeDate;
+}, mongoose.Document<unknown, {}, mongoose.FlatRecord<{
+    estudianteId: string;
+    cursoId: string;
+    asignaturas: mongoose.Types.ObjectId[];
+    estado: "ACTIVA" | "CANCELADA" | "FINALIZADA" | "SIN_PAGAR";
+    periodo: string;
+    fechaMatricula: NativeDate;
+}>> & mongoose.FlatRecord<{
+    estudianteId: string;
+    cursoId: string;
+    asignaturas: mongoose.Types.ObjectId[];
+    estado: "ACTIVA" | "CANCELADA" | "FINALIZADA" | "SIN_PAGAR";
+    periodo: string;
+    fechaMatricula: NativeDate;
+}> & {
+    _id: mongoose.Types.ObjectId;
+} & {
+    __v: number;
+}>>;

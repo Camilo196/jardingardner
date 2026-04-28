@@ -1,14 +1,32 @@
-import mongoose, { Schema } from 'mongoose';
-// Define el esquema de Mongoose para Matricula
-const matriculaSchema = new Schema({
-    estudianteId: { type: String, required: true },
-    cursoId: { type: String, required: true },
-    asignaturas: [{ type: String }], // IDs de las asignaturas
-    estado: { type: String, enum: ['ACTIVA', 'CANCELADA', 'FINALIZADA'], required: true },
-    periodo: { type: String, required: true },
-    fechaMatricula: { type: Date, default: Date.now },
+import mongoose from 'mongoose';
+const matriculaSchema = new mongoose.Schema({
+    estudianteId: {
+        type: String, // Usar String en lugar de ObjectId para la cédula
+        ref: 'Estudiante',
+        required: true
+    },
+    cursoId: {
+        type: String, // Usar String en lugar de ObjectId para el ID del curso
+        ref: 'Curso',
+        required: true
+    },
+    asignaturas: [{
+            type: mongoose.Schema.Types.ObjectId, // Mantener como ObjectId para asignaturas
+            ref: 'Asignatura'
+        }],
+    estado: {
+        type: String,
+        enum: ['ACTIVA', 'CANCELADA', 'FINALIZADA', 'SIN_PAGAR'],
+        default: 'ACTIVA'
+    },
+    periodo: {
+        type: String,
+        required: true
+    },
+    fechaMatricula: {
+        type: Date,
+        default: Date.now
+    }
 });
-// Crea el modelo de Mongoose a partir del esquema
-const MatriculaModel = mongoose.model('Matricula', matriculaSchema);
-export { MatriculaModel };
+export const MatriculaModel = mongoose.model('Matricula', matriculaSchema);
 //# sourceMappingURL=MatriculaModel.js.map

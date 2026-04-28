@@ -9,11 +9,11 @@ const AsignaturaSchema = new Schema({
         required: true
     },
     profesorId: {
-        type: String, // Usa String en vez de ObjectId
+        type: String, // Ya es String, correcto
         required: true
     },
     cursoId: {
-        type: String, // Usa String en vez de ObjectId
+        type: String, // Ya es String, correcto
         required: true
     }
 }, {

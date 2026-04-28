@@ -41,7 +41,7 @@ type Empleado {
   nombre: String!
   primerApellido: String!
   segundoApellido: String!
-  email: String!
+  email: String
   telefono: String
   direccion: String
   tipo: String!
@@ -53,7 +53,7 @@ type Estudiante {
   nombre: String!
   primerApellido: String!
   segundoApellido: String!
-  email: String!
+  email: String
   telefono: String
   direccion: String
   acudiente: String
@@ -219,7 +219,7 @@ input EmpleadoInput {
   nombre: String!
   primerApellido: String!
   segundoApellido: String!
-  email: String!
+  email: String
   telefono: String
   direccion: String
 }
@@ -229,7 +229,7 @@ input EstudianteInput {
     nombre: String!
     primerApellido: String!
     segundoApellido: String!
-    email: String!
+    email: String
     telefono: String
     direccion: String
     acudiente: String

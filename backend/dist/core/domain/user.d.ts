@@ -1,34 +1,10 @@
-import { Schema } from 'mongoose';
-export declare const User: import("mongoose").Model<{
-    email: string;
+export declare class User {
+    id: string;
+    username: string;
     password: string;
-    role: "admin" | "teacher" | "student";
-}, {}, {}, {}, import("mongoose").Document<unknown, {}, {
-    email: string;
-    password: string;
-    role: "admin" | "teacher" | "student";
-}> & {
-    email: string;
-    password: string;
-    role: "admin" | "teacher" | "student";
-} & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}, Schema<any, import("mongoose").Model<any, any, any, any, any, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, {
-    email: string;
-    password: string;
-    role: "admin" | "teacher" | "student";
-}, import("mongoose").Document<unknown, {}, import("mongoose").FlatRecord<{
-    email: string;
-    password: string;
-    role: "admin" | "teacher" | "student";
-}>> & import("mongoose").FlatRecord<{
-    email: string;
-    password: string;
-    role: "admin" | "teacher" | "student";
-}> & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}>>;
+    role: string;
+    email?: string | undefined;
+    readonly isFirstLogin: boolean;
+    static findById(id: any): void;
+    constructor(id: string, username: string, password: string, role: string, email?: string | undefined, isFirstLogin?: boolean);
+}

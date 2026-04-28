@@ -1,16 +1,16 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Panel Administrativo — LEARNSCAPE</title>
+  <title>Panel Administrativo — Gardner</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
   <script src="../assets/config.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-/* ── RESET & TOKENS ── */
+/* â”€â”€ RESET & TOKENS â”€â”€ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --blue:#1a56db;--blue-dark:#1040b0;--blue-lt:#dbeafe;--blue-mid:#3b82f6;
@@ -30,7 +30,7 @@
 }
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;font-size:14px}
 
-/* ── SIDEBAR ── */
+/* â”€â”€ SIDEBAR â”€â”€ */
 .sidebar{
   width:var(--sidebar-w);min-height:100vh;
   background:var(--ink2);
@@ -39,7 +39,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   z-index:200;
 }
 .sb-logo{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:12px}
-.sb-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--blue-dark));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sb-mark{width:46px;height:46px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;box-shadow:0 4px 12px rgba(15,23,42,.18);padding:4px}
+.sb-mark img{width:100%;height:100%;object-fit:contain;display:block}
 .sb-logo-text .name{font-size:16px;font-weight:900;color:#fff;letter-spacing:.5px}
 .sb-logo-text .sub{font-size:9px;color:rgba(255,255,255,.4);font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
 
@@ -65,7 +66,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .sb-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.65);padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;font-family:inherit;width:100%;text-align:left}
 .sb-btn:hover{background:rgba(255,255,255,.15);color:#fff}
 
-/* ── MAIN AREA ── */
+/* â”€â”€ MAIN AREA â”€â”€ */
 .main{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column}
 
 .topbar{
@@ -83,7 +84,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .content{padding:24px 28px;flex:1}
 .section{display:none}.section.active{display:block}
 
-/* ── DASHBOARD ── */
+/* â”€â”€ DASHBOARD â”€â”€ */
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
 .kpi{
   background:var(--white);border:1px solid var(--border);
@@ -132,18 +133,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .top-score{font-size:13px;font-weight:900}
 .top-score.green{color:var(--green)}.top-score.amber{color:var(--amber)}.top-score.red{color:var(--red)}
 
-/* ── ALERTS ── */
+/* â”€â”€ ALERTS â”€â”€ */
 .alert-box{border-radius:var(--r-sm);padding:12px 16px;font-size:13px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:10px}
 .alert-box.danger{background:var(--red-lt);border:1px solid #fca5a5;border-left:4px solid var(--red);color:#991b1b}
 .alert-box.warning{background:var(--amber-lt);border:1px solid #fcd34d;border-left:4px solid var(--amber);color:#92400e}
 .alert-box.success{background:var(--green-lt);border:1px solid #86efac;border-left:4px solid var(--green);color:#15803d}
 
-/* ── TABLES (gestion sections) ── */
+/* â”€â”€ TABLES (gestion sections) â”€â”€ */
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px}
 .section-title-txt{font-size:18px;font-weight:800;color:var(--ink)}
 .section-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 
-/* ══ TABLAS PREMIUM ══ */
+/* â•â• TABLAS PREMIUM â•â• */
 .adm-table,.data-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
 .adm-table,.data-table{background:var(--white);border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 2px 16px rgba(15,23,42,.06)}
 .adm-table thead tr,.data-table thead tr{background:linear-gradient(135deg,#0f172a 0%,#1a56db 100%)}
@@ -204,7 +205,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .search-box input{border:none;outline:none;font-size:13px;font-family:inherit;background:none;min-width:180px;color:var(--ink)}
 .search-box input::placeholder{color:var(--muted)}
 
-/* ── Tablas admin premium ── */
+/* â”€â”€ Tablas admin premium â”€â”€ */
 .adm-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;background:var(--white);border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 20px rgba(15,23,42,.07)}
 .adm-table thead tr{background:linear-gradient(to right,#1e293b,#1a56db)}
 .adm-table thead th{padding:13px 16px;text-align:left;font-size:10.5px;font-weight:700;color:rgba(255,255,255,.75);letter-spacing:.7px;text-transform:uppercase;border-bottom:none;white-space:nowrap}
@@ -231,7 +232,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .badge-blue{background:#dbeafe;color:#1d4ed8}
 .badge-purple{background:#ede9fe;color:#6d28d9}
 .badge-gray{background:#f1f5f9;color:#475569}
-/* Botones de acción en tabla */
+/* Botones de acciÃ³n en tabla */
 .tbl-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
 .tbl-btn-edit{background:#e0e7ff;color:#3730a3}.tbl-btn-edit:hover{background:#c7d2fe;transform:translateY(-1px)}
 .tbl-btn-del{background:#fee2e2;color:#dc2626}.tbl-btn-del:hover{background:#fecaca;transform:translateY(-1px)}
@@ -246,7 +247,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .data-table tbody tr:last-child td{border-bottom:none}
 .data-table tbody tr:hover td{background:#f8faff}
 
-/* ── FORM / MODAL (inherit existing styles + override) ── */
+/* â”€â”€ FORM / MODAL (inherit existing styles + override) â”€â”€ */
 .modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:1000;justify-content:center;align-items:flex-start;padding:48px 20px;overflow-y:auto;backdrop-filter:blur(4px)}
 .modal.active,.modal[style*="flex"]{display:flex}
 .modal-content{background:var(--white);border-radius:16px;width:100%;max-width:680px;box-shadow:0 24px 64px rgba(0,0,0,.15)}
@@ -262,7 +263,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .modal-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
 
-/* ── PILLS / BADGES ── */
+/* â”€â”€ PILLS / BADGES â”€â”€ */
 .pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:16px;font-size:11px;font-weight:700}
 .pill.green{background:var(--green-lt);color:var(--green)}
 .pill.red{background:var(--red-lt);color:var(--red)}
@@ -270,12 +271,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .pill.blue{background:var(--blue-lt);color:var(--blue)}
 .pill.gray{background:var(--surface);color:var(--muted)}
 
-/* ── PERIOD/BOLETIN CARDS ── */
+/* â”€â”€ PERIOD/BOLETIN CARDS â”€â”€ */
 .period-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:var(--shadow-xs)}
 .period-card.open{border-color:#86efac;background:#f0fdf4}
 .period-card.closed{border-color:#fcd34d;background:#fffbeb}
 
-/* ── CALENDAR ── */
+/* â”€â”€ CALENDAR â”€â”€ */
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal-hdr{text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px;letter-spacing:.5px}
 .cal-day{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer;transition:.15s}
@@ -284,30 +285,45 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .cal-day.has-event{background:var(--green-lt);color:var(--green);border:1.5px solid var(--green)}
 .cal-day:not(.empty):not(.today):not(.has-event):hover{background:var(--surface)}
 
-/* ── LOADING ── */
+/* â”€â”€ LOADING â”€â”€ */
 .spin-wrap{display:flex;justify-content:center;padding:40px}
 .spin{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .empty-state{text-align:center;padding:48px 20px;color:var(--muted)}
 .empty-state .emo{font-size:40px;margin-bottom:10px;opacity:.5}
 
-/* ── TOAST ── */
+/* â”€â”€ TOAST â”€â”€ */
 .toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;opacity:0;transform:translateY(12px);transition:.3s;pointer-events:none;max-width:340px}
 .toast.on{opacity:1;transform:none}
 .toast.ok{border-left:4px solid var(--green)}.toast.er{border-left:4px solid var(--red)}
 
-/* ── RESPONSIVE ── */
+/* â”€â”€ RESPONSIVE â”€â”€ */
 @media(max-width:900px){
-  .sidebar{width:60px}
-  .sb-logo-text,.sb-uname,.sb-urole,.sb-section,.sb-item span:not(.ico){display:none}
-  .sb-item{justify-content:center;padding:12px}
+  body{display:block}
+  .sidebar{width:100%;min-height:auto;height:auto;position:relative;top:auto;overflow:visible}
+  .sb-logo{padding:16px}
+  .sb-user{margin:10px 12px 6px}
+  .sb-logo-text,.sb-uname,.sb-urole,.sb-section,.sb-item span:not(.ico){display:block}
+  .sb-menu{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 12px}
+  .sb-item{justify-content:flex-start;padding:12px 14px;border-radius:10px}
+  .sb-foot{padding:12px;display:grid;gap:8px}
+  .main{display:block}
+  .topbar{position:relative;height:auto;padding:16px;align-items:flex-start;justify-content:flex-start;flex-direction:column}
+  .topbar-right{width:100%;justify-content:flex-start;flex-wrap:wrap}
   .kpis{grid-template-columns:repeat(2,1fr)}
   .charts-row{grid-template-columns:1fr}
   .tops-row{grid-template-columns:1fr}
 }
-@media(max-width:600px){.kpis{grid-template-columns:1fr 1fr}.content{padding:16px}}
+@media(max-width:600px){
+  .sb-menu{grid-template-columns:1fr}
+  .kpis{grid-template-columns:1fr}
+  .content{padding:16px}
+  .topbar-title{font-size:15px}
+  .topbar-sub{font-size:11px}
+  .toast{left:16px;right:16px;bottom:16px;max-width:none}
+}
 
-/* ── HORARIO SECTION ── */
+/* â”€â”€ HORARIO SECTION â”€â”€ */
 
     :root {
       --blue:       #4a69bd;
@@ -325,18 +341,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Nunito', sans-serif; background: var(--gray-50); color: var(--gray-900); min-height: 100vh; }
 
-    /* ─── Header ─── */
+    /* â”€â”€â”€ Header â”€â”€â”€ */
     header { background: var(--blue); color: #fff; padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
     .header-logo { font-size: 20px; font-weight: 800; letter-spacing: 1px; }
     .header-back { background: rgba(255,255,255,.18); border: none; color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .2s; }
     .header-back:hover { background: rgba(255,255,255,.3); }
 
-    /* ─── Container ─── */
+    /* â”€â”€â”€ Container â”€â”€â”€ */
     .container { max-width: 1200px; margin: 0 auto; padding: 28px 20px; }
     .page-title { font-size: 26px; font-weight: 800; color: var(--blue); margin-bottom: 4px; }
     .page-subtitle { font-size: 14px; color: var(--gray-500); margin-bottom: 24px; }
 
-    /* ─── Controles ─── */
+    /* â”€â”€â”€ Controles â”€â”€â”€ */
     .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 24px; background: #fff; padding: 16px 20px; border-radius: var(--radius); box-shadow: var(--shadow); }
     .controls label { font-size: 13px; font-weight: 700; color: var(--gray-700); }
     .controls select { padding: 8px 14px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 14px; color: var(--gray-900); background: #fff; cursor: pointer; }
@@ -345,7 +361,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     .btn-export:hover { background: var(--blue-dark); }
     .btn-export:disabled { background: var(--gray-200); color: var(--gray-500); cursor: not-allowed; }
 
-    /* ─── Grilla principal ─── */
+    /* â”€â”€â”€ Grilla principal â”€â”€â”€ */
     .schedule-wrap { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
     .schedule-grid { display: grid; grid-template-columns: 90px repeat(5, 1fr); min-width: 600px; }
     .schedule-scroll { overflow-x: auto; }
@@ -386,7 +402,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     .block-viernes   { background: #fff1f2; color: #9f1239; border-left: 3px solid #f43f5e; }
     .block-conflict  { background: #fee2e2 !important; border-left: 3px solid #dc2626 !important; color: #7f1d1d !important; }
 
-    /* Celda vacía */
+    /* Celda vacÃ­a */
     .empty-cell { display: flex; align-items: center; justify-content: center; height: 100%; min-height: 64px; }
     .empty-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gray-200); }
 
@@ -414,7 +430,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       .btn-export { margin-left: 0; }
     }
   
-/* ── REPORTES SECTION ── */
+/* â”€â”€ REPORTES SECTION â”€â”€ */
 
     :root {
       --blue:      #4a69bd;
@@ -443,7 +459,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     .page-title { font-size: 26px; font-weight: 800; color: var(--blue); margin-bottom: 4px; }
     .page-subtitle { font-size: 14px; color: var(--gray-500); margin-bottom: 28px; }
 
-    /* ─── Report cards grid ─── */
+    /* â”€â”€â”€ Report cards grid â”€â”€â”€ */
     .report-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 36px; }
     .report-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; cursor: pointer; border: 2px solid transparent; transition: all .2s; }
     .report-card:hover { border-color: var(--blue); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74,105,189,.15); }
@@ -456,7 +472,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     .badge-xlsx { background: #dcfce7; color: #166534; }
     .badge-csv  { background: #dbeafe; color: #1e40af; }
 
-    /* ─── Config panel ─── */
+    /* â”€â”€â”€ Config panel â”€â”€â”€ */
     .config-panel { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 24px; display: none; }
     .config-panel.show { display: block; }
     .config-title { font-size: 18px; font-weight: 800; color: var(--blue); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
@@ -477,7 +493,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     .btn-blue { background: #dbeafe; color: #1e40af; }
     .btn-blue:hover { background: #bfdbfe; }
 
-    /* ─── Preview table ─── */
+    /* â”€â”€â”€ Preview table â”€â”€â”€ */
     .preview-wrap { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
     .preview-header { padding: 16px 20px; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: space-between; }
     .preview-header h3 { font-size: 16px; font-weight: 800; }
@@ -506,7 +522,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     @media (max-width: 600px) { .btn-row { flex-direction: column; } }
   
 
-/* ── Admin: Cards de Asignaturas ── */
+/* â”€â”€ Admin: Cards de Asignaturas â”€â”€ */
 .asig-materia-card{background:#fff;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 4px 16px rgba(26,86,219,.07);margin-bottom:18px;overflow:hidden;transition:box-shadow .2s;}
 .asig-materia-card:hover{box-shadow:0 8px 24px rgba(26,86,219,.12);}
 .asig-materia-head{padding:18px 22px;background:linear-gradient(135deg,#1a56db 0%,#4f46e5 100%);display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
@@ -535,13 +551,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 </head>
 <body>
 
-<!-- ══ SIDEBAR ══ -->
+<!-- â•â• SIDEBAR â•â• -->
 <aside class="sidebar">
   <div class="sb-logo">
-    <div class="sb-mark">🎒</div>
+    <div class="sb-mark"><img src="../assets/institution/pdf_image_2.jpg" alt="Logo Gardner"></div>
     <div class="sb-logo-text">
-      <div class="name">LEARNSCAPE</div>
-      <div class="sub">Admin Panel</div>
+      <div class="name">GARDNER</div>
+      <div class="sub">Panel Administrativo</div>
     </div>
   </div>
 
@@ -555,52 +571,52 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
   <div class="sb-section">Principal</div>
   <button class="sb-item active" onclick="showSection('dashboard',this)">
-    <span class="ico">📊</span><span>Dashboard</span>
+    <span class="ico"><i class="fas fa-chart-pie"></i></span><span>Dashboard</span>
   </button>
 
   <div class="sb-section">Gestión</div>
   <button class="sb-item" onclick="showSection('estudiantes',this)">
-    <span class="ico">🎓</span><span>Estudiantes</span>
+    <span class="ico"><i class="fas fa-user-graduate"></i></span><span>Estudiantes</span>
     <span class="badge green" id="sbBadgeEst">0</span>
   </button>
   <button class="sb-item" onclick="showSection('profesores',this)">
-    <span class="ico">👨‍🏫</span><span>Profesores</span>
+    <span class="ico"><i class="fas fa-chalkboard-teacher"></i></span><span>Profesores</span>
     <span class="badge" id="sbBadgeProf">0</span>
   </button>
   <button class="sb-item" onclick="showSection('cursos',this)">
-    <span class="ico">📚</span><span>Cursos</span>
+    <span class="ico"><i class="fas fa-book-open"></i></span><span>Cursos</span>
   </button>
   <button class="sb-item" onclick="showSection('asignaturas',this)">
-    <span class="ico">📖</span><span>Asignaturas</span>
+    <span class="ico"><i class="fas fa-book"></i></span><span>Asignaturas</span>
   </button>
   <button class="sb-item" onclick="showSection('matriculas',this)">
-    <span class="ico">📋</span><span>Matrículas</span>
+    <span class="ico"><i class="fas fa-clipboard-list"></i></span><span>Matrículas</span>
   </button>
 
   <div class="sb-section">Académico</div>
   <button class="sb-item" onclick="showSection('boletines',this);cargarDatosBoletines()">
-    <span class="ico">📄</span><span>Boletines</span>
+    <span class="ico"><i class="fas fa-file-alt"></i></span><span>Boletines</span>
   </button>
   <button class="sb-item" onclick="showSection('periodos',this);cargarPeriodos()">
-    <span class="ico">📅</span><span>Períodos</span>
+    <span class="ico"><i class="fas fa-calendar-alt"></i></span><span>Períodos</span>
   </button>
   <button class="sb-item" onclick="showSection('cronograma',this);iniciarCronogramaAdmin()">
-    <span class="ico">🗓️</span><span>Cronograma</span>
+    <span class="ico"><i class="fas fa-calendar-check"></i></span><span>Cronograma</span>
   </button>
   <button class="sb-item" onclick="showSection('horarios',this)">
-    <span class="ico">🕐</span><span>Horarios</span>
+    <span class="ico"><i class="fas fa-clock"></i></span><span>Horarios</span>
   </button>
   <button class="sb-item" onclick="showSection('exportar',this)">
-    <span class="ico">📈</span><span>Exportar</span>
+    <span class="ico"><i class="fas fa-chart-line"></i></span><span>Exportar</span>
   </button>
 
   <div class="sb-footer">
-    <button class="sb-btn" onclick="abrirCambioPassAdm()">🔑 Cambiar clave</button>
-    <button class="sb-btn" onclick="cerrarSesion()">← Cerrar sesión</button>
+    <button class="sb-btn" onclick="abrirCambioPassAdm()"><i class="fas fa-key"></i> Cambiar clave</button>
+    <button class="sb-btn" onclick="cerrarSesion()"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
   </div>
 </aside>
 
-<!-- ══ MAIN ══ -->
+<!-- â•â• MAIN â•â• -->
 <div class="main">
 
   <!-- Topbar -->
@@ -615,40 +631,40 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       <select id="dashPeriodo" onchange="actualizarDashboard()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:12px;font-weight:700;font-family:inherit;background:var(--white);color:var(--ink);cursor:pointer">
         <option value="">Todos los períodos</option>
       </select>
-      <span class="tb-pill" id="anoBadge">📅 2026</span>
+      <span class="tb-pill" id="anoBadge"><i class="fas fa-calendar-alt"></i> 2026</span>
     </div>
   </div>
 
   <div class="content">
 
-    <!-- ══════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          SECCIÓN: DASHBOARD
-    ═══════════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="section-dashboard" class="section active">
 
       <!-- KPIs -->
       <div class="kpis" style="grid-template-columns:repeat(4,1fr)">
         <div class="kpi blue">
-          <div class="kpi-ico">👨‍🏫</div>
-          <div class="kpi-val" id="totalProfesores">—</div>
+          <div class="kpi-ico"><i class="fas fa-chalkboard-teacher"></i></div>
+          <div class="kpi-val" id="totalProfesores">-</div>
           <div class="kpi-lbl">Profesores</div>
           <div class="kpi-hint">docentes activos</div>
         </div>
         <div class="kpi red">
-          <div class="kpi-ico">🎓</div>
-          <div class="kpi-val" id="totalEstudiantes">—</div>
+          <div class="kpi-ico"><i class="fas fa-user-graduate"></i></div>
+          <div class="kpi-val" id="totalEstudiantes">-</div>
           <div class="kpi-lbl">Estudiantes</div>
           <div class="kpi-hint">matriculados</div>
         </div>
         <div class="kpi green">
-          <div class="kpi-ico">📚</div>
-          <div class="kpi-val" id="totalCursos">—</div>
+          <div class="kpi-ico"><i class="fas fa-book-open"></i></div>
+          <div class="kpi-val" id="totalCursos">-</div>
           <div class="kpi-lbl">Cursos</div>
           <div class="kpi-hint" id="kpiCursosHint">activos</div>
         </div>
         <div class="kpi amber">
-          <div class="kpi-ico">📖</div>
-          <div class="kpi-val" id="totalAsignaturas">—</div>
+          <div class="kpi-ico"><i class="fas fa-book"></i></div>
+          <div class="kpi-val" id="totalAsignaturas">-</div>
           <div class="kpi-lbl">Asignaturas</div>
           <div class="kpi-hint">registradas</div>
         </div>
@@ -657,7 +673,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       <div class="kpis" style="grid-template-columns:repeat(2,1fr);margin-top:-8px">
         <div class="kpi" style="border-top:3px solid var(--purple)">
           <div style="display:flex;align-items:center;gap:12px">
-            <div class="kpi-ico" style="background:var(--purple-lt);margin-bottom:0">⭐</div>
+            <div class="kpi-ico" style="background:var(--purple-lt);margin-bottom:0"><i class="fas fa-star"></i></div>
             <div>
               <div class="kpi-lbl">Promedio General del Jardín</div>
               <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px">
@@ -669,7 +685,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         </div>
         <div class="kpi" style="border-top:3px solid #0891b2">
           <div style="display:flex;align-items:center;gap:12px">
-            <div class="kpi-ico" style="background:#cffafe;margin-bottom:0">📋</div>
+            <div class="kpi-ico" style="background:#cffafe;margin-bottom:0"><i class="fas fa-clipboard-list"></i></div>
             <div>
               <div class="kpi-lbl">Tasa de Asistencia Global</div>
               <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px">
@@ -692,7 +708,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
               <div class="chart-title">Promedio por Asignatura</div>
               <div class="chart-sub">Comparativa del período seleccionado</div>
             </div>
-            <span class="chart-badge" id="chartNotasBadge">—</span>
+            <span class="chart-badge" id="chartNotasBadge">-</span>
           </div>
           <div style="position:relative;height:180px">
           <canvas id="chartNotas"></canvas>
@@ -714,23 +730,23 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       <!-- Tops -->
       <div class="tops-row">
         <div class="top-card">
-          <div class="top-title">🏆 Mejores promedios</div>
+          <div class="top-title"><i class="fas fa-trophy"></i> Mejores promedios</div>
           <div id="topMejores"><div class="spin-wrap"><div class="spin"></div></div></div>
         </div>
         <div class="top-card">
-          <div class="top-title">🚨 Estudiantes en riesgo <span style="font-size:11px;color:var(--muted);font-weight:500">(promedio &lt; 3.0)</span></div>
+          <div class="top-title"><i class="fas fa-exclamation-triangle"></i> Estudiantes en riesgo <span style="font-size:11px;color:var(--muted);font-weight:500">(promedio &lt; 3.0)</span></div>
           <div id="topRiesgo"><div class="spin-wrap"><div class="spin"></div></div></div>
         </div>
       </div>
 
     </div>
 
-    <!-- ══════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          SECCIÓN: ESTUDIANTES
-    ═══════════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="section-estudiantes" class="section">
       <div class="section-header">
-        <div class="section-title-txt">🎓 Estudiantes</div>
+        <div class="section-title-txt"><i class="fas fa-user-graduate"></i> Estudiantes</div>
         <div class="section-actions">
           <div class="search-box">
             <i class="fas fa-search" style="color:var(--muted);font-size:12px"></i>
@@ -770,18 +786,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
                     </tr>
                   </thead>
                   <tbody>
-                    <!-- Aquí se llenará la tabla dinámicamente -->
+                    <!-- Aquí se llenarÃ¡ la tabla dinÃ¡micamente -->
                   </tbody>
                 </table>
               </div>
     </div>
 
-    <!-- ══════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          SECCIÓN: PROFESORES
-    ═══════════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="section-profesores" class="section">
       <div class="section-header">
-        <div class="section-title-txt">👨‍🏫 Profesores</div>
+        <div class="section-title-txt"><i class="fas fa-chalkboard-teacher"></i> Profesores</div>
         <div class="section-actions">
           <div class="search-box">
             <i class="fas fa-search" style="color:var(--muted);font-size:12px"></i>
@@ -820,18 +836,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
                     </tr>
                   </thead>
                   <tbody>
-                    <!-- Aquí se llenará la tabla dinámicamente -->
+                    <!-- Aquí se llenarÃ¡ la tabla dinÃ¡micamente -->
                   </tbody>
                 </table>
               </div>
     </div>
 
-    <!-- ══════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          SECCIÓN: CURSOS
-    ═══════════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="section-cursos" class="section">
       <div class="section-header">
-        <div class="section-title-txt">📚 Cursos</div>
+        <div class="section-title-txt"><i class="fas fa-book-open"></i> Cursos</div>
         <div class="section-actions">
           <div class="search-box">
             <i class="fas fa-search" style="color:var(--muted);font-size:12px"></i>
@@ -868,18 +884,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
                     </tr>
                   </thead>
                   <tbody>
-                    <!-- Aquí se llenará la tabla dinámicamente -->
+                    <!-- Aquí se llenarÃ¡ la tabla dinÃ¡micamente -->
                   </tbody>
                 </table>
               </div>
     </div>
 
-    <!-- ══════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          SECCIÓN: ASIGNATURAS
-    ═══════════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="section-asignaturas" class="section">
       <div class="section-header">
-        <div class="section-title-txt">📖 Asignaturas</div>
+        <div class="section-title-txt"><i class="fas fa-book"></i> Asignaturas</div>
         <div class="section-actions">
           <div class="search-box">
             <i class="fas fa-search" style="color:var(--muted);font-size:12px"></i>
@@ -889,17 +905,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         </div>
       </div>
       <div id="asigCardsContainer">
-        <!-- Se llena dinámicamente con cards agrupadas por materia -->
+        <!-- Se llena dinÃ¡micamente con cards agrupadas por materia -->
         <div style="text-align:center;padding:40px;color:#94a3b8">Cargando asignaturas...</div>
       </div>
     </div>
 
-    <!-- ══════════════════════════════════════
-         SECCIÓN: MATRÍCULAS
-    ═══════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         SECCIÓN: MATRÃCULAS
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="section-matriculas" class="section">
       <div class="section-header">
-        <div class="section-title-txt">📋 Matrículas</div>
+        <div class="section-title-txt"><i class="fas fa-clipboard-list"></i> Matrículas</div>
         <div class="section-actions">
           <button class="action-btn green" onclick="openModalMatricula()">+ Nueva Matrícula</button>
         </div>
@@ -936,25 +952,25 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
                     </tr>
                   </thead>
                   <tbody>
-                    <!-- Aquí se llenará la tabla dinámicamente -->
+                    <!-- Aquí se llenarÃ¡ la tabla dinÃ¡micamente -->
                   </tbody>
                 </table>
               </div>
     </div>
 
-    <!-- ══════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          SECCIÓN: BOLETINES
-    ═══════════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="section-boletines" class="section">
       <div class="section-header">
-        <div class="section-title-txt">📄 Boletines</div>
+        <div class="section-title-txt"><i class="fas fa-file-alt"></i> Boletines</div>
       </div>
       <div >
                 <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:20px">
                   <div>
                     <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Período</label>
                     <select id="blPeriodo" style="padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;min-width:160px">
-                      <option value="">— Cargando... —</option>
+                      <option value="">Cargando...</option>
                     </select>
                   </div>
                   <div>
@@ -977,7 +993,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
                     </select>
                   </div>
                   <button onclick="generarBoletinAdmin()" style="padding:9px 20px;background:#4f46e5;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer">
-                    ⬇️ Generar PDF
+                    <i class="fas fa-file-pdf"></i> Generar PDF
                   </button>
                 </div>
                 <div id="blMsg" style="font-size:14px;color:#374151;min-height:24px"></div>
@@ -987,19 +1003,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
               </div>
     </div>
 
-    <!-- ══════════════════════════════════════
-         SECCIÓN: PERÍODOS
-    ═══════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         SECCIÓN: PERÃODOS
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="section-periodos" class="section">
       <div class="section-header">
-        <div class="section-title-txt">📅 Configuración de Períodos</div>
+        <div class="section-title-txt"><i class="fas fa-calendar-alt"></i> Configuración de Períodos</div>
       </div>
       <div >
 
                 <!-- Header -->
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
                   <div>
-                    <h3 style="margin:0 0 4px;font-size:18px;font-weight:800;color:#1e40af">📅 Períodos Académicos</h3>
+                    <h3 style="margin:0 0 4px;font-size:18px;font-weight:800;color:#1e40af"><i class="fas fa-calendar-alt"></i> Períodos Académicos</h3>
                     <p style="margin:0;font-size:13px;color:#64748b">Gestiona los períodos del año escolar — fechas, cortes y estado de registro de notas</p>
                   </div>
                   <div style="display:flex;gap:8px;align-items:center">
@@ -1009,7 +1025,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
                   </div>
                 </div>
 
-                <!-- Barra de acceso rápido: configurar los 3 periodos del año -->
+                <!-- Barra de acceso rÃ¡pido: configurar los 3 periodos del año -->
                 <div style="background:linear-gradient(135deg,#1e40af,#3730a3);border-radius:12px;padding:20px 24px;margin-bottom:20px;color:#fff">
                   <div style="font-size:14px;font-weight:800;margin-bottom:6px;opacity:.9">⚡ Configuración rápida — Los 3 períodos del año</div>
                   <div style="font-size:12px;opacity:.7;margin-bottom:16px">Define fechas de inicio y cierre para los 3 períodos. Puedes ajustar cada uno individualmente después.</div>
@@ -1044,7 +1060,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
                 <!-- Grid de períodos configurados -->
                 <div id="periodosGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:24px"></div>
 
-                <!-- Acordeón: configuración avanzada -->
+                <!-- AcordeÃ³n: configuraciÃ³n avanzada -->
                 <details style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0;overflow:hidden">
                   <summary style="padding:14px 18px;font-size:14px;font-weight:700;color:#1e40af;cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px">
                     ➕ Configuración avanzada — Ajuste fino de un período
@@ -1065,32 +1081,32 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
                         <input type="date" id="pNuevoFechaA" style="padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:13px"></div>
                       <div><label style="font-size:12px;font-weight:700;display:block;margin-bottom:4px;color:#374151">Fecha cierre</label>
                         <input type="date" id="pNuevoFecha" style="padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:13px"></div>
-                      <button onclick="configurarNuevoPeriodo()" style="padding:9px 18px;background:#1d4ed8;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer">💾 Guardar</button>
+                      <button onclick="configurarNuevoPeriodo()" style="padding:9px 18px;background:#1d4ed8;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer"><i class="fas fa-save"></i> Guardar</button>
                     </div>
                   </div>
                 </details>
               </div>
     </div>
 
-    <!-- ══════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          SECCIÓN: CRONOGRAMA
-    ═══════════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="section-cronograma" class="section">
       <div class="section-header">
-        <div class="section-title-txt">🗓️ Cronograma Académico</div>
+        <div class="section-title-txt"><i class="fas fa-calendar-check"></i> Cronograma Académico</div>
       </div>
       <div >
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
-                  <h3 style="margin:0;font-size:16px;font-weight:700;color:#1e40af">📅 Cronograma Institucional</h3>
+                  <h3 style="margin:0;font-size:16px;font-weight:700;color:#1e40af"><i class="fas fa-calendar-alt"></i> Cronograma Institucional</h3>
                   <button onclick="abrirModalEvento()" style="padding:9px 18px;background:#4f46e5;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">+ Agregar evento</button>
                 </div>
                 <!-- Calendario -->
                 <div style="background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden">
                   <div style="background:linear-gradient(135deg,#4f46e5,#3730a3);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between">
                     <div style="display:flex;gap:8px;align-items:center">
-                      <button onclick="admCalMes(-1)" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 12px;border-radius:16px;font-size:16px;cursor:pointer">‹</button>
+                      <button onclick="admCalMes(-1)" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 12px;border-radius:16px;font-size:16px;cursor:pointer">&#8249;</button>
                       <span id="admCalMesTxt" style="font-size:14px;font-weight:700;min-width:160px;text-align:center"></span>
-                      <button onclick="admCalMes(1)" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 12px;border-radius:16px;font-size:16px;cursor:pointer">›</button>
+                      <button onclick="admCalMes(1)" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 12px;border-radius:16px;font-size:16px;cursor:pointer">&#8250;</button>
                     </div>
                     <div style="display:flex;gap:10px;font-size:11px;font-weight:700;flex-wrap:wrap">
                       <span style="background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:4px">Examen</span>
@@ -1110,27 +1126,27 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     </div>
 
   
-    <!-- ══════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          SECCIÓN: HORARIOS
-    ═══════════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="section-horarios" class="section">
       <div class="section-header">
-        <div class="section-title-txt">🕐 Horario de Clases</div>
+        <div class="section-title-txt"><i class="fas fa-clock"></i> Horario de Clases</div>
         <div class="section-actions">
           <select id="horCurso" onchange="horRenderGrid()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-weight:700;font-family:inherit;background:#fff;color:var(--ink)">
-            <option value="">— Seleccionar curso —</option>
+            <option value="">Seleccionar curso</option>
           </select>
-          <button class="action-btn primary" onclick="horGuardar()">💾 Guardar horario</button>
+          <button class="action-btn primary" onclick="horGuardar()"><i class="fas fa-save"></i> Guardar horario</button>
         </div>
       </div>
 
       <div id="horAlert" style="display:none;margin-bottom:12px"></div>
 
-      <!-- Grilla simple lun-vie × asignaturas del curso -->
+      <!-- Grilla simple lun-vie Ã— asignaturas del curso -->
       <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-xs)">
         <div id="horGrid">
           <div style="text-align:center;padding:48px;color:var(--muted);font-size:14px">
-            <div style="font-size:32px;margin-bottom:8px">📚</div>
+            <div style="font-size:32px;margin-bottom:8px"><i class="fas fa-book-open"></i></div>
             Selecciona un curso para ver su horario
           </div>
         </div>
@@ -1138,30 +1154,30 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
       <!-- Leyenda -->
       <div style="margin-top:12px;font-size:12px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-        <span>💡 Selecciona una asignatura en cada celda para asignarle ese día y hora</span>
-        <span style="background:var(--red-lt);color:var(--red);padding:3px 10px;border-radius:8px">⚡ Choque detectado</span>
-        <span style="background:var(--green-lt);color:var(--green);padding:3px 10px;border-radius:8px">✅ Sin conflictos</span>
+        <span><i class="fas fa-lightbulb"></i> Selecciona una asignatura en cada celda para asignarle ese día y hora</span>
+        <span style="background:var(--red-lt);color:var(--red);padding:3px 10px;border-radius:8px"><i class="fas fa-bolt"></i> Choque detectado</span>
+        <span style="background:var(--green-lt);color:var(--green);padding:3px 10px;border-radius:8px"><i class="fas fa-check-circle"></i> Sin conflictos</span>
       </div>
     </div>
 
-<!-- ══════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          SECCIÓN: EXPORTAR
-    ═══════════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div id="section-exportar" class="section">
       <div class="section-header">
-        <div class="section-title-txt">📈 Reportes y Exportaciones</div>
+        <div class="section-title-txt"><i class="fas fa-chart-line"></i> Reportes y Exportaciones</div>
       </div>
       <div class="container">
-  <div class="page-title">📊 Reportes y Exportaciones</div>
+  <div class="page-title"><i class="fas fa-chart-pie"></i> Reportes y Exportaciones</div>
   <div class="page-subtitle">Genera reportes en Excel (.xlsx) o CSV listos para imprimir o compartir</div>
 
-  <!-- ─── Selector de reporte ─── -->
+  <!-- â”€â”€â”€ Selector de reporte â”€â”€â”€ -->
   <div class="report-grid">
 
     <div class="report-card" id="card-calificaciones" onclick="seleccionarReporte('calificaciones')">
-      <div class="report-icon">📝</div>
+      <div class="report-icon"><i class="fas fa-file-signature"></i></div>
       <div class="report-title">Calificaciones por Asignatura</div>
-      <div class="report-desc">Todas las notas de un asignatura en un período, agrupadas por corte y tipo de actividad.</div>
+      <div class="report-desc">Todas las notas de una asignatura en un período, agrupadas por corte y tipo de actividad.</div>
       <div class="report-badges">
         <span class="report-badge badge-xlsx">Excel</span>
         <span class="report-badge badge-csv">CSV</span>
@@ -1169,7 +1185,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     </div>
 
     <div class="report-card" id="card-estudiantes" onclick="seleccionarReporte('estudiantes')">
-      <div class="report-icon">🎓</div>
+      <div class="report-icon"><i class="fas fa-user-graduate"></i></div>
       <div class="report-title">Listado de Estudiantes</div>
       <div class="report-desc">Directorio completo de estudiantes del sistema con datos de contacto y estado de matrícula.</div>
       <div class="report-badges">
@@ -1179,7 +1195,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     </div>
 
     <div class="report-card" id="card-asistencia" onclick="seleccionarReporte('asistencia')">
-      <div class="report-icon">✅</div>
+      <div class="report-icon"><i class="fas fa-check-circle"></i></div>
       <div class="report-title">Asistencia por Asignatura</div>
       <div class="report-desc">Resumen de asistencias por estudiante en una asignatura y período. Incluye porcentaje de presencia.</div>
       <div class="report-badges">
@@ -1189,7 +1205,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     </div>
 
     <div class="report-card" id="card-promedios" onclick="seleccionarReporte('promedios')">
-      <div class="report-icon">📈</div>
+      <div class="report-icon"><i class="fas fa-chart-line"></i></div>
       <div class="report-title">Promedios por Curso</div>
       <div class="report-desc">Promedio general de cada estudiante en un curso, con estado (aprobado/reprobado) para el período.</div>
       <div class="report-badges">
@@ -1200,17 +1216,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
   </div>
 
-  <!-- ─── Panel de configuración (dinámico) ─── -->
+  <!-- â”€â”€â”€ Panel de configuraciÃ³n (dinÃ¡mico) â”€â”€â”€ -->
   <div class="config-panel" id="configPanel">
-    <div class="config-title" id="configTitle">⚙️ Configurar reporte</div>
+    <div class="config-title" id="configTitle"><i class="fas fa-cog"></i> Configurar reporte</div>
     <div class="form-row" id="formCampos"></div>
     <div class="btn-row">
-      <button class="btn btn-primary" id="btnGenerar" onclick="generarReporte()">🔄 Generar vista previa</button>
+        <button class="btn btn-primary" id="btnGenerar" onclick="generarReporte()"><i class="fas fa-sync-alt"></i> Generar vista previa</button>
       <button class="btn btn-secondary" onclick="cerrarConfig()">Cancelar</button>
     </div>
   </div>
 
-  <!-- ─── Vista previa ─── -->
+  <!-- â”€â”€â”€ Vista previa â”€â”€â”€ -->
   <div id="previewSection" style="display:none;">
     <div class="preview-wrap">
       <div class="preview-header">
@@ -1221,8 +1237,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="spinner-wrap"><div class="spinner"></div></div>
       </div>
       <div class="export-actions">
-        <button class="btn btn-green" onclick="exportarExcel()">⬇ Descargar Excel (.xlsx)</button>
-        <button class="btn btn-blue"  onclick="exportarCSV()">⬇ Descargar CSV</button>
+        <button class="btn btn-green" onclick="exportarExcel()"><i class="fas fa-file-excel"></i> Descargar Excel (.xlsx)</button>
+        <button class="btn btn-blue"  onclick="exportarCSV()"><i class="fas fa-file-csv"></i> Descargar CSV</button>
         <span class="export-count" id="exportCount"></span>
       </div>
     </div>
@@ -1257,7 +1273,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     return json.data;
   }
 
-  // Bug 3 fix: Helper para generar <select> de periodos dinámicamente
+  // Bug 3 fix: Helper para generar <select> de periodos dinÃ¡micamente
   async function buildPeriodoSelect(selectId) {
     const anio = new Date().getFullYear();
     try {
@@ -1275,9 +1291,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       '</select>';
   }
 
-  // ══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   //  SELECCIONAR TIPO DE REPORTE
-  // ══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   async function seleccionarReporte(tipo) {
     reporteActual = tipo;
     document.querySelectorAll('.report-card').forEach(c => c.classList.remove('active'));
@@ -1289,14 +1305,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     const panel = document.getElementById('configPanel');
     panel.classList.add('show');
     const titles = {
-      calificaciones: '📝 Reporte de Calificaciones por Asignatura',
-      estudiantes:    '🎓 Reporte de Estudiantes',
-      asistencia:     '✅ Reporte de Asistencia',
-      promedios:      '📈 Reporte de Promedios por Curso',
+      calificaciones: 'Reporte de Calificaciones por Asignatura',
+      estudiantes:    'Reporte de Estudiantes',
+      asistencia:     'Reporte de Asistencia',
+      promedios:      'Reporte de Promedios por Curso',
     };
     document.getElementById('configTitle').textContent = titles[tipo];
 
-    // Construir campos según tipo
+    // Construir campos segÃºn tipo
     const campos = document.getElementById('formCampos');
     campos.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
 
@@ -1336,7 +1352,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
             <label>Período *</label>
             <select id="campo-periodo"><option value="">Cargando...</option></select>
           </div>`;
-        // Cargar periodos dinámicamente
+        // Cargar periodos dinÃ¡micamente
         buildPeriodoSelect('campo-periodo').then(html => {
           const div = document.querySelector('#campo-periodo').parentElement;
           div.innerHTML = '<label>Período *</label>' + html;
@@ -1361,9 +1377,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     reporteActual = null;
   }
 
-  // ══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   //  GENERAR REPORTE
-  // ══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   async function generarReporte() {
     document.getElementById('previewSection').style.display = 'block';
     document.getElementById('previewBody').innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
@@ -1380,7 +1396,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     }
   }
 
-  // ── Calificaciones ──────────────────────────────────────
+  // â”€â”€ Calificaciones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function generarCalificaciones() {
     const asigId  = document.getElementById('campo-asignatura')?.value;
     const periodo = document.getElementById('campo-periodo')?.value?.trim();
@@ -1414,8 +1430,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     headersExport = ['Estudiante', 'Actividad', 'Tipo', 'Corte', 'Nota', 'Período', 'Observaciones', 'Fecha'];
     datosExport = cals.map(c => ({
       'Estudiante':    estMap[c.estudianteId] || c.estudianteId,
-      'Actividad':     c.nombreActividad || '—',
-      'Tipo':          tipoLabel[c.tipoActividad] || c.tipoActividad || '—',
+      'Actividad':     c.nombreActividad || '-',
+      'Tipo':          tipoLabel[c.tipoActividad] || c.tipoActividad || '-',
       'Corte':         corteLabel[c.corte] || `Corte ${c.corte}`,
       'Nota':          Number(c.nota),
       'Período':       c.periodo,
@@ -1424,13 +1440,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     }));
 
     const prof = asig?.profesor ? `${asig.profesor.nombre} ${asig.profesor.primerApellido}` : '—';
-    document.getElementById('previewTitle').textContent = `Calificaciones — ${asig?.nombre || ''} (${periodo})`;
-    document.getElementById('previewMeta').textContent = `Curso: ${asig?.curso?.nombre || '—'} · Docente: ${prof} · ${datosExport.length} registros`;
+    document.getElementById('previewTitle').textContent = `Calificaciones - ${asig?.nombre || ''} (${periodo})`;
+    document.getElementById('previewMeta').textContent = `Curso: ${asig?.curso?.nombre || '-'} · Docente: ${prof} · ${datosExport.length} registros`;
 
     renderTabla(headersExport, datosExport, 'Nota');
   }
 
-  // ── Estudiantes ─────────────────────────────────────────
+  // â”€â”€ Estudiantes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function generarEstudiantes() {
     const data = await gql(`query {
       estudiantes {
@@ -1455,7 +1471,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     renderTabla(headersExport, datosExport);
   }
 
-  // ── Asistencia ──────────────────────────────────────────
+  // â”€â”€ Asistencia â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function generarAsistencia() {
     const asigId  = document.getElementById('campo-asignatura')?.value;
     const periodo = document.getElementById('campo-periodo')?.value?.trim();
@@ -1493,12 +1509,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       'Estado':        r.porcentajeAsistencia >= 80 ? 'Habilitado' : 'En riesgo',
     }));
 
-    document.getElementById('previewTitle').textContent = `Asistencia — ${asig?.nombre || ''} (${periodo})`;
-    document.getElementById('previewMeta').textContent = `Curso: ${asig?.curso?.nombre || '—'} · ${datosExport.length} estudiantes`;
+    document.getElementById('previewTitle').textContent = `Asistencia - ${asig?.nombre || ''} (${periodo})`;
+    document.getElementById('previewMeta').textContent = `Curso: ${asig?.curso?.nombre || '-'} · ${datosExport.length} estudiantes`;
     renderTabla(headersExport, datosExport, '% Asistencia');
   }
 
-  // ── Promedios por curso ─────────────────────────────────
+  // â”€â”€ Promedios por curso â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function generarPromedios() {
     const cursoId = document.getElementById('campo-curso')?.value;
     const periodo = document.getElementById('campo-periodo')?.value?.trim();
@@ -1545,14 +1561,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     })).sort((a, b) => b['Promedio'] - a['Promedio']);
 
     const cursoNombre = boletines[0]?.curso?.nombre || '';
-    document.getElementById('previewTitle').textContent = `Promedios — ${cursoNombre} (${periodo})`;
+    document.getElementById('previewTitle').textContent = `Promedios - ${cursoNombre} (${periodo})`;
     document.getElementById('previewMeta').textContent = `${datosExport.length} estudiantes`;
     renderTabla(headersExport, datosExport, 'Promedio');
   }
 
-  // ══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   //  RENDER TABLA PREVIEW
-  // ══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   function notaClass(val) {
     if (val >= 4.0) return 'nota-alta';
     if (val >= 3.0) return 'nota-media';
@@ -1585,12 +1601,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     document.getElementById('exportCount').textContent = `${datos.length} registro${datos.length !== 1 ? 's' : ''}`;
   }
 
-  // ══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   //  EXPORTAR EXCEL
-  // ══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   function exportarExcel() {
     if (!datosExport.length) { toast('Genera el reporte primero'); return; }
     const titulo = document.getElementById('previewTitle').textContent;
+    const filename = `${titulo.replace(/[^a-zA-Z0-9_\- ]/g,'').trim().replace(/\s+/g,'_')}.xlsx`;
+    if (typeof XLSX === 'undefined' || !XLSX?.utils) {
+      const filas = [headersExport, ...datosExport.map(row => headersExport.map(h => row[h] ?? ''))];
+      descargarExcel(filas, filename);
+      toast(`Descargando ${filename}...`);
+      return;
+    }
     const ws = XLSX.utils.json_to_sheet(datosExport, { header: headersExport });
 
     // Estilos básicos de ancho de columna
@@ -1607,14 +1630,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       CreatedDate: new Date(),
     };
 
-    const filename = `${titulo.replace(/[^a-zA-Z0-9_\- ]/g,'').trim().replace(/\s+/g,'_')}.xlsx`;
     XLSX.writeFile(wb, filename);
-    toast(`Descargando ${filename} ✓`);
+    toast(`Descargando ${filename}...`);
   }
 
-  // ══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   //  EXPORTAR CSV
-  // ══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   function exportarCSV() {
     if (!datosExport.length) { toast('Genera el reporte primero'); return; }
     const titulo = document.getElementById('previewTitle').textContent;
@@ -1627,14 +1649,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     a.download = `${titulo.replace(/[^a-zA-Z0-9_\- ]/g,'').trim().replace(/\s+/g,'_')}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast('CSV descargado ✓');
+    toast('CSV descargado correctamente');
   }
 </script>
     </div>
 </div><!-- /content -->
 </div><!-- /main -->
 
-<!-- ══ BACKWARD COMPAT: openTab noop (replaced by showSection) ══ -->
+<!-- â•â• BACKWARD COMPAT: openTab noop (replaced by showSection) â•â• -->
 <script>
 function openTab(evt, tabName){
   // Mapping from old tab IDs to new section IDs
@@ -1743,8 +1765,9 @@ function openTab(evt, tabName){
               <input type="text" id="segundoApellidoEstudiante" required />
             </div>
             <div class="form-group">
-              <label for="emailEstudiante">Email</label>
-              <input type="email" id="emailEstudiante" required />
+              <label for="emailEstudiante">Email (opcional)</label>
+              <input type="email" id="emailEstudiante" />
+              <small style="display:block;margin-top:6px;color:#64748b;font-size:11px;">Solo se usa si luego quieres enviar avisos o recuperación por correo.</small>
             </div>
             <div class="form-group">
               <label for="telefonoEstudiante">Teléfono</label>
@@ -1792,10 +1815,22 @@ function openTab(evt, tabName){
             <div class="form-group">
               <label for="idCurso">ID Curso</label>
               <input type="text" id="idCurso" required />
+              <small style="display:block;margin-top:6px;color:#64748b;font-size:11px;">Se autocompleta según el grado, pero puedes ajustarlo si lo necesitas.</small>
             </div>
             <div class="form-group">
               <label for="nombreCurso">Nombre del Curso</label>
-              <input type="text" id="nombreCurso" required />
+              <select id="nombreCurso" required>
+                <option value="">Seleccione un curso</option>
+                <option value="Párvulos">Párvulos</option>
+                <option value="Pre-jardín">Pre-jardín</option>
+                <option value="Jardín">Jardín</option>
+                <option value="Transición">Transición</option>
+                <option value="Primero">Primero</option>
+                <option value="Segundo">Segundo</option>
+                <option value="Tercero">Tercero</option>
+                <option value="Cuarto">Cuarto</option>
+                <option value="Quinto">Quinto</option>
+              </select>
             </div>
             <div class="form-group">
               <label for="cantidadCurso">Cantidad Máxima de Est.</label>
@@ -1815,8 +1850,8 @@ function openTab(evt, tabName){
               </div>
             </div>
             <div class="form-group">
-              <label for="duracionCurso">Duracion del Curso</label>
-              <input type="text" id="duracionCurso" required />
+              <label for="duracionCurso">Duración del Curso</label>
+              <input type="text" id="duracionCurso" placeholder="Ej: Año lectivo 2026" required />
             </div>
             <div class="form-actions">
               <button
@@ -1849,7 +1884,11 @@ function openTab(evt, tabName){
         <!-- Nombre -->
         <div class="form-group">
           <label for="nombreAsignatura">Nombre de la Asignatura</label>
-          <input type="text" id="nombreAsignatura" placeholder="Ej: Matemáticas, Español..." required />
+          <select id="nombreAsignatura" required onchange="onAsignaturaPredefinidaChange()">
+            <option value="">Seleccione una asignatura</option>
+          </select>
+          <input type="text" id="nombreAsignaturaOtra" placeholder="Escriba otra asignatura..." style="display:none;margin-top:10px;" />
+          <small style="display:block;margin-top:6px;color:#64748b;font-size:11px;">La lista cambia según el curso: preescolar o primaria.</small>
         </div>
 
         <!-- Profesor -->
@@ -1888,7 +1927,7 @@ function openTab(evt, tabName){
         <!-- MODO VARIOS CURSOS: tabla con un horario por curso -->
         <div id="panelVariosCursos" style="display:none;">
           <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#78350f;">
-            💡 Selecciona los cursos donde se dictará esta asignatura. El horario se configura en la sección Horarios.
+            <i class="fas fa-lightbulb"></i> Selecciona los cursos donde se dictará esta asignatura. El horario se configura en la sección Horarios.
           </div>
           <div id="listaCursosMulti" style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto;"></div>
         </div>
@@ -1903,7 +1942,7 @@ function openTab(evt, tabName){
 </div>
 
 <!-- Modal para Matricula -->
-<!-- Reemplazar el modal de matrícula vacío por este -->
+<!-- Reemplazar el modal de matrícula vacÃ­o por este -->
 <div id="modalMatricula" class="modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -1939,10 +1978,10 @@ function openTab(evt, tabName){
         </div>
 
         <div class="form-group">
-          <label>Asignaturas</label>
-          <div id="asignaturasContainer" class="checkbox-group">
-            <div class="no-asignaturas">Seleccione un curso para ver las asignaturas disponibles</div>
-          </div>
+            <label>Asignaturas (marque las que correspondan)</label>
+            <div id="asignaturasContainer" class="checkbox-group">
+              <div class="no-asignaturas">Seleccione un curso y marque las asignaturas disponibles</div>
+            </div>
         </div>
 
         <div class="form-actions">
@@ -1957,7 +1996,7 @@ function openTab(evt, tabName){
     <script>
 /* init handled by new DOMContentLoaded below */
 
-      // Función para cerrar sesión
+      // FunciÃ³n para cerrar sesión
       function cerrarSesion() {
         sessionStorage.clear();
         window.location.href = "principal.html";
@@ -1987,7 +2026,7 @@ function openTab(evt, tabName){
           await gqlAdm(`mutation CP($u:String!,$o:String!,$n:String!){cambiarPassword(username:$u,oldPassword:$o,newPassword:$n)}`,
             {u:username, o:actual, n:nueva});
           cerrarCambioPassAdm();
-          alert('✅ Contraseña actualizada correctamente');
+          alert('Contraseña actualizada correctamente');
         }catch(e){
           errDiv.textContent=e.message||'Error al cambiar la contraseña.';
           errDiv.style.display='block';
@@ -2011,7 +2050,7 @@ function verificarToken() {
     const token = sessionStorage.getItem("token");
     
     if (!token) {
-        console.log("⚠️ No hay token disponible");
+        console.log("âš ï¸ No hay token disponible");
         renovarToken();
         return false;
     }
@@ -2021,12 +2060,12 @@ function verificarToken() {
         const expirationTime = payload.exp * 1000; // Convertir a milisegundos
         
         if (Date.now() >= expirationTime) {
-            console.log("⚠️ Token expirado");
+            console.log("âš ï¸ Token expirado");
             renovarToken();
             return false;
         }
 
-        // Token válido
+        // Token vÃ¡lido
         return true;
     } catch (error) {
         console.error("Error al verificar token:", error);
@@ -2035,21 +2074,21 @@ function verificarToken() {
     }
 }
 
-      // Funciones para manejar las pestañas
+      // Funciones para manejar las pestaÃ±as
       function openTab(evt, tabName) {
-        // Ocultar todos los contenidos de pestañas
+        // Ocultar todos los contenidos de pestaÃ±as
         var tabContents = document.getElementsByClassName("tab-content");
         for (var i = 0; i < tabContents.length; i++) {
           tabContents[i].classList.remove("active");
         }
 
-        // Desactivar todas las pestañas
+        // Desactivar todas las pestaÃ±as
         var tabs = document.getElementsByClassName("tab");
         for (var i = 0; i < tabs.length; i++) {
           tabs[i].classList.remove("active");
         }
 
-        // Mostrar el contenido de la pestaña actual y activar la pestaña
+        // Mostrar el contenido de la pestaÃ±a actual y activar la pestaÃ±a
         document.getElementById(tabName).classList.add("active");
         evt.currentTarget.classList.add("active");
       }
@@ -2063,7 +2102,7 @@ function verificarToken() {
         document.getElementById(modalId).style.display = "none";
       }
 
-      // Funciones específicas para abrir modales
+      // Funciones especÃ­ficas para abrir modales
       function openModalProfesor() {
         openModal("modalProfesor");
       }
@@ -2072,13 +2111,13 @@ function verificarToken() {
         document.getElementById("formCurso").reset();
         document.getElementById("guardarCurso").onclick = crearCurso;
 
-        // Limpiar el campo de búsqueda y el hidden
+        // Limpiar el campo de bÃºsqueda y el hidden
         document.getElementById("buscarProfesorCurso").value = "";
         document.getElementById("profesorCurso").value = "";
         document.getElementById("listaProfesores").innerHTML = "";
         document.getElementById("listaProfesores").style.display = "none";
 
-        // Agregar el evento de búsqueda
+        // Agregar el evento de bÃºsqueda
         const buscarInput = document.getElementById("buscarProfesorCurso");
         buscarInput.addEventListener("input", buscarProfesorCurso);
 
@@ -2127,7 +2166,7 @@ function verificarToken() {
   profesoresFiltrados.forEach((prof) => {
     const div = document.createElement("div");
     div.textContent = `${prof.nombre} ${prof.primerApellido} ${prof.segundoApellido} (${prof.cedula})`;
-    div.dataset.id = prof.cedula; // Usamos cédula como ID
+    div.dataset.id = prof.id || prof.cedula; // Priorizar el id real; usar cédula solo como respaldo
     div.addEventListener("click", () => seleccionarProfesor(prof));
     listaProfesores.appendChild(div);
   });
@@ -2142,19 +2181,19 @@ function seleccionarProfesor(profesor) {
   
   document.getElementById("buscarProfesorCurso").value = `${nombre} ${primerApellido} ${segundoApellido}`;
   
-  // CORRECCIÓN: Usar la cédula como ID
-  document.getElementById("profesorCurso").value = profesor.cedula;
+  // Usar el id real del profesor; mantener cédula como respaldo si hace falta
+  document.getElementById("profesorCurso").value = profesor.id || profesor.cedula;
   
   console.log("Profesor seleccionado:", nombre, primerApellido);
-  console.log("Cédula usada como ID:", profesor.cedula);
+  console.log("ID usado para curso:", profesor.id || profesor.cedula);
   
   document.getElementById("listaProfesores").style.display = "none";
 }
 
 
 
-// openModalAsignatura — ver definición canónica más abajo (función multi-curso)
-      // Función para cargar las asignaturas en el select
+// openModalAsignatura â€” ver definiciÃ³n canÃ³nica mÃ¡s abajo (funciÃ³n multi-curso)
+      // FunciÃ³n para cargar las asignaturas en el select
 
       function cargarEstudiantesEnSelect() {
         const selectEstudiante = document.getElementById(
@@ -2183,8 +2222,9 @@ function seleccionarProfesor(profesor) {
             '<option value="">Seleccione un curso</option>';
 
           // Verificar de manera más segura si hay cursos
-          if (Array.isArray(cursos) && cursos.length > 0) {
-            cursos.forEach((curso) => {
+          const cursosDisponibles = Array.isArray(cursos) ? cursos.filter(Boolean) : [];
+          if (cursosDisponibles.length > 0) {
+            cursosDisponibles.forEach((curso) => {
               let option = document.createElement("option");
               option.value = curso.id;
               option.textContent = curso.nombre;
@@ -2192,7 +2232,9 @@ function seleccionarProfesor(profesor) {
             });
           } else {
             console.warn("No hay cursos disponibles para cargar en el select.");
+            selectCurso.innerHTML = '<option value="">No hay cursos creados todavía</option>';
           }
+          poblarSelectorAsignatura();
         } else {
           console.error("El select de cursos no se encontró en el DOM.");
         }
@@ -2204,10 +2246,10 @@ function seleccionarProfesor(profesor) {
       // Cargar profesores al cargar la página
 /* cargarProfesores init handled below */
 
-      // Función para editar profesor
+      // FunciÃ³n para editar profesor
       function editarProfesor(profesorId) {
         openModal("modalProfesor");
-        // Aquí se cargarían los datos del profesor para editar
+        // Aquí se cargarÃ­an los datos del profesor para editar
         document.getElementById("idProfesor").value = profesorId;
       }
 
@@ -2217,11 +2259,11 @@ function seleccionarProfesor(profesor) {
           confirm("¿Está seguro de eliminar al profesor " + profesorId + "?")
         ) {
           alert("Profesor eliminado correctamente");
-          // Aquí iría la lógica para eliminar al profesor
+          // Aquí irÃ­a la lÃ³gica para eliminar al profesor
         }
       }
 
-      // Función para editar estudiante
+      // FunciÃ³n para editar estudiante
       function editarEstudiante(estudianteId) {
         openModal("modalEstudiante");
         // Simulamos cargar datos del estudiante
@@ -2236,17 +2278,17 @@ function seleccionarProfesor(profesor) {
           )
         ) {
           alert("Estudiante eliminado correctamente");
-          // Aquí iría la lógica para eliminar al estudiante
+          // Aquí irÃ­a la lÃ³gica para eliminar al estudiante
         }
       }
 
-      // Función para ver calificaciones
+      // FunciÃ³n para ver calificaciones
       function verCalificaciones(estudianteId) {
         openModal("modalCalificaciones");
-        // Aquí se cargarían las calificaciones del estudiante
+        // Aquí se cargarÃ­an las calificaciones del estudiante
       }
 
-      // Función para editar curso
+      // FunciÃ³n para editar curso
       function editarCurso(cursoId) {
         openModal("modalCurso");
         // Simulamos cargar datos del curso
@@ -2257,7 +2299,7 @@ function seleccionarProfesor(profesor) {
       function eliminarCurso(cursoId) {
         if (confirm("¿Está seguro de eliminar el curso " + cursoId + "?")) {
           alert("Curso eliminado correctamente");
-          // Aquí iría la lógica para eliminar el curso
+          // Aquí irÃ­a la lÃ³gica para eliminar el curso
         }
       }
 
@@ -2270,60 +2312,60 @@ function seleccionarProfesor(profesor) {
       // Función para eliminar asignatura
       function eliminarCurso(asignaturaId) {
         if (
-          confirm("¿Está seguro de eliminar el curso " + asignaturaId + "?")
+          confirm("¿Está seguro de eliminar la asignatura " + asignaturaId + "?")
         ) {
-          alert("Curso eliminado correctamente");
-          // Aquí iría la lógica para eliminar el curso
+          alert("Asignatura eliminada correctamente");
+          // Aquí iría la lógica para eliminar la asignatura
         }
       }
 
-      // Función para ver estudiantes de un curso
+      // FunciÃ³n para ver estudiantes de un curso
       function verEstudiantes(cursoId) {
         openModal("modalEstudiantesCurso");
-        // Aquí se cargarían los estudiantes del curso
+        // Aquí se cargarÃ­an los estudiantes del curso
         document.getElementById("courseNameStudents").textContent =
           cursoId === "MAT-2025-01"
-            ? "Matemáticas Avanzadas (MAT-2025-01)"
+            ? "MatemÃ¡ticas Avanzadas (MAT-2025-01)"
             : cursoId === "FIS-2025-01"
-            ? "Física Moderna (FIS-2025-01)"
+            ? "FÃ­sica Moderna (FIS-2025-01)"
             : "Curso (" + cursoId + ")";
       }
 
-      // Función para exportar reporte
+      // FunciÃ³n para exportar reporte
       function exportarReporte(formato) {
         alert("Exportando reporte en formato " + formato.toUpperCase());
-        // Aquí iría la lógica para generar y descargar el reporte
+        // Aquí irÃ­a la lÃ³gica para generar y descargar el reporte
       }
 
-      // Función para agregar estudiante a curso
+      // FunciÃ³n para agregar estudiante a curso
       function openAddStudentToCourse() {
         alert("Abriendo formulario para agregar estudiante al curso");
-        // Aquí se abriría un formulario para asignar estudiantes
+        // Aquí se abrirÃ­a un formulario para asignar estudiantes
       }
 
-      // Función para exportar lista de estudiantes
+      // FunciÃ³n para exportar lista de estudiantes
       function exportarListaEstudiantes() {
         alert("Exportando lista de estudiantes del curso");
-        // Aquí iría la lógica para exportar la lista
+        // Aquí irÃ­a la lÃ³gica para exportar la lista
       }
 
-      // Función para editar calificación
+      // FunciÃ³n para editar calificaciÃ³n
       function editarCalificacion(estudianteId) {
         alert("Editando calificaciones del estudiante " + estudianteId);
-        // Aquí se abriría un formulario para editar calificaciones
+        // Aquí se abrirÃ­a un formulario para editar calificaciones
       }
 
-      // Función para eliminar estudiante de un curso
+      // FunciÃ³n para eliminar estudiante de un curso
       function eliminarEstudianteCurso(estudianteId) {
         if (
           confirm(
-            "¿Está seguro de eliminar al estudiante " +
+            "Â¿EstÃ¡ seguro de eliminar al estudiante " +
               estudianteId +
               " del curso?"
           )
         ) {
           alert("Estudiante eliminado del curso");
-          // Aquí iría la lógica para eliminar al estudiante
+          // Aquí irÃ­a la lÃ³gica para eliminar al estudiante
         }
       }
 
@@ -2372,8 +2414,8 @@ function seleccionarProfesor(profesor) {
               <td style="max-width:140px"><span style="font-size:11px;color:#94a3b8;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${est.direccion||''}">${est.direccion||'—'}</span></td>
               <td><span style="font-size:12px;color:#475569">${est.acudiente||'<span style="color:#cbd5e1">—</span>'}</span></td>
               <td><div class="tbl-actions">
-                <button class="tbl-btn tbl-btn-edit" onclick="editarEstudiante(${index})">✏️ Editar</button>
-                <button class="tbl-btn tbl-btn-del" onclick="eliminarEstudiante('${est.id}')">🗑️</button>
+                <button class="tbl-btn tbl-btn-edit" onclick="editarEstudiante(${index})"><i class="fas fa-pen"></i> Editar</button>
+                <button class="tbl-btn tbl-btn-del" onclick="eliminarEstudiante('${est.id}')"><i class="fas fa-trash"></i></button>
               </div></td>
             </tr>`;
         });
@@ -2440,8 +2482,8 @@ function seleccionarProfesor(profesor) {
               <td style="max-width:140px"><span style="font-size:11px;color:#94a3b8;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${est.direccion||''}">${est.direccion||'—'}</span></td>
               <td><span style="font-size:12px;color:#475569">${est.acudiente||'<span style="color:#cbd5e1">—</span>'}</span></td>
               <td><div class="tbl-actions">
-                <button class="tbl-btn tbl-btn-edit" onclick="editarEstudiante(${index})">✏️ Editar</button>
-                <button class="tbl-btn tbl-btn-del" onclick="eliminarEstudiante('${est.id}')">🗑️</button>
+                <button class="tbl-btn tbl-btn-edit" onclick="editarEstudiante(${index})"><i class="fas fa-pen"></i> Editar</button>
+                <button class="tbl-btn tbl-btn-del" onclick="eliminarEstudiante('${est.id}')"><i class="fas fa-trash"></i></button>
               </div></td>
             </tr>`;
         });
@@ -2475,7 +2517,7 @@ function seleccionarProfesor(profesor) {
           .getElementById("acudienteEstudiante")
           .value.trim();
 
-        // Validación de la cédula
+        // ValidaciÃ³n de la cédula
         if (!cedula) {
           alert("La cédula es obligatoria");
           document.getElementById("cedulaEstudiante").focus();
@@ -2484,7 +2526,7 @@ function seleccionarProfesor(profesor) {
 
         // Crear objeto estudiante
         const estudiante = {
-          cedula: cedula, // Asegúrate de que sea una cadena de texto
+          cedula: cedula, // AsegÃºrate de que sea una cadena de texto
           nombre: nombre,
           primerApellido: primerApellido,
           segundoApellido: segundoApellido,
@@ -2558,15 +2600,15 @@ function seleccionarProfesor(profesor) {
   document.getElementById("nombreEstudiante").value = est.nombre;
   document.getElementById("primerApellidoEstudiante").value = est.primerApellido;
   document.getElementById("segundoApellidoEstudiante").value = est.segundoApellido || '';
-  document.getElementById("emailEstudiante").value = est.email;
+  document.getElementById("emailEstudiante").value = est.email || "";
   document.getElementById("telefonoEstudiante").value = est.telefono || '';
   document.getElementById("direccionEstudiante").value = est.direccion || '';
   document.getElementById("acudienteEstudiante").value = est.acudiente || '';
 
-  // Configurar el botón guardar para actualizar
+  // Configurar el botÃ³n guardar para actualizar
   document.getElementById("guardarEstudiante").onclick = function() {
     const estudianteActualizado = {
-      cedula: est.cedula, // IMPORTANTE: Incluir la cédula en el objeto de actualización
+      cedula: est.cedula, // IMPORTANTE: Incluir la cédula en el objeto de actualizaciÃ³n
       nombre: document.getElementById("nombreEstudiante").value.trim(),
       primerApellido: document.getElementById("primerApellidoEstudiante").value.trim(),
       segundoApellido: document.getElementById("segundoApellidoEstudiante").value.trim(),
@@ -2576,9 +2618,9 @@ function seleccionarProfesor(profesor) {
       acudiente: document.getElementById("acudienteEstudiante").value.trim()
     };
 
-    // Validaciones básicas
-    if (!estudianteActualizado.nombre || !estudianteActualizado.primerApellido || !estudianteActualizado.email) {
-      alert("Por favor complete los campos obligatorios");
+    // Validaciones bÃ¡sicas
+    if (!estudianteActualizado.nombre || !estudianteActualizado.primerApellido) {
+      alert("Por favor complete los campos obligatorios del estudiante");
       return;
     }
 
@@ -2651,7 +2693,7 @@ function seleccionarProfesor(profesor) {
       function eliminarEstudiante(id) {
         const token = sessionStorage.getItem("token");
 
-        if (confirm("¿Está seguro de eliminar este estudiante?")) {
+        if (confirm("Â¿EstÃ¡ seguro de eliminar este estudiante?")) {
           fetch(window.LEARNSCAPE_API, {
             method: "POST",
             headers: {
@@ -2687,16 +2729,16 @@ function seleccionarProfesor(profesor) {
 
     <script>
 
-      /* ================ ADMINISTRACIÓN DE PROFESORES ================= */
+      /* ================ ADMINISTRACIÃ“N DE PROFESORES ================= */
 // Variables globales
 var profesores = [];
 
 function buscarProfesores() {
-  // Obtener el valor de búsqueda
+  // Obtener el valor de bÃºsqueda
   const input = document.getElementById("buscarProfesor");
   const searchTerm = input.value.toLowerCase();
 
-  console.log("Término de búsqueda:", searchTerm);
+  console.log("TÃ©rmino de bÃºsqueda:", searchTerm);
 
   // Obtener los contenedores para mostrar resultados
   let resultadosContainer = document.getElementById("resultados-busqueda");
@@ -2720,7 +2762,7 @@ function buscarProfesores() {
     resultadosContainer.innerHTML = "";
   }
 
-  // Actualizar la tabla principal (código original)
+  // Actualizar la tabla principal (cÃ³digo original)
   if (tabla && typeof profesores !== 'undefined') {
     tabla.innerHTML = "";
 
@@ -2740,12 +2782,12 @@ function buscarProfesores() {
       tabla.innerHTML += `
         <tr>
           <td><span style="font-family:monospace;font-size:12px;font-weight:700;color:#6d28d9;background:#ede9fe;padding:2px 8px;border-radius:6px">${prof.cedula}</span></td>
-          <td><div class="tbl-cell-main"><div class="tbl-av tbl-av-purple">${ini}</div><div><div class="tbl-nm">${nombreCompleto}</div><div class="tbl-sub">👨‍🏫 Docente</div></div></div></td>
+          <td><div class="tbl-cell-main"><div class="tbl-av tbl-av-purple">${ini}</div><div><div class="tbl-nm">${nombreCompleto}</div><div class="tbl-sub"><i class="fas fa-chalkboard-teacher"></i> Docente</div></div></div></td>
           <td><span style="font-size:12px;color:#64748b">${prof.email||'—'}</span></td>
           <td><span style="font-size:12px;color:#64748b">${prof.telefono||'<span style="color:#cbd5e1">—</span>'}</span></td>
           <td><div class="tbl-actions">
-            <button class="tbl-btn tbl-btn-edit" onclick="editarProfesor('${prof.cedula}')">✏️ Editar</button>
-            <button class="tbl-btn tbl-btn-del" onclick="eliminarProfesor('${prof.cedula}')">🗑️</button>
+            <button class="tbl-btn tbl-btn-edit" onclick="editarProfesor('${prof.cedula}')"><i class="fas fa-pen"></i> Editar</button>
+            <button class="tbl-btn tbl-btn-del" onclick="eliminarProfesor('${prof.cedula}')"><i class="fas fa-trash"></i></button>
           </div></td>
         </tr>`;
     });
@@ -2754,18 +2796,18 @@ function buscarProfesores() {
       document.getElementById("totalProfesores").textContent = profesoresFiltrados.length;
     }
 
-    // Mostrar resultados en el desplegable del modal (nuevo código)
+    // Mostrar resultados en el desplegable del modal (nuevo cÃ³digo)
     if (resultadosContainer) {
-      // Si el campo está vacío, no mostrar resultados
+      // Si el campo estÃ¡ vacÃ­o, no mostrar resultados
       if (searchTerm === "") {
         resultadosContainer.style.display = "none";
         return;
       }
 
-      // Asegurarse de que el contenedor esté visible
+      // Asegurarse de que el contenedor estÃ© visible
       resultadosContainer.style.display = "block";
 
-      // Establecer posición del contenedor debajo del input
+      // Establecer posiciÃ³n del contenedor debajo del input
       if (input) {
         const inputRect = input.getBoundingClientRect();
         resultadosContainer.style.position = "absolute";
@@ -2809,8 +2851,8 @@ function buscarProfesores() {
           item.addEventListener("click", function() {
             input.value = `${prof.nombre} ${prof.primerApellido}`;
             resultadosContainer.style.display = "none";
-            // Puedes agregar aquí código para seleccionar este profesor en tu sistema
-            // Por ejemplo, podrías guardar el ID del profesor seleccionado en un input oculto
+            // Puedes agregar aquí­ cÃ³digo para seleccionar este profesor en tu sistema
+            // Por ejemplo, podrÃ­as guardar el ID del profesor seleccionado en un input oculto
             if (document.getElementById("profesorSeleccionadoId")) {
               document.getElementById("profesorSeleccionadoId").value = prof.id;
             }
@@ -2831,10 +2873,10 @@ function buscarProfesores() {
         resultadosContainer.appendChild(noResultados);
       }
     } else {
-      console.log("No se encontró el contenedor de resultados después de intentar crearlo");
+      console.log("No se encontrÃ³ el contenedor de resultados después de intentar crearlo");
     }
   } else {
-    console.log("No se encontró la tabla o la variable profesores no está definida");
+    console.log("No se encontrÃ³ la tabla o la variable profesores no estÃ¡ definida");
   }
 
   // Agregar evento para cerrar la lista al hacer clic fuera
@@ -2894,9 +2936,9 @@ function cargarProfesores() {
         console.log(`  ID=${prof.id} (${typeof prof.id}, ${prof.id ? prof.id.length : 'N/A'} caracteres)`);
         console.log(`  Cédula=${prof.cedula} (${typeof prof.cedula})`);
         
-        // Validar si es un ObjectID válido
+        // Validar si es un ObjectID vÃ¡lido
         const isValidObjectId = prof.id && /^[0-9a-fA-F]{24}$/.test(prof.id);
-        console.log(`  ¿ID válido para MongoDB? ${isValidObjectId ? 'SÍ' : 'NO'}`);
+        console.log(`  Â¿ID vÃ¡lido para MongoDB? ${isValidObjectId ? 'SÃ' : 'NO'}`);
       });
       
       actualizarTablaProfesores();
@@ -2919,12 +2961,12 @@ function actualizarTablaProfesores() {
     tabla.innerHTML += `
       <tr>
         <td><span style="font-family:monospace;font-size:12px;font-weight:700;color:#6d28d9;background:#ede9fe;padding:2px 8px;border-radius:6px">${pro.cedula}</span></td>
-        <td><div class="tbl-cell-main"><div class="tbl-av tbl-av-purple">${ini}</div><div><div class="tbl-nm">${nombreCompleto}</div><div class="tbl-sub">👨‍🏫 Docente</div></div></div></td>
+        <td><div class="tbl-cell-main"><div class="tbl-av tbl-av-purple">${ini}</div><div><div class="tbl-nm">${nombreCompleto}</div><div class="tbl-sub"><i class="fas fa-chalkboard-teacher"></i> Docente</div></div></div></td>
         <td><span style="font-size:12px;color:#64748b">${pro.email||'—'}</span></td>
         <td><span style="font-size:12px;color:#64748b">${pro.telefono||'<span style="color:#cbd5e1">—</span>'}</span></td>
         <td><div class="tbl-actions">
-          <button class="tbl-btn tbl-btn-edit" onclick="editarProfesor('${pro.cedula}')">✏️ Editar</button>
-          <button class="tbl-btn tbl-btn-del" onclick="eliminarProfesor('${pro.cedula}')">🗑️</button>
+          <button class="tbl-btn tbl-btn-edit" onclick="editarProfesor('${pro.cedula}')"><i class="fas fa-pen"></i> Editar</button>
+          <button class="tbl-btn tbl-btn-del" onclick="eliminarProfesor('${pro.cedula}')"><i class="fas fa-trash"></i></button>
         </div></td>
       </tr>`;
   });
@@ -2951,7 +2993,7 @@ function openModalProfesor() {
   document.getElementById("emailProfesor").value = "";
   document.getElementById("telefonoProfesor").value = "";
 
-  // Configurar el botón para crear nuevo profesor
+  // Configurar el botÃ³n para crear nuevo profesor
   document.getElementById("guardarProfesor").onclick = crearProfesor;
 
   // Abrir el modal
@@ -2970,7 +3012,7 @@ function crearProfesor() {
   const telefono = document.getElementById("telefonoProfesor").value.trim();
   const direccion = document.getElementById("direccionProfesor") ? document.getElementById("direccionProfesor").value.trim() : "";
   
-  // Validaciones básicas
+  // Validaciones bÃ¡sicas
   if (!cedula) {
     alert("Por favor, ingrese la cédula del profesor");
     return;
@@ -2994,7 +3036,7 @@ function crearProfesor() {
   // Validar formato de email
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    alert("Por favor ingrese un correo electrónico válido");
+    alert("Por favor ingrese un correo electrÃ³nico vÃ¡lido");
     return;
   }
   
@@ -3017,7 +3059,7 @@ function crearProfesor() {
   loadingIndicator.innerHTML = '<div class="spinner"></div><p>Creando profesor...</p>';
   document.body.appendChild(loadingIndicator);
   
-  // Enviar petición al servidor con la consulta GraphQL correcta
+  // Enviar peticiÃ³n al servidor con la consulta GraphQL correcta
   fetch(window.LEARNSCAPE_API, {
     method: "POST",
     headers: {
@@ -3058,7 +3100,7 @@ function crearProfesor() {
     // Quitar indicador de carga
     document.body.removeChild(loadingIndicator);
     
-    // SIMPLEMENTE MOSTRAR MENSAJE DE ÉXITO - Las credenciales ya fueron enviadas por el backend
+    // SIMPLEMENTE MOSTRAR MENSAJE DE Ã‰XITO - Las credenciales ya fueron enviadas por el backend
     alert(`Profesor creado exitosamente. Se han enviado las credenciales al correo ${email}`);
     
     // Actualizar la tabla de profesores
@@ -3089,7 +3131,7 @@ function editarProfesor(id) {
   document.getElementById("cedulaProfesor").value = profesor.cedula || profesor.id;
   document.getElementById("cedulaProfesor").disabled = true;
 
-  // Llenar los demás campos
+  // Llenar los demÃ¡s campos
   document.getElementById("nombreProfesor").value = profesor.nombre;
   document.getElementById("primerApellidoProfesor").value = profesor.primerApellido;
   document.getElementById("segundoApellidoProfesor").value = profesor.segundoApellido;
@@ -3169,7 +3211,7 @@ function editarProfesor(id) {
 }
 
 function eliminarProfesor(id) {
-  if (confirm("¿Está seguro de eliminar este profesor?")) {
+  if (confirm("Â¿EstÃ¡ seguro de eliminar este profesor?")) {
     const token = sessionStorage.getItem("token");
 
     // Mostrar indicador de carga
@@ -3190,7 +3232,7 @@ function eliminarProfesor(id) {
             eliminarProfesor(id: $id)
           }
         `,
-        variables: { id }, // Esto será la cédula
+        variables: { id }, // Esto serÃ¡ la cédula
       }),
     })
       .then((response) => response.json())
@@ -3272,8 +3314,198 @@ document.head.appendChild(profesoresStyle);
 
     <!-- Cargar, Editar, Eliminar Curso -->
     <script>
-      /* ================ ADMINISTRACIÓN DE CURSOS ================= */
+      /* ================ ADMINISTRACIÃ“N DE CURSOS ================= */
 let cursos = []; // Inicializar lista de cursos
+const CURSOS_PREDEFINIDOS = [
+  "Párvulos",
+  "Pre-jardín",
+  "Jardín",
+  "Transición",
+  "Primero",
+  "Segundo",
+  "Tercero",
+  "Cuarto",
+  "Quinto"
+];
+const MATERIAS_PREESCOLAR = [
+  "Inteligencia lingüística",
+  "Inteligencia musical",
+  "Inteligencia lógico matemático",
+  "Inteligencia interpersonal",
+  "Inteligencia corporal",
+  "Inteligencia naturalista",
+  "Inteligencia intrapersonal",
+  "Expresión artística y creatividad",
+  "Educación Física",
+  "Inteligencia espacial"
+];
+const MATERIAS_PRIMARIA = [
+  "Lengua castellana",
+  "Matemáticas",
+  "Ciencias naturales",
+  "Ciencias sociales",
+  "Inglés",
+  "Religión",
+  "Ética y valores",
+  "Informática",
+  "Artística",
+  "Educación Física",
+  "Comprensión lectora",
+  "Música",
+  "Expresión corporal",
+  "Pensamiento lógico"
+];
+
+function nivelCursoDesdeNombre(nombre = "") {
+  const limpio = String(nombre || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+  if (["parvulos","pre-jardin","jardin","transicion"].some(x => limpio.startsWith(x))) return "preescolar";
+  if (["primero","segundo","tercero","cuarto","quinto"].some(x => limpio.startsWith(x))) return "primaria";
+  return "";
+}
+
+function cursosSeleccionadosParaAsignatura() {
+  const modo = document.querySelector('input[name="modoAsignatura"]:checked')?.value;
+  if (modo === "varios") {
+    return (cursos || []).filter(c => document.getElementById(`chkCurso_${c.id}`)?.checked);
+  }
+  const cursoId = document.getElementById("cursoAsignatura")?.value;
+  return (cursos || []).filter(c => c.id === cursoId);
+}
+
+function materiasDisponiblesSegunSeleccion() {
+  const seleccionados = cursosSeleccionadosParaAsignatura();
+  const niveles = [...new Set(seleccionados.map(c => nivelCursoDesdeNombre(c.nombre)).filter(Boolean))];
+  if (niveles.length === 1) {
+    return niveles[0] === "preescolar"
+      ? { tipo: "preescolar", materias: [...MATERIAS_PREESCOLAR] }
+      : { tipo: "primaria", materias: [...MATERIAS_PRIMARIA] };
+  }
+  return {
+    tipo: "mixto",
+    materias: [
+      ...MATERIAS_PREESCOLAR,
+      ...MATERIAS_PRIMARIA.filter(m => !MATERIAS_PREESCOLAR.includes(m))
+    ]
+  };
+}
+
+function poblarSelectorAsignatura(nombreSeleccionado = "") {
+  const select = document.getElementById("nombreAsignatura");
+  const inputOtra = document.getElementById("nombreAsignaturaOtra");
+  if (!select) return;
+
+  const { tipo } = materiasDisponiblesSegunSeleccion();
+  const selected = String(nombreSeleccionado || "").trim();
+  const options = [];
+
+  const pushOptions = (label, list) => {
+    options.push(`<optgroup label="${label}">`);
+    list.forEach(nombre => options.push(`<option value="${nombre}">${nombre}</option>`));
+    options.push(`</optgroup>`);
+  };
+
+  if (tipo === "preescolar") {
+    pushOptions("Materias de preescolar", MATERIAS_PREESCOLAR);
+  } else if (tipo === "primaria") {
+    pushOptions("Materias de primaria", MATERIAS_PRIMARIA);
+  } else {
+    pushOptions("Materias de preescolar", MATERIAS_PREESCOLAR);
+    pushOptions("Materias de primaria", MATERIAS_PRIMARIA);
+  }
+
+  select.innerHTML = `<option value="">Seleccione una asignatura</option>${options.join("")}<option value="__OTRA__">Otra...</option>`;
+
+  const existeEnLista = [...MATERIAS_PREESCOLAR, ...MATERIAS_PRIMARIA].includes(selected);
+  if (selected && !existeEnLista) {
+    select.value = "__OTRA__";
+    if (inputOtra) {
+      inputOtra.style.display = "";
+      inputOtra.value = selected;
+    }
+  } else {
+    if (selected) select.value = selected;
+    if (inputOtra) {
+      inputOtra.style.display = "none";
+      if (!selected) inputOtra.value = "";
+    }
+  }
+}
+
+function onAsignaturaPredefinidaChange() {
+  const select = document.getElementById("nombreAsignatura");
+  const inputOtra = document.getElementById("nombreAsignaturaOtra");
+  if (!select || !inputOtra) return;
+  if (select.value === "__OTRA__") {
+    inputOtra.style.display = "";
+    inputOtra.focus();
+  } else {
+    inputOtra.style.display = "none";
+    inputOtra.value = "";
+  }
+}
+
+function obtenerNombreAsignaturaSeleccionada() {
+  const select = document.getElementById("nombreAsignatura");
+  const inputOtra = document.getElementById("nombreAsignaturaOtra");
+  if (!select) return "";
+  if (select.value === "__OTRA__") {
+    return String(inputOtra?.value || "").trim();
+  }
+  return String(select.value || "").trim();
+}
+
+function generarIdCursoDesdeNombre(nombre) {
+  return (nombre || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .toUpperCase();
+}
+
+function poblarSelectorNombreCurso(nombreSeleccionado = "") {
+  const select = document.getElementById("nombreCurso");
+  if (!select) return;
+
+  const opciones = CURSOS_PREDEFINIDOS.includes(nombreSeleccionado)
+    ? CURSOS_PREDEFINIDOS
+    : (nombreSeleccionado ? [...CURSOS_PREDEFINIDOS, nombreSeleccionado] : CURSOS_PREDEFINIDOS);
+
+  select.innerHTML = '<option value="">Seleccione un curso</option>' +
+    opciones.map(nombre => `<option value="${nombre}">${nombre}</option>`).join('');
+
+  if (nombreSeleccionado) {
+    select.value = nombreSeleccionado;
+  }
+}
+
+function sincronizarCursoPredefinido(forzar = false) {
+  const select = document.getElementById("nombreCurso");
+  const inputId = document.getElementById("idCurso");
+  const inputDuracion = document.getElementById("duracionCurso");
+  if (!select || !inputId) return;
+
+  const nombre = select.value.trim();
+  if (!nombre) {
+    if (forzar) inputId.value = "";
+    return;
+  }
+
+  const nuevoId = generarIdCursoDesdeNombre(nombre);
+  if (forzar || !inputId.value.trim() || inputId.dataset.auto === "true") {
+    inputId.value = nuevoId;
+    inputId.dataset.auto = "true";
+  }
+
+  if (inputDuracion && (!inputDuracion.value.trim() || inputDuracion.dataset.auto === "true")) {
+    inputDuracion.value = "Año lectivo 2026";
+    inputDuracion.dataset.auto = "true";
+  }
+}
 
 // Buscar cursos con filtro
 function buscarCursos() {
@@ -3292,7 +3524,7 @@ function buscarCursos() {
   );
 
   cursosFiltrados.forEach((curso, index) => {
-    // Construir nombre del profesor con verificación de campos
+    // Construir nombre del profesor con verificaciÃ³n de campos
     let nombreProfesor = "Sin asignar";
     if (curso.profesor) {
       nombreProfesor = curso.profesor.nombre || "";
@@ -3309,12 +3541,12 @@ function buscarCursos() {
     tabla.innerHTML += `
       <tr>
         <td><div class="tbl-cell-main"><div class="tbl-av tbl-av-green" style="border-radius:10px">${cIco}</div><div><div class="tbl-nm">${curso.nombre}</div></div></div></td>
-        <td>${curso.duracion?`<span class="badge badge-blue">${curso.duracion}</span>`:'<span style="color:#cbd5e1">—</span>'}</td>
-        <td><span class="badge badge-gray">${curso.cantidadMax||'—'} alum.</span></td>
+        <td>${curso.duracion?`<span class="badge badge-blue">${curso.duracion}</span>`:'<span style="color:#cbd5e1">â€”</span>'}</td>
+        <td><span class="badge badge-gray">${curso.cantidadMax||'â€”'} alum.</span></td>
         <td>${nombreProfesor!=='Sin asignar'?`<div class="tbl-cell-main"><div class="tbl-av tbl-av-purple" style="width:28px;height:28px;font-size:10px">${pIni}</div><span style="font-size:12px;color:#475569">${nombreProfesor}</span></div>`:'<span style="color:#cbd5e1">Sin asignar</span>'}</td>
         <td><div class="tbl-actions">
-          <button class="tbl-btn tbl-btn-edit" onclick="editarCurso(${index})">✏️ Editar</button>
-          <button class="tbl-btn tbl-btn-del" onclick="eliminarCurso(${index})">🗑️</button>
+          <button class="tbl-btn tbl-btn-edit" onclick="editarCurso(${index})"><i class="fas fa-pen"></i> Editar</button>
+          <button class="tbl-btn tbl-btn-del" onclick="eliminarCurso(${index})"><i class="fas fa-trash"></i></button>
         </div></td>
       </tr>`;
   });
@@ -3325,7 +3557,12 @@ function buscarCursos() {
 // Abrir modal para crear nuevo curso
 function openModalCurso() {
   document.getElementById("formCurso").reset();
+  document.getElementById("idCurso").disabled = false;
+  document.getElementById("idCurso").dataset.auto = "true";
+  document.getElementById("duracionCurso").dataset.auto = "true";
   document.getElementById("guardarCurso").onclick = crearCurso;
+  poblarSelectorNombreCurso();
+  sincronizarCursoPredefinido(true);
 
   // Limpiar el campo de búsqueda y el hidden
   document.getElementById("buscarProfesorCurso").value = "";
@@ -3344,8 +3581,15 @@ function openModalCurso() {
   // Agregar el nuevo event listener
   nuevoInput.addEventListener("input", function() {
     const searchTerm = this.value.toLowerCase();
-    buscarProfesorCurso(searchTerm); // CAMBIO AQUÍ: buscarProfesorCurso en lugar de buscarProfesorParaCurso
+    buscarProfesorCurso(searchTerm);
   });
+
+  const selectCurso = document.getElementById("nombreCurso");
+  const nuevoSelect = selectCurso.cloneNode(true);
+  selectCurso.parentNode.replaceChild(nuevoSelect, selectCurso);
+  nuevoSelect.addEventListener("change", () => sincronizarCursoPredefinido(true));
+  poblarSelectorNombreCurso();
+  sincronizarCursoPredefinido(true);
 
   // Cargar profesores si no están cargados
   if (!profesores || profesores.length === 0) {
@@ -3366,19 +3610,19 @@ function seleccionarProfesorParaCurso(profesor) {
   const segundoApellido = profesor.segundoApellido || "";
   const nombreCompleto = `${nombre} ${primerApellido} ${segundoApellido}`;
   
-  // Mostrar en la consola todos los datos del profesor para depuración
+  // Mostrar en la consola todos los datos del profesor para depuraciÃ³n
   console.log("Profesor completo:", profesor);
   console.log("ID de MongoDB:", profesor.id);
   console.log("Cédula:", profesor.cedula);
   
-  // SOLUCIÓN: Usar la cédula como ID válido
-  let idToUse = profesor.cedula;
-  console.log("Usando cédula como ID:", idToUse);
+  // Usar el id real del profesor; fallback a cédula si no viene
+  let idToUse = profesor.id || profesor.cedula;
+  console.log("Usando ID de profesor:", idToUse);
   
-  // Actualizar el campo de búsqueda con el nombre del profesor
+  // Actualizar el campo de bÃºsqueda con el nombre del profesor
   document.getElementById("buscarProfesorCurso").value = nombreCompleto.trim();
   
-  // ALMACENAR la cédula
+  // Almacenar el identificador del profesor
   document.getElementById("profesorCurso").value = idToUse;
   
   console.log("Profesor seleccionado:", nombreCompleto);
@@ -3434,7 +3678,7 @@ function cargarCursos() {
       tabla.innerHTML = ""; // Limpiar la tabla
 
       cursos.forEach((cur, index) => {
-        // Construir el nombre del profesor con validación
+        // Construir el nombre del profesor con validaciÃ³n
         let nombreProfesor = "Sin asignar";
         
         if (cur.profesor) {
@@ -3453,17 +3697,17 @@ function cargarCursos() {
         const pIni2=(nombreProfesor!=='Sin asignar'?(nombreProfesor.split(' ').slice(0,2).map(w=>w[0]).join('')):'?').toUpperCase();
         tabla.innerHTML += `<tr>
           <td><div class="tbl-cell-main"><div class="tbl-av tbl-av-green" style="border-radius:10px">${cIco2}</div><div><div class="tbl-nm">${cur.nombre}</div></div></div></td>
-          <td>${cur.duracion?`<span class="badge badge-blue">${cur.duracion}</span>`:'<span style="color:#cbd5e1">—</span>'}</td>
-          <td><span class="badge badge-gray">${cur.cantidadMax||'—'} alum.</span></td>
+          <td>${cur.duracion?`<span class="badge badge-blue">${cur.duracion}</span>`:'<span style="color:#cbd5e1">â€”</span>'}</td>
+          <td><span class="badge badge-gray">${cur.cantidadMax||'â€”'} alum.</span></td>
           <td>${nombreProfesor!=='Sin asignar'?`<div class="tbl-cell-main"><div class="tbl-av tbl-av-purple" style="width:28px;height:28px;font-size:10px">${pIni2}</div><span style="font-size:12px;color:#475569">${nombreProfesor}</span></div>`:'<span style="color:#cbd5e1">Sin asignar</span>'}</td>
           <td><div class="tbl-actions">
-            <button class="tbl-btn tbl-btn-edit" onclick="editarCurso(${index})">✏️ Editar</button>
-            <button class="tbl-btn tbl-btn-del" onclick="eliminarCurso(${index})">🗑️</button>
+            <button class="tbl-btn tbl-btn-edit" onclick="editarCurso(${index})"><i class="fas fa-pen"></i> Editar</button>
+            <button class="tbl-btn tbl-btn-del" onclick="eliminarCurso(${index})"><i class="fas fa-trash"></i></button>
           </div></td>
         </tr>`;
       });
 
-      // Llamar a la función para cargar los cursos en el select de asignaturas
+      // Llamar a la funciÃ³n para cargar los cursos en el select de asignaturas
       if (typeof cargarCursosEnSelect === 'function') {
         cargarCursosEnSelect();
       }
@@ -3616,11 +3860,14 @@ function editarCurso(index) {
   let cur = cursos[index];
 
   // Llenar el formulario con los datos del curso
+  poblarSelectorNombreCurso(cur.nombre);
   document.getElementById("idCurso").value = cur.id;
   document.getElementById("idCurso").disabled = true; // No permitir cambiar el ID
+  document.getElementById("idCurso").dataset.auto = "false";
   document.getElementById("nombreCurso").value = cur.nombre;
   document.getElementById("cantidadCurso").value = cur.cantidadMax;
   document.getElementById("duracionCurso").value = cur.duracion;
+  document.getElementById("duracionCurso").dataset.auto = "false";
 
   // Mostrar el profesor actual
   if (cur.profesor) {
@@ -3633,24 +3880,33 @@ function editarCurso(index) {
     }
     
     document.getElementById("buscarProfesorCurso").value = nombreProfesor;
-    // IMPORTANTE: Usar la cédula del profesor, no el id
-    document.getElementById("profesorCurso").value = cur.profesor.cedula || cur.profesor.id;
-    console.log("ID del profesor cargado:", cur.profesor.cedula || cur.profesor.id);
+    document.getElementById("profesorCurso").value = cur.profesor.id || cur.profesor.cedula;
+    console.log("ID del profesor cargado:", cur.profesor.id || cur.profesor.cedula);
   } else {
     document.getElementById("buscarProfesorCurso").value = "";
     document.getElementById("profesorCurso").value = "";
   }
 
-  // Configurar el evento de búsqueda
+  // Configurar el evento de bÃºsqueda
   const buscarInput = document.getElementById("buscarProfesorCurso");
   const nuevoInput = buscarInput.cloneNode(true);
   buscarInput.parentNode.replaceChild(nuevoInput, buscarInput);
   
-  // CORRECCIÓN AQUÍ: Usar buscarProfesorCurso en lugar de buscarProfesorParaCurso
+  // CORRECCIÃ“N AQUÃ: Usar buscarProfesorCurso en lugar de buscarProfesorParaCurso
   nuevoInput.addEventListener("input", function() {
     const searchTerm = this.value.toLowerCase();
-    buscarProfesorCurso(searchTerm); // USAR LA FUNCIÓN CORRECTA
+    buscarProfesorCurso(searchTerm); // USAR LA FUNCIÃ“N CORRECTA
   });
+
+  const selectCurso = document.getElementById("nombreCurso");
+  const nuevoSelect = selectCurso.cloneNode(true);
+  selectCurso.parentNode.replaceChild(nuevoSelect, selectCurso);
+  nuevoSelect.addEventListener("change", () => {
+    document.getElementById("idCurso").dataset.auto = "true";
+    sincronizarCursoPredefinido(true);
+  });
+  poblarSelectorNombreCurso(cur.nombre);
+  nuevoSelect.value = cur.nombre || "";
 
   document.getElementById("guardarCurso").onclick = function () {
   // Validar que se haya seleccionado un profesor
@@ -3661,14 +3917,14 @@ function editarCurso(index) {
   }
 
   let cursoActualizado = {
-    id: cur.id, // AGREGAR ESTA LÍNEA - Incluir el ID del curso en el input
+    id: cur.id, // AGREGAR ESTA LÃNEA - Incluir el ID del curso en el input
     nombre: document.getElementById("nombreCurso").value.trim(),
     cantidadMax: parseInt(document.getElementById("cantidadCurso").value.trim(), 10),
     profesorId: profesorId, // Usar la cédula como profesorId
     duracion: document.getElementById("duracionCurso").value.trim(),
   };
 
-  console.log("Datos a enviar para actualización:", cursoActualizado);
+  console.log("Datos a enviar para actualizaciÃ³n:", cursoActualizado);
 
 
     // Mostrar indicador de carga
@@ -3711,7 +3967,7 @@ function editarCurso(index) {
       // Quitar indicador de carga
       document.body.removeChild(loadingIndicator);
       
-      console.log("Respuesta actualización:", data);
+      console.log("Respuesta actualizaciÃ³n:", data);
       
       if (data.errors) {
         const errorMsg = data.errors[0].message;
@@ -3732,7 +3988,7 @@ function editarCurso(index) {
         document.body.removeChild(loadingIndicator);
       }
       
-      console.error("Error en la actualización:", error);
+      console.error("Error en la actualizaciÃ³n:", error);
       alert(`Error al actualizar curso: ${error.message}`);
     });
   };
@@ -3746,7 +4002,7 @@ function eliminarCurso(index) {
   const token = sessionStorage.getItem("token");
   const cursoId = cursos[index].id;
 
-  if (confirm(`¿Está seguro de eliminar el curso ${cursos[index].nombre}?`)) {
+  if (confirm(`Â¿EstÃ¡ seguro de eliminar el curso ${cursos[index].nombre}?`)) {
     // Mostrar indicador de carga
     const loadingIndicator = document.createElement("div");
     loadingIndicator.className = "loading-indicator";
@@ -3796,7 +4052,7 @@ function eliminarCurso(index) {
   }
 }
 
-// Estilos para la funcionalidad de búsqueda de profesores
+// Estilos para la funcionalidad de bÃºsqueda de profesores
 const cursosStyle = document.createElement('style');
 cursosStyle.textContent = `
   #listaProfesores {
@@ -3891,12 +4147,12 @@ document.head.appendChild(cursosStyle);
                 <div class="asig-c-dot"></div>
                 <div>
                   <div class="asig-c-nombre">${curso}</div>
-                  <div class="asig-c-prof">👨‍🏫 ${prof}${horario?' &nbsp;·&nbsp; 🕐 '+horario:''}</div>
+                  <div class="asig-c-prof"><i class="fas fa-chalkboard-teacher"></i> ${prof}${horario ? ' &nbsp;·&nbsp; <i class="fas fa-clock"></i> ' + horario : ''}</div>
                 </div>
               </div>
               <div class="asig-c-actions">
-                <button class="asig-btn-edit" onclick="editarAsignatura(${a._idx})">✏️ Editar</button>
-                <button class="asig-btn-del" onclick="eliminarAsignatura('${a.id}')">🗑️ Eliminar</button>
+                <button class="asig-btn-edit" onclick="editarAsignatura(${a._idx})"><i class="fas fa-pen"></i> Editar</button>
+                <button class="asig-btn-del" onclick="eliminarAsignatura('${a.id}')"><i class="fas fa-trash"></i> Eliminar</button>
               </div>
             </div>`;
           }).join('');
@@ -3907,7 +4163,7 @@ document.head.appendChild(cursosStyle);
                 <div><div class="asig-m-nombre">${g.nombre}</div><div class="asig-m-sub">${total} curso${total!==1?'s':''} asignado${total!==1?'s':''}</div></div>
               </div>
               <div class="asig-m-right">
-                <span class="asig-m-pill">${total} cursos</span>
+                <span class="asig-m-pill">${total} curso${total!==1?'s':''}</span>
                 <span class="asig-m-tog" id="togg${gid}">▼</span>
               </div>
             </div>
@@ -3932,7 +4188,7 @@ document.head.appendChild(cursosStyle);
         renderAsignaturasCards(filtradas);
         document.getElementById("totalAsignaturas").textContent = filtradas.length;
       }
-      // openModalAsignatura — ver definición canónica (multi-curso) más abajo
+      // openModalAsignatura â€” ver definiciÃ³n canÃ³nica (multi-curso) mÃ¡s abajo
 
       function cargarAsignaturas() {
   const token = sessionStorage.getItem("token");
@@ -4026,7 +4282,7 @@ function buscarProfesorAsignatura(searchTerm) {
   profesoresFiltrados.forEach((prof) => {
     const div = document.createElement("div");
     div.textContent = `${prof.nombre} ${prof.primerApellido} ${prof.segundoApellido || ''} (${prof.cedula})`;
-    div.dataset.id = prof.cedula; // Usar cédula como ID
+    div.dataset.id = prof.id || prof.cedula;
     div.addEventListener("click", () => seleccionarProfesorAsignatura(prof));
     listaProfesores.appendChild(div);
   });
@@ -4043,22 +4299,23 @@ function seleccionarProfesorAsignatura(profesor) {
   
   document.getElementById("buscarProfesorAsignatura").value = `${nombre} ${primerApellido} ${segundoApellido}`;
   
-  // Usar la cédula como ID
-  document.getElementById("profesorAsignatura").value = profesor.cedula;
+  // Usar el id real del profesor; fallback a cédula si hace falta
+  document.getElementById("profesorAsignatura").value = profesor.id || profesor.cedula;
   
   console.log("Profesor seleccionado para asignatura:", nombre, primerApellido);
-  console.log("Cédula usada como ID:", profesor.cedula);
+  console.log("ID usado para asignatura:", profesor.id || profesor.cedula);
   
   document.getElementById("listaProfesoresAsignatura").style.display = "none";
 }
 
-// Modificar la función openModalAsignatura para usar la búsqueda mejorada
-// ─── ASIGNATURAS — lógica nueva con modo multi-curso ─────────────────────────
+// Modificar la funciÃ³n openModalAsignatura para usar la bÃºsqueda mejorada
+// â”€â”€â”€ ASIGNATURAS â€” lÃ³gica nueva con modo multi-curso â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function toggleModoAsignatura() {
   const modo = document.querySelector('input[name="modoAsignatura"]:checked')?.value;
   document.getElementById('panelUnCurso').style.display      = modo === 'uno'    ? '' : 'none';
   document.getElementById('panelVariosCursos').style.display = modo === 'varios' ? '' : 'none';
+  poblarSelectorAsignatura();
 }
 
 function construirListaCursosMulti() {
@@ -4083,6 +4340,7 @@ function toggleHorarioCurso(cursoId) {
   } else {
     fila.style.borderColor = '#e5e7eb'; fila.style.background = '#fff';
   }
+  poblarSelectorAsignatura();
 }
 
 function openModalAsignatura() {
@@ -4096,6 +4354,8 @@ function openModalAsignatura() {
 
   document.getElementById('buscarProfesorAsignatura').value = '';
   document.getElementById('profesorAsignatura').value = '';
+  document.getElementById('nombreAsignaturaOtra').value = '';
+  document.getElementById('nombreAsignaturaOtra').style.display = 'none';
   document.getElementById('listaProfesoresAsignatura').innerHTML = '';
   document.getElementById('listaProfesoresAsignatura').style.display = 'none';
 
@@ -4119,6 +4379,7 @@ function openModalAsignatura() {
     document.body.removeChild(loading);
     cargarCursosEnSelect();
     construirListaCursosMulti();
+    poblarSelectorAsignatura();
     openModal('modalAsignatura');
   }).catch(err => {
     if (document.body.contains(loading)) document.body.removeChild(loading);
@@ -4127,7 +4388,7 @@ function openModalAsignatura() {
 }
 
 async function crearAsignatura() {
-  const nombre     = document.getElementById('nombreAsignatura').value.trim();
+  const nombre     = obtenerNombreAsignaturaSeleccionada();
   const profesorId = document.getElementById('profesorAsignatura').value;
   const modo       = document.querySelector('input[name="modoAsignatura"]:checked')?.value;
 
@@ -4145,14 +4406,14 @@ async function crearAsignatura() {
       const data = await gqlAdm(`
         mutation($input: AsignaturaInput!) {
           crearAsignatura(input: $input) { id nombre curso { nombre } }
-        }`, { input: { nombre, horario: '', profesorId, cursoId } });
+        }`, { input: { nombre, horario: 'Por asignar', profesorId, cursoId } });
 
       showToastAdm(`✅ Asignatura "${data.crearAsignatura.nombre}" creada en ${data.crearAsignatura.curso?.nombre}. Asigna el horario en la sección Horarios.`, 'ok');
 
     } else {
       const seleccionados = (cursos || [])
         .filter(c => document.getElementById(`chkCurso_${c.id}`)?.checked)
-        .map(c => ({ cursoId: c.id, horario: '' }));
+        .map(c => ({ cursoId: c.id, horario: 'Por asignar' }));
 
       if (!seleccionados.length) { alert('Selecciona al menos un curso'); return; }
 
@@ -4165,7 +4426,7 @@ async function crearAsignatura() {
         }`, { input: { nombre, profesorId, cursos: seleccionados } });
 
       const res = data.crearAsignaturaEnVariosCursos;
-      const cursoNames = res.creadas.map(a => a.curso?.nombre ?? '').join(', ');
+      const cursoNames = res.creadas.map(a => a.curso?.nombre || 'Sin curso').join(', ');
       showToastAdm(`✅ "${nombre}" creada en ${res.creadas.length} curso(s): ${cursoNames}. Asigna horarios en la sección Horarios.`, 'ok');
     }
 
@@ -4193,7 +4454,7 @@ function editarAsignatura(index) {
 
   // Llenar el formulario con los datos actuales
   document.getElementById("idAsignatura").value = asi.id;
-  document.getElementById("nombreAsignatura").value = asi.nombre || "";
+  poblarSelectorAsignatura(asi.nombre || "");
   // Al editar, ocultamos el selector de modo (siempre un curso)
   document.getElementById('modoAsignaturaGroup').style.display = 'none';
   document.getElementById('panelUnCurso').style.display = '';
@@ -4204,7 +4465,7 @@ function editarAsignatura(index) {
     console.log("Datos del profesor:", asi.profesor); // Debug
     const nombreCompleto = `${asi.profesor.nombre || ''} ${asi.profesor.primerApellido || ''} ${asi.profesor.segundoApellido || ''}`.trim();
     document.getElementById("buscarProfesorAsignatura").value = nombreCompleto;
-    document.getElementById("profesorAsignatura").value = asi.profesor.cedula;
+    document.getElementById("profesorAsignatura").value = asi.profesor.id || asi.profesor.cedula;
   } else {
     document.getElementById("buscarProfesorAsignatura").value = "";
     document.getElementById("profesorAsignatura").value = "";
@@ -4213,6 +4474,7 @@ function editarAsignatura(index) {
   // Cargar el curso actual
   if (asi.curso && asi.curso.id) {
     document.getElementById("cursoAsignatura").value = asi.curso.id;
+    poblarSelectorAsignatura(asi.nombre || "");
   }
 
   // Configurar el evento de búsqueda de profesores
@@ -4234,12 +4496,12 @@ function editarAsignatura(index) {
     cargarCursosEnSelect();
   })
   .catch(error => {
-    console.error("Error al cargar datos:", error);
+      console.error("Error al cargar datos:", error);
   });
 
   // Configurar el botón de guardar
   document.getElementById("guardarAsignatura").onclick = async function() {
-    const nombre     = document.getElementById("nombreAsignatura").value.trim();
+    const nombre     = obtenerNombreAsignaturaSeleccionada();
     const profesorId = document.getElementById("profesorAsignatura").value;
     const cursoId    = document.getElementById("cursoAsignatura").value;
     if (!nombre)     { alert("Ingresa el nombre de la asignatura"); return; }
@@ -4281,7 +4543,7 @@ function editarAsignatura(index) {
   if (Array.isArray(profesores) && profesores.length > 0) {
     profesores.forEach(profesor => {
       const option = document.createElement("option");
-      option.value = profesor.cedula; // Usar la cédula como ID
+      option.value = profesor.id || profesor.cedula; // Priorizar el id real; usar cédula solo como respaldo
       option.textContent = `${profesor.nombre} ${profesor.primerApellido} ${profesor.segundoApellido || ''}`;
       selectProfesor.appendChild(option);
     });
@@ -4293,9 +4555,9 @@ function editarAsignatura(index) {
     });
   }
 }
-function eliminarAsignatura(index) {
+function eliminarAsignatura(asignaturaId) {
   const token = sessionStorage.getItem("token");
-  const asignatura = asignaturas[index];
+  const asignatura = asignaturas.find(a => String(a.id) === String(asignaturaId));
 
   if (!asignatura || !asignatura.id) {
     console.error("No se encontró la asignatura o no tiene ID");
@@ -4322,7 +4584,7 @@ function eliminarAsignatura(index) {
           }
         `,
         variables: {
-          id: asignatura.id
+          id: asignaturaId
         }
       })
     })
@@ -4359,7 +4621,7 @@ function exportarBoletin(boletinId) {
     // Mostrar indicador de carga
     const loadingIndicator = document.createElement("div");
     loadingIndicator.className = "loading-indicator";
-    loadingIndicator.innerHTML = '<div class="spinner"></div><p>Generando PDF del boletín...</p>';
+    loadingIndicator.innerHTML = '<div class="spinner"></div><p>Generando PDF del boletÃ­n...</p>';
     document.body.appendChild(loadingIndicator);
     
     fetch(window.LEARNSCAPE_API, {
@@ -4403,7 +4665,7 @@ function exportarBoletin(boletinId) {
         // Crear URL para el blob
         const blobUrl = URL.createObjectURL(blob);
         
-        // Crear un enlace invisible y hacer clic en él para descargar
+        // Crear un enlace invisible y hacer clic en Ã©l para descargar
         const a = document.createElement('a');
         a.href = blobUrl;
         a.download = `Boletin_${boletinId}.pdf`;
@@ -4422,24 +4684,24 @@ function exportarBoletin(boletinId) {
             document.body.removeChild(loadingIndicator);
         }
         
-        console.error("Error al exportar boletín:", error);
+        console.error("Error al exportar boletÃ­n:", error);
         alert(`Error: ${error.message}`);
     });
 }
     </script>
 
-    <!-- MEJORA DE SEGURIDAD PARA CREAR ESTUDIANTES CON CÉDULA AUTOMÁTICA -->
+    <!-- MEJORA DE SEGURIDAD PARA CREAR ESTUDIANTES CON CÃ‰DULA AUTOMÃTICA -->
     <script>
       // ----------------------------------------------------------
 
-      // Función para verificar el token
+      // FunciÃ³n para verificar el token
       function verificarTokenEstudiante() {
         const token = sessionStorage.getItem("token");
         const tokenExpiration = sessionStorage.getItem("tokenExpiration");
 
         // Si no hay token, redirigir al login
         if (!token) {
-          console.log("⚠️ No hay token disponible para crear estudiante");
+          console.log("âš ï¸ No hay token disponible para crear estudiante");
           alert("Su sesión ha expirado. Por favor, inicie sesión nuevamente.");
           window.location.href = "principal.html";
           return false;
@@ -4447,7 +4709,7 @@ function exportarBoletin(boletinId) {
 
         // Si el token ha expirado, redirigir al login
         if (tokenExpiration && Date.now() > parseInt(tokenExpiration)) {
-          console.log("⚠️ Token expirado al intentar crear estudiante");
+          console.log("âš ï¸ Token expirado al intentar crear estudiante");
           alert("Su sesión ha expirado. Por favor, inicie sesión nuevamente.");
           sessionStorage.clear();
           window.location.href = "principal.html";
@@ -4457,7 +4719,7 @@ function exportarBoletin(boletinId) {
         return true;
       }
 
-      // Reemplazar la función crearEstudiante con una versión segura y con generación automática de cédula
+      // Reemplazar la funciÃ³n crearEstudiante con una versiÃ³n segura y con generaciÃ³n automÃ¡tica de cédula
       const originalCrearEstudiante = window.crearEstudiante;
       window.crearEstudiante = function () {
         // Verificar token antes de continuar
@@ -4488,16 +4750,16 @@ function exportarBoletin(boletinId) {
           .getElementById("acudienteEstudiante")
           .value.trim();
 
-        // Validación de campos obligatorios (excepto cédula)
-        if (!nombre || !primerApellido || !segundoApellido || !email) {
-          alert("Los campos Nombre, Apellido y Email son obligatorios");
+        // ValidaciÃ³n de campos obligatorios (excepto cédula)
+        if (!nombre || !primerApellido || !segundoApellido) {
+          alert("Los campos de nombre y apellido del estudiante son obligatorios");
           return;
         }
 
-        // Generar cédula automática si está vacía
+        // Generar cédula automÃ¡tica si estÃ¡ vacÃ­a
         if (!cedula) {
-          // Crear un ID único basado en timestamp + iniciales + número aleatorio
-          const timestamp = new Date().getTime().toString().slice(-6); // Últimos 6 dígitos del timestamp
+          // Crear un ID Ãºnico basado en timestamp + iniciales + nÃºmero aleatorio
+          const timestamp = new Date().getTime().toString().slice(-6); // Ãšltimos 6 dÃ­gitos del timestamp
           const iniciales = (
             nombre.charAt(0) + apellido.charAt(0)
           ).toUpperCase();
@@ -4506,7 +4768,7 @@ function exportarBoletin(boletinId) {
             .padStart(3, "0");
           cedula = `${iniciales}${timestamp}${random}`;
 
-          console.log("Cédula generada automáticamente:", cedula);
+          console.log("Cédula generada automÃ¡ticamente:", cedula);
 
           // Actualizar el campo en el formulario
           document.getElementById("cedulaEstudiante").value = cedula;
@@ -4575,19 +4837,19 @@ function exportarBoletin(boletinId) {
             // Quitar indicador de carga
             document.body.removeChild(loadingIndicator);
 
-            // Revisar si hay errores relacionados con autenticación
+            // Revisar si hay errores relacionados con autenticaciÃ³n
             if (
               data.errors &&
               data.errors.some(
                 (e) =>
                   e.message.includes("token") ||
-                  e.message.includes("autenticación") ||
+                  e.message.includes("autenticaciÃ³n") ||
                   e.message.includes("jwt") ||
                   e.message.includes("expired")
               )
             ) {
               console.log(
-                "⚠️ Error de autenticación detectado:",
+                "âš ï¸ Error de autenticaciÃ³n detectado:",
                 data.errors[0].message
               );
               sessionStorage.clear();
@@ -4624,11 +4886,11 @@ function exportarBoletin(boletinId) {
 
             console.error("Error al crear estudiante:", error);
 
-            // Si es error de autenticación
+            // Si es error de autenticaciÃ³n
             if (
               error.message.includes("sesión") ||
               error.message.includes("token") ||
-              error.message.includes("autenticación")
+              error.message.includes("autenticaciÃ³n")
             ) {
               sessionStorage.clear();
               alert(error.message);
@@ -4652,7 +4914,7 @@ function exportarBoletin(boletinId) {
         );
         if (cedulaLabel) {
           cedulaLabel.innerHTML =
-            "Cédula <small>(opcional - se generará automáticamente)</small>";
+            "Cédula <small>(opcional - se generarÃ¡ automÃ¡ticamente)</small>";
         }
 
         // Desmarcar la cédula como campo obligatorio
@@ -4662,7 +4924,7 @@ function exportarBoletin(boletinId) {
           cedulaInput.value = "";
         }
 
-        // Configurar el botón para crear nuevo estudiante
+        // Configurar el botÃ³n para crear nuevo estudiante
         const guardarBtn = document.getElementById("guardarEstudiante");
         if (guardarBtn) guardarBtn.onclick = crearEstudiante;
 
@@ -4714,12 +4976,12 @@ function exportarBoletin(boletinId) {
         document.head.appendChild(style);
       }
 
-      // Función para actualizar fecha de expiración del token cuando se carga la página
+      // FunciÃ³n para actualizar fecha de expiraciÃ³n del token cuando se carga la pÃ¡gina
       document.addEventListener("DOMContentLoaded", function () {
         const token = sessionStorage.getItem("token");
 
         if (token) {
-          // Extender la fecha de expiración por 1 hora más desde ahora
+          // Extender la fecha de expiraciÃ³n por 1 hora mÃ¡s desde ahora
           const newExpiration = Date.now() + 60 * 60 * 1000; // 1 hora en milisegundos
           sessionStorage.setItem("tokenExpiration", newExpiration.toString());
           console.log(
@@ -4874,7 +5136,7 @@ function crearMatricula() {
             document.body.removeChild(loadingIndicator);
         }
         
-        alert("Matrícula creada con éxito");
+        alert("Matrícula creada con Ã©xito");
         cargarMatriculas();
         closeModal("modalMatricula");
     })
@@ -4886,7 +5148,7 @@ function crearMatricula() {
             document.body.removeChild(loadingIndicator);
         }
         
-        alert("❌ Error: " + error.message);
+        alert("âŒ Error: " + error.message);
     });
 }
 function enviarClaveProvisional(estudianteId) {
@@ -4931,14 +5193,14 @@ function cargarAsignaturasPorCurso(cursoId) {
   console.log("Buscando asignaturas para el curso ID:", cursoId);
   console.log("Total de asignaturas disponibles:", asignaturas.length);
   
-  // Verificar cómo están las propiedades de cada asignatura
+  // Verificar cÃ³mo están las propiedades de cada asignatura
   asignaturas.forEach(a => {
     console.log(`Asignatura: ${a.nombre}, Curso ID en asignatura: ${a.cursoId}, Curso:`, a.curso);
   });
 
   // Filtrar asignaturas por curso seleccionado (usando curso.id)
   const asignaturasFiltradas = asignaturas.filter(a => {
-    // Intentar todas las posibles formas de relación con curso
+    // Intentar todas las posibles formas de relaciÃ³n con curso
     return (a.cursoId === cursoId) || 
            (a.curso && a.curso.id === cursoId);
   });
@@ -5084,14 +5346,14 @@ function actualizarTablaMatriculas() {
         const curIco=(matricula.curso?.nombre?.[0]||'?').toUpperCase();
         const est_lower=(matricula.estado||'').toLowerCase();
         const bxCls=est_lower==='activo'?'bx-green':est_lower==='inactivo'?'bx-red':est_lower==='pendiente'?'bx-amber':'bx-gray';
-        const idShort=matricula.id.length>10?'…'+matricula.id.slice(-8):matricula.id;
+        const idShort=matricula.id || '—';
         tabla.innerHTML += `<tr>
           <td><span class="id-chip" title="${matricula.id}">${idShort}</span></td>
           <td><div class="av-cell"><div class="av av-blue">${ini}</div><div><div class="av-nm">${nom}</div></div></div></td>
           <td><div class="av-cell"><div class="av av-teal av-sm" style="border-radius:8px">${curIco}</div><span style="font-size:12px;color:#475569">${cur}</span></div></td>
-          <td><span class="bx ${bxCls}">${matricula.estado||'—'}</span></td>
+          <td><span class="bx ${bxCls}">${matricula.estado||'â€”'}</span></td>
           <td><span style="font-size:12px;color:#64748b">${formatearFecha(matricula.fechaMatricula)}</span></td>
-          <td><div class="tb-acts"><button class="tb-btn tb-edit" onclick="editarMatricula('${matricula.id}')">✏️ Editar</button><button class="tb-btn tb-del" onclick="eliminarMatricula('${matricula.id}')">🗑️</button></div></td>
+          <td><div class="tb-acts"><button class="tb-btn tb-edit" onclick="editarMatricula('${matricula.id}')"><i class="fas fa-pen"></i> Editar</button><button class="tb-btn tb-del" onclick="eliminarMatricula('${matricula.id}')"><i class="fas fa-trash"></i></button></div></td>
         </tr>`;
     });
 
@@ -5123,7 +5385,7 @@ function openModalMatricula() {
   // Resetear formulario
   document.getElementById("formMatricula").reset();
   
-  // Limpiar campos de búsqueda de estudiante
+  // Limpiar campos de bÃºsqueda de estudiante
   document.getElementById("buscarEstudianteMatricula").value = "";
   document.getElementById("estudianteMatricula").value = "";
   document.getElementById("listaEstudiantesMatricula").innerHTML = "";
@@ -5133,7 +5395,7 @@ function openModalMatricula() {
   document.getElementById('asignaturasContainer').innerHTML = 
     '<div class="no-asignaturas">Seleccione un curso para ver las asignaturas disponibles</div>';
 
-  // Configurar búsqueda de estudiantes
+  // Configurar bÃºsqueda de estudiantes
   const buscarInput = document.getElementById("buscarEstudianteMatricula");
   const nuevoInput = buscarInput.cloneNode(true);
   buscarInput.parentNode.replaceChild(nuevoInput, buscarInput);
@@ -5175,7 +5437,7 @@ function openModalMatricula() {
       cargarAsignaturasPorCurso(this.value);
     });
 
-    // Configurar botón de guardar
+    // Configurar botÃ³n de guardar
     document.getElementById("guardarMatricula").onclick = crearMatricula;
     
     // Abrir el modal
@@ -5265,7 +5527,7 @@ function crearMatricula() {
             
             // Solo enviar credenciales si el estado es ACTIVA
             if (estado === 'ACTIVA') {
-                alert("✅ Matrícula creada exitosamente. Generando credenciales de acceso...");
+                alert("âœ… Matrícula creada exitosamente. Generando credenciales de acceso...");
                 
                 // Asegurarnos de tener un ID de estudiante
                 const estudianteIdToUse = matriculaCreada.estudiante?.cedula || 
@@ -5274,7 +5536,7 @@ function crearMatricula() {
                 
                 if (!estudianteIdToUse) {
                     console.error("No se pudo obtener el ID del estudiante");
-                    alert("⚠️ Matrícula creada, pero no se pudieron generar credenciales (ID de estudiante no disponible)");
+                    alert("âš ï¸ Matrícula creada, pero no se pudieron generar credenciales (ID de estudiante no disponible)");
                     cargarMatriculas();
                     closeModal("modalMatricula");
                     return;
@@ -5283,10 +5545,10 @@ function crearMatricula() {
                 // Verificar si hay email
                 if (!matriculaCreada.estudiante?.email) {
                     console.error("El estudiante no tiene email configurado");
-                    alert("⚠️ Matrícula creada, pero el estudiante no tiene email para enviar credenciales");
+                    alert("âš ï¸ Matrícula creada, pero el estudiante no tiene email para enviar credenciales");
                 }
                 
-                console.log(`Iniciando creación de credenciales para: ${estudianteIdToUse}`);
+                console.log(`Iniciando creaciÃ³n de credenciales para: ${estudianteIdToUse}`);
                 
                 // Intentar crear credenciales
                 return enviarCrearCredenciales(estudianteIdToUse)
@@ -5297,12 +5559,12 @@ function crearMatricula() {
                     })
                     .catch(error => {
                         console.error("Error al crear credenciales:", error);
-                        alert("⚠️ Matrícula creada, pero hubo un problema al generar credenciales: " + error.message);
+                        alert("âš ï¸ Matrícula creada, pero hubo un problema al generar credenciales: " + error.message);
                         cargarMatriculas();
                         closeModal("modalMatricula");
                     });
             } else {
-                alert("✅ Matrícula creada exitosamente");
+                alert("âœ… Matrícula creada exitosamente");
                 cargarMatriculas();
                 closeModal("modalMatricula");
             }
@@ -5313,11 +5575,11 @@ function crearMatricula() {
             document.body.removeChild(loadingIndicator);
         }
         console.error("Error:", error);
-        alert("❌ Error: " + error.message);
+        alert("âŒ Error: " + error.message);
     });
 }
 
-// Nueva función para enviar credenciales
+// Nueva funciÃ³n para enviar credenciales
 function enviarCrearCredenciales(estudianteId) {
     const token = sessionStorage.getItem("token");
     
@@ -5351,11 +5613,11 @@ function enviarCrearCredenciales(estudianteId) {
         
         if (data.errors) {
             console.error("Error al crear credenciales:", data.errors);
-            // Si hay un error específico, intentar con el método alternativo
+            // Si hay un error especÃ­fico, intentar con el mÃ©todo alternativo
             return enviarClaveProvisional(estudianteId);
         }
         
-        alert("✅ Credenciales de acceso creadas y enviadas al correo del estudiante");
+        alert("âœ… Credenciales de acceso creadas y enviadas al correo del estudiante");
         console.log("Credenciales enviadas exitosamente");
         return true;
     })
@@ -5366,7 +5628,7 @@ function enviarCrearCredenciales(estudianteId) {
         }
         
         console.error("Error al crear credenciales:", error);
-        // Intentar con el método alternativo
+        // Intentar con el mÃ©todo alternativo
         return enviarClaveProvisional(estudianteId);
     });
 }
@@ -5437,14 +5699,14 @@ function actualizarTablaMatriculas(matriculas) {
       const curIco=(matricula.curso?.nombre?.[0]||'?').toUpperCase();
       const est_lower=(matricula.estado||'').toLowerCase();
       const bxCls=est_lower==='activo'?'bx-green':est_lower==='inactivo'?'bx-red':est_lower==='pendiente'?'bx-amber':'bx-gray';
-      const idShort=matricula.id.length>10?'…'+matricula.id.slice(-8):matricula.id;
+      const idShort=matricula.id || '—';
       return `<tr>
         <td><span class="id-chip" title="${matricula.id}">${idShort}</span></td>
         <td><div class="av-cell"><div class="av av-blue">${ini}</div><div><div class="av-nm">${nom}</div></div></div></td>
         <td><div class="av-cell"><div class="av av-teal av-sm" style="border-radius:8px">${curIco}</div><span style="font-size:12px;color:#475569">${cur}</span></div></td>
-        <td><span class="bx ${bxCls}">${matricula.estado||'—'}</span></td>
+        <td><span class="bx ${bxCls}">${matricula.estado||'â€”'}</span></td>
         <td><span style="font-size:12px;color:#64748b">${formatearFecha(matricula.fechaMatricula)}</span></td>
-        <td><div class="tb-acts"><button class="tb-btn tb-edit" onclick="editarMatricula('${matricula.id}')">✏️ Editar</button><button class="tb-btn tb-del" onclick="eliminarMatricula('${matricula.id}')">🗑️</button></div></td>
+        <td><div class="tb-acts"><button class="tb-btn tb-edit" onclick="editarMatricula('${matricula.id}')"><i class="fas fa-pen"></i> Editar</button><button class="tb-btn tb-del" onclick="eliminarMatricula('${matricula.id}')"><i class="fas fa-trash"></i></button></div></td>
       </tr>`;
     }).join('');
 
@@ -5470,7 +5732,7 @@ function mostrarErrorMatriculas(mensaje) {
 function formatearFecha(fecha) {
     if (!fecha) return 'Fecha no disponible';
     
-    // MongoDB a veces retorna timestamp numérico como string
+    // MongoDB a veces retorna timestamp numÃ©rico como string
     let fechaObj;
     if (!isNaN(fecha) && String(fecha).length >= 10) {
         // Es un timestamp Unix (segundos o milisegundos)
@@ -5481,14 +5743,14 @@ function formatearFecha(fecha) {
     }
     
     if (isNaN(fechaObj.getTime())) {
-        console.log('Fecha inválida:', fecha);
-        return 'Fecha inválida';
+        console.log('Fecha invÃ¡lida:', fecha);
+        return 'Fecha invÃ¡lida';
     }
     
     return fechaObj.toLocaleDateString('es-CO', { 
         year: 'numeric', month: '2-digit', day: '2-digit' 
     });
-}// Función para editar una matrícula
+}// FunciÃ³n para editar una matrícula
 
 function editarMatricula(id) {
     if (!verificarToken()) return;
@@ -5559,7 +5821,7 @@ function editarMatricula(id) {
         }, 1000); // Dar tiempo para que se carguen las asignaturas
     });
     
-    // Configurar el botón para actualizar la matrícula
+    // Configurar el botÃ³n para actualizar la matrícula
     document.getElementById("guardarMatricula").onclick = function() {
         // Obtener valores del formulario
         const estudianteId = document.getElementById("estudianteMatricula").value;
@@ -5583,7 +5845,7 @@ function editarMatricula(id) {
         loadingIndicator.innerHTML = '<div class="spinner"></div><p>Actualizando matrícula...</p>';
         document.body.appendChild(loadingIndicator);
         
-        // Usar GraphQL para la actualización
+        // Usar GraphQL para la actualizaciÃ³n
         const query = `
             mutation ActualizarMatricula($id: ID!, $input: ActualizarMatriculaInput!) {
                 actualizarMatricula(id: $id, input: $input) {
@@ -5642,7 +5904,7 @@ function editarMatricula(id) {
             }
             
             console.log("Respuesta de actualizarMatricula:", data);
-            alert("Matrícula actualizada con éxito");
+            alert("Matrícula actualizada con Ã©xito");
             closeModal("modalMatricula");
             cargarMatriculas(); // Recargar la lista
         })
@@ -5661,11 +5923,11 @@ function editarMatricula(id) {
     openModal("modalMatricula");
 }
 
-// Función para eliminar una matrícula
+// FunciÃ³n para eliminar una matrícula
 function eliminarMatricula(id) {
     if (!verificarToken()) return;
     
-    if (!confirm("¿Está seguro de eliminar esta matrícula?")) {
+    if (!confirm("Â¿EstÃ¡ seguro de eliminar esta matrícula?")) {
         return;
     }
     
@@ -5713,7 +5975,7 @@ function eliminarMatricula(id) {
     });
 }
 
-// Agregar estas funciones en la sección de scripts
+// Agregar estas funciones en la secciÃ³n de scripts
 
 // Manejo del cambio de tipo de reporte
 document.addEventListener('DOMContentLoaded', function() {
@@ -5725,7 +5987,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// Configurar controles según el tipo de reporte
+// Configurar controles segÃºn el tipo de reporte
 function configurarReporte(tipo) {
   const configContainer = document.getElementById('reporteConfiguracion');
   const resultadosContainer = document.getElementById('reporteResultados');
@@ -5742,7 +6004,7 @@ function configurarReporte(tipo) {
   
   configContainer.style.display = 'block';
   
-  // Configurar según el tipo
+  // Configurar segÃºn el tipo
   switch(tipo) {
     case 'boletines':
       configContainer.innerHTML = `
@@ -5789,7 +6051,7 @@ function configurarReporte(tipo) {
     </div>
     <button class="btn btn-primary" onclick="generarReporteEstudiantes()">Generar Reporte</button>
   `;
-  // Pasar explícitamente 'cursoEstudiantes' como parámetro
+  // Pasar explÃ­citamente 'cursoEstudiantes' como parÃ¡metro
   setTimeout(() => cargarCursosParaReporte('cursoEstudiantes'), 300);
   break;
   }
@@ -5803,8 +6065,8 @@ function cargarCursosParaReporte(elementId = 'cursoBoletin') {
   const select = document.getElementById(elementId);
   
   if (!select) {
-    console.error(`No se encontró el elemento con ID: ${elementId}`);
-    return; // Salir de la función si el elemento no existe
+    console.error(`No se encontrÃ³ el elemento con ID: ${elementId}`);
+    return; // Salir de la funciÃ³n si el elemento no existe
   }
   
   fetch(window.LEARNSCAPE_API, {
@@ -5840,7 +6102,7 @@ function cargarCursosParaReporte(elementId = 'cursoBoletin') {
     selectElement.innerHTML = '<option value="">Seleccione un curso</option>';
     
     if (elementId === 'cursoEstudiantes') {
-      // Para el selector de estudiantes mantener la opción "Todos los cursos"
+      // Para el selector de estudiantes mantener la opciÃ³n "Todos los cursos"
       selectElement.innerHTML = '<option value="">Todos los cursos</option>';
     }
     
@@ -5870,7 +6132,7 @@ function cargarAsignaturasParaReporte() {
   const select = document.getElementById('asignaturaReporte');
   
   if (!select) {
-    console.error("No se encontró el elemento asignaturaReporte");
+    console.error("No se encontrÃ³ el elemento asignaturaReporte");
     return;
   }
   
@@ -5922,7 +6184,7 @@ function cargarAsignaturasParaReporte() {
     
     const asignaturas = data.data.asignaturas;
     
-    // Vaciamos el select y ponemos la opción por defecto
+    // Vaciamos el select y ponemos la opciÃ³n por defecto
     select.innerHTML = '<option value="">Seleccione una asignatura</option>';
     
     // Agregar opciones
@@ -5947,11 +6209,11 @@ function cargarAsignaturasParaReporte() {
   });
 }
 
-// ══════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // BOLETINES - TAB ADMIN
-// ══════════════════════════════════════════
-// Bug 11 fix: gqlAdmin unificado con gqlAdm para evitar duplicación
-// gqlAdm está definido más abajo y es la función canónica; este alias lo reutiliza
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// Bug 11 fix: gqlAdmin unificado con gqlAdm para evitar duplicaciÃ³n
+// gqlAdm estÃ¡ definido mÃ¡s abajo y es la funciÃ³n canÃ³nica; este alias lo reutiliza
 async function gqlAdmin(query, variables = {}) {
   return gqlAdm(query, variables);
 }
@@ -6076,7 +6338,7 @@ async function generarBoletinAdmin() {
                 <td style="padding:10px;text-align:center">
                   <button onclick="descargarBoletinPDF('${m.estudiante.cedula}','${m.estudiante.nombre} ${m.estudiante.primerApellido}','${periodo}')"
                     style="padding:6px 14px;background:#4f46e5;color:#fff;border:none;border-radius:5px;font-size:13px;cursor:pointer">
-                    ⬇️ PDF
+                    <i class="fas fa-file-pdf"></i> PDF
                   </button>
                 </td>
               </tr>`).join('')}
@@ -6084,7 +6346,7 @@ async function generarBoletinAdmin() {
         </table>
         <div style="margin-top:14px">
           <button onclick="descargarTodosCurso()" style="padding:9px 20px;background:#16a34a;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer">
-            ⬇️ Descargar Todos los Boletines
+            <i class="fas fa-download"></i> Descargar todos los boletines
           </button>
         </div>`;
       msg.textContent = `✅ ${mats.length} estudiantes encontrados. Selecciona PDF individual o descarga todos.`;
@@ -6141,7 +6403,7 @@ function exportarTodosBoletinesCurso(cursoId, periodo) {
   exportarSiguiente();
 }
 
-// ─── Utilidades de exportación ───────────────────────────────────────────────
+// â”€â”€â”€ Utilidades de exportaciÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * Extrae filas de la tabla visible en #reporteResultados y las devuelve
@@ -6165,7 +6427,7 @@ function extraerTablaResultados() {
   // Datos
   tabla.querySelectorAll('tbody tr').forEach(tr => {
     const celda = Array.from(tr.querySelectorAll('td')).map(td => {
-      // Si la celda tiene botones, ignora su texto y devuelve vacío
+      // Si la celda tiene botones, ignora su texto y devuelve vacÃ­o
       if (td.querySelector('button')) return '';
       return td.innerText.trim().replace(/\n/g, ' ');
     });
@@ -6195,8 +6457,8 @@ function descargarCSV(filas, nombreArchivo) {
 }
 
 /**
- * Descarga un archivo Excel (.xlsx) básico usando XML SpreadsheetML
- * (no requiere librerías externas).
+ * Descarga un archivo Excel (.xlsx) bÃ¡sico usando XML SpreadsheetML
+ * (no requiere librerÃ­as externas).
  */
 function descargarExcel(filas, nombreArchivo) {
   const estiloEncabezado = 's="1"';
@@ -6241,8 +6503,8 @@ function descargarExcel(filas, nombreArchivo) {
 }
 
 /**
- * Punto de entrada principal de los botones de exportación.
- * Si el reporte aún no fue generado, lo genera primero y luego exporta.
+ * Punto de entrada principal de los botones de exportaciÃ³n.
+ * Si el reporte aÃºn no fue generado, lo genera primero y luego exporta.
  */
 function exportarReporte(formato) {
   const tipoReporte = document.getElementById('tipoReporte')?.value;
@@ -6286,7 +6548,7 @@ function exportarReporte(formato) {
           alert(`Tipo de reporte desconocido: ${tipoReporte}`);
           return;
       }
-      // Esperar a que el fetch asíncrono pinte la tabla (máx 10 s)
+      // Esperar a que el fetch asÃ­ncrono pinte la tabla (mÃ¡x 10 s)
       let intentos = 0;
       const esperar = setInterval(() => {
         intentos++;
@@ -6296,12 +6558,12 @@ function exportarReporte(formato) {
           exportar();
         } else if (intentos > 100) {
           clearInterval(esperar);
-          alert('El reporte tardó demasiado. Intenta exportar de nuevo una vez cargado.');
+          alert('El reporte tardÃ³ demasiado. Intenta exportar de nuevo una vez cargado.');
         }
       }, 100);
     } catch (error) {
       console.error('Error al generar reporte:', error);
-      alert('Ocurrió un error al generar el reporte: ' + error.message);
+      alert('OcurriÃ³ un error al generar el reporte: ' + error.message);
     }
   }
 }
@@ -6362,7 +6624,7 @@ function generarReporteCalificaciones() {
     }
     
     if (!data.data || !data.data.asignatura) {
-      throw new Error("No se encontró información de la asignatura");
+      throw new Error("No se encontrÃ³ informaciÃ³n de la asignatura");
     }
     
     const asignatura = data.data.asignatura;
@@ -6422,7 +6684,7 @@ function generarReporteCalificaciones() {
               <th>#</th>
               <th>Cédula</th>
               <th>Nombre</th>
-              <th>Calificación</th>
+              <th>CalificaciÃ³n</th>
               <th>Periodo</th>
               <th>Observaciones</th>
             </tr>
@@ -6432,7 +6694,7 @@ function generarReporteCalificaciones() {
       
       // Consultar calificaciones para cada estudiante
       const promises = matriculas
-        .filter(m => m && m.estudiante) // Filtrar matrículas válidas
+        .filter(m => m && m.estudiante) // Filtrar matrículas vÃ¡lidas
         .map(matricula => {
           const estudianteId = matricula.estudiante.id;
           
@@ -6488,7 +6750,7 @@ function generarReporteCalificaciones() {
               </tr>
             `;
           } else {
-            // Mostrar cada calificación en una fila
+            // Mostrar cada calificaciÃ³n en una fila
             calificaciones.forEach((calificacion, calIndex) => {
               const colorNota = calificacion.nota >= 3.5 ? 'success' : calificacion.nota >= 3.0 ? 'warning' : 'danger';
               
@@ -6535,7 +6797,7 @@ function generarReporteEstudiantes() {
   const resultadosContainer = document.getElementById('reporteResultados');
   
   if (!resultadosContainer) {
-    console.error("No se encontró el contenedor de resultados");
+    console.error("No se encontrÃ³ el contenedor de resultados");
     return;
   }
   
@@ -6550,7 +6812,7 @@ function generarReporteEstudiantes() {
   let query, variables;
   
   if (cursoId) {
-    // Consultar estudiantes de un curso específico via matriculas raíz
+    // Consultar estudiantes de un curso especÃ­fico via matriculas raÃ­z
     query = `
       query GetEstudiantesCurso($cursoId: ID!) {
         matriculas {
@@ -6611,9 +6873,9 @@ function generarReporteEstudiantes() {
     let estudiantes, titulo;
     
     if (cursoId) {
-      // Datos de estudiantes de un curso específico filtrados por cursoId
+      // Datos de estudiantes de un curso especÃ­fico filtrados por cursoId
       if (!data.data || !data.data.matriculas) {
-        throw new Error("No se encontró información del curso");
+        throw new Error("No se encontrÃ³ informaciÃ³n del curso");
       }
 
       const matriculasCurso = data.data.matriculas.filter(
@@ -6781,7 +7043,7 @@ function buscarBoletinesEstudiante(estudianteId, cursoId, nombreEstudiante) {
     const matriculas = data.data.matriculas;
     
     if (!estudiante) {
-      throw new Error("No se encontró información del estudiante");
+      throw new Error("No se encontrÃ³ informaciÃ³n del estudiante");
     }
     
     // Obtener boletines del estudiante
@@ -6792,7 +7054,7 @@ function buscarBoletinesEstudiante(estudianteId, cursoId, nombreEstudiante) {
       m.estudiante && m.estudiante.id === estudianteId
     );
     
-    // Filtrar por curso específico si es necesario
+    // Filtrar por curso especÃ­fico si es necesario
     const boletinesFiltrados = cursoId 
       ? boletines.filter(b => b.curso && b.curso.id === cursoId)
       : boletines;
@@ -6807,7 +7069,7 @@ function buscarBoletinesEstudiante(estudianteId, cursoId, nombreEstudiante) {
       }));
       
     // Verificar si ya existen boletines para los cursos actuales en el periodo actual
-    const periodoActual = periodoAdmLabel(); // calculado automáticamente
+    const periodoActual = periodoAdmLabel(); // calculado automÃ¡ticamente
     const cursosSinBoletin = cursosActuales.filter(curso => {
       return !boletinesFiltrados.some(boletin => 
         boletin.curso.id === curso.id && 
@@ -6825,10 +7087,10 @@ function buscarBoletinesEstudiante(estudianteId, cursoId, nombreEstudiante) {
         <h3>Boletines de ${estudiante.nombre} ${estudiante.primerApellido}</h3>
     `;
     
-    // Mostrar siempre el botón de generación, independientemente de si hay boletines o no
+    // Mostrar siempre el botÃ³n de generaciÃ³n, independientemente de si hay boletines o no
     html += `
       <div class="alert alert-info mb-3">
-        <h4>Generar nuevo boletín</h4>
+        <h4>Generar nuevo boletÃ­n</h4>
         <p>Periodo actual: ${periodoActual}</p>
         <div class="mt-2">
     `;
@@ -6836,13 +7098,13 @@ function buscarBoletinesEstudiante(estudianteId, cursoId, nombreEstudiante) {
     // Mostrar botones para cada curso activo del estudiante
     if (cursosActuales.length > 0) {
       cursosActuales.forEach(curso => {
-        // Verificar si ya existe un boletín para este curso/periodo
+        // Verificar si ya existe un boletÃ­n para este curso/periodo
         const tieneBoletin = boletinesFiltrados.some(
           b => b.curso.id === curso.id && b.periodo === periodoActual
         );
         
         const btnClass = tieneBoletin ? "btn-secondary" : "btn-success";
-        const btnText = tieneBoletin ? "Regenerar boletín" : "Generar boletín";
+        const btnText = tieneBoletin ? "Regenerar boletÃ­n" : "Generar boletÃ­n";
         
         html += `
           <button class="btn ${btnClass} mb-2 mr-2" 
@@ -6852,7 +7114,7 @@ function buscarBoletinesEstudiante(estudianteId, cursoId, nombreEstudiante) {
         `;
       });
     } else {
-      html += `<p>El estudiante no está matriculado en ningún curso activo.</p>`;
+      html += `<p>El estudiante no estÃ¡ matriculado en ningÃºn curso activo.</p>`;
     }
     
     html += `
@@ -6924,8 +7186,8 @@ function buscarBoletinesEstudiante(estudianteId, cursoId, nombreEstudiante) {
     `;
   });
 }
-// Configurar controles según el tipo de reporte
-// Reemplazar la función configurarReporte actual con esta versión mejorada
+// Configurar controles segÃºn el tipo de reporte
+// Reemplazar la funciÃ³n configurarReporte actual con esta versiÃ³n mejorada
 
 function configurarReporte(tipo) {
   console.log("Configurando reporte de tipo:", tipo);
@@ -6934,7 +7196,7 @@ function configurarReporte(tipo) {
   const resultadosContainer = document.getElementById('reporteResultados');
   
   if (!configContainer) {
-    console.error("No se encontró el contenedor de configuración de reportes");
+    console.error("No se encontrÃ³ el contenedor de configuraciÃ³n de reportes");
     alert("Error: Falta el contenedor para configurar reportes");
     return;
   }
@@ -6954,10 +7216,10 @@ function configurarReporte(tipo) {
     return;
   }
   
-  // Hacer visible el contenedor de configuración
+  // Hacer visible el contenedor de configuraciÃ³n
   configContainer.style.display = 'block';
   
-  // Configurar según el tipo
+  // Configurar segÃºn el tipo
   switch(tipo) {
     case 'boletines':
       configContainer.innerHTML = `
@@ -7002,7 +7264,7 @@ function configurarReporte(tipo) {
           <label for="cursoEstudiantes">Seleccione un curso (opcional):</label>
           <select id="cursoEstudiantes" class="form-control">
             <option value="">Todos los cursos</option>
-            <!-- Opciones de cursos se cargarán dinámicamente -->
+            <!-- Opciones de cursos se cargarÃ¡n dinÃ¡micamente -->
           </select>
         </div>
         <button class="btn btn-primary" onclick="generarReporteEstudiantes()">Generar Reporte</button>
@@ -7014,12 +7276,12 @@ function configurarReporte(tipo) {
     default:
       configContainer.innerHTML = `
         <h3>Tipo de reporte no configurado</h3>
-        <p class="error-text">El tipo de reporte seleccionado no está disponible aún.</p>
+        <p class="error-text">El tipo de reporte seleccionado no estÃ¡ disponible aÃºn.</p>
       `;
   }
 }
 
-// Función para cargar cursos en el selector
+// FunciÃ³n para cargar cursos en el selector
 function cargarCursosParaReporte() {
   if (!verificarToken()) return;
   
@@ -7060,7 +7322,7 @@ function cargarCursosParaReporte() {
   });
 }
 
-// Función para generar el reporte de boletines
+// FunciÃ³n para generar el reporte de boletines
 function generarReporteBoletines() {
   if (!verificarToken()) return;
   
@@ -7207,11 +7469,11 @@ function exportarBoletin(boletinId) {
     
     const pdfBase64 = data.data.exportarBoletin;
     
-    // Preguntar al usuario qué desea hacer
-    const opcion = confirm("¿Desea abrir el PDF en una nueva pestaña o descargarlo?");
+    // Preguntar al usuario quÃ© desea hacer
+    const opcion = confirm("Â¿Desea abrir el PDF en una nueva pestaÃ±a o descargarlo?");
     
     if (opcion) {
-      // Abrir en nueva pestaña
+      // Abrir en nueva pestaÃ±a
       const newWindow = window.open();
       newWindow.document.write(`
         <iframe width="100%" height="100%" src="data:application/pdf;base64,${pdfBase64}"></iframe>
@@ -7232,8 +7494,8 @@ function exportarBoletin(boletinId) {
       document.body.removeChild(loadingIndicator);
     }
     
-    console.error("Error al exportar boletín:", error);
-    alert(`Error al exportar boletín: ${error.message}`);
+    console.error("Error al exportar boletÃ­n:", error);
+    alert(`Error al exportar boletÃ­n: ${error.message}`);
   });
 }
 
@@ -7241,7 +7503,7 @@ function exportarReporte(formato) {
   const tipoReporteElement = document.getElementById('tipoReporte');
   
   if (!tipoReporteElement) {
-    console.error("No se encontró el elemento tipoReporte");
+    console.error("No se encontrÃ³ el elemento tipoReporte");
     alert("Error al cargar el componente de reportes");
     return;
   }
@@ -7269,7 +7531,7 @@ function exportarReporte(formato) {
     }
   } catch (error) {
     console.error("Error al generar reporte:", error);
-    alert("Ocurrió un error al generar el reporte: " + error.message);
+    alert("OcurriÃ³ un error al generar el reporte: " + error.message);
   }
 }
 // Cargar asignaturas para el informe de calificaciones
@@ -7280,7 +7542,7 @@ function cargarAsignaturasParaReporte() {
   const select = document.getElementById('asignaturaReporte');
   
   if (!select) {
-    console.error("No se encontró el elemento asignaturaReporte");
+    console.error("No se encontrÃ³ el elemento asignaturaReporte");
     return;
   }
   
@@ -7348,14 +7610,14 @@ function generarBoletinEstudiante(estudianteId, cursoId, periodo) {
   if (!verificarToken()) return;
   
   // Mostrar mensaje de log
-  console.log(`Generando boletín para estudiante: ${estudianteId}, curso: ${cursoId}, periodo: ${periodo}`);
+  console.log(`Generando boletÃ­n para estudiante: ${estudianteId}, curso: ${cursoId}, periodo: ${periodo}`);
   
   const token = sessionStorage.getItem("token");
   
   // Mostrar indicador de carga
   const loadingIndicator = document.createElement("div");
   loadingIndicator.className = "loading-indicator";
-  loadingIndicator.innerHTML = '<div class="spinner"></div><p>Generando boletín...</p>';
+  loadingIndicator.innerHTML = '<div class="spinner"></div><p>Generando boletÃ­n...</p>';
   document.body.appendChild(loadingIndicator);
   
   // Primero necesitamos obtener las calificaciones del estudiante para este curso
@@ -7419,9 +7681,9 @@ function generarBoletinEstudiante(estudianteId, cursoId, periodo) {
     
     console.log(`Calificaciones filtradas: ${calificacionesFiltradas.length}`);
     
-    // Verificar si hay calificaciones para crear el boletín
+    // Verificar si hay calificaciones para crear el boletÃ­n
     if (calificacionesFiltradas.length === 0) {
-      throw new Error("No hay calificaciones para generar el boletín. Por favor registre calificaciones para este estudiante primero.");
+      throw new Error("No hay calificaciones para generar el boletÃ­n. Por favor registre calificaciones para este estudiante primero.");
     }
     
     const boletinInput = {
@@ -7432,17 +7694,17 @@ function generarBoletinEstudiante(estudianteId, cursoId, periodo) {
       observaciones: "Generado desde el sistema",
       calificaciones: calificacionesFiltradas.map(c => ({
         asignaturaId: c.asignaturaId,
-        estudianteId: estudianteId, // Añadir el estudianteId a cada calificación
+        estudianteId: estudianteId, // AÃ±adir el estudianteId a cada calificaciÃ³n
         nota: c.nota,
-        periodo: periodo, // Es buena práctica incluir el periodo también
+        periodo: periodo, // Es buena prÃ¡ctica incluir el periodo tambiÃ©n
         fecha: new Date().toISOString(),
         observaciones: c.observaciones || ""
       }))
     };
     
-    console.log("Datos para generar boletín:", boletinInput);
+    console.log("Datos para generar boletÃ­n:", boletinInput);
     
-    // Enviar la mutación para generar el boletín
+    // Enviar la mutaciÃ³n para generar el boletÃ­n
     return fetch(window.LEARNSCAPE_API, {
       method: "POST",
       headers: {
@@ -7476,18 +7738,18 @@ function generarBoletinEstudiante(estudianteId, cursoId, periodo) {
   
   const nuevoBoletin = data.data.generarBoletin;
   
-  // Mostrar mensaje de éxito con opciones inmediatas
+  // Mostrar mensaje de Ã©xito con opciones inmediatas
   const resultadosContainer = document.getElementById('reporteResultados');
   
-  // Mostrar el boletín recién creado con botones para descargar e imprimir
+  // Mostrar el boletÃ­n reciÃ©n creado con botones para descargar e imprimir
   resultadosContainer.innerHTML = `
     <div class="alert alert-success">
-      <strong>¡Éxito!</strong> Boletín generado correctamente con promedio: ${nuevoBoletin.promedio.toFixed(2)}
+      <strong>Â¡Ã‰xito!</strong> BoletÃ­n generado correctamente con promedio: ${nuevoBoletin.promedio.toFixed(2)}
     </div>
     
     <div class="card mb-3">
       <div class="card-header bg-primary text-white">
-        <h4>Boletín Generado</h4>
+        <h4>BoletÃ­n Generado</h4>
       </div>
       <div class="card-body">
         <p><strong>Estudiante:</strong> ${document.getElementById("buscarEstudianteMatricula") ? 
@@ -7513,12 +7775,12 @@ function generarBoletinEstudiante(estudianteId, cursoId, periodo) {
     </button>
   `;
   
-  // Opcional: Mostrar alerta con confirmación
-  alert(`Boletín generado correctamente. Promedio: ${nuevoBoletin.promedio.toFixed(2)}`);
+  // Opcional: Mostrar alerta con confirmaciÃ³n
+  alert(`BoletÃ­n generado correctamente. Promedio: ${nuevoBoletin.promedio.toFixed(2)}`);
 })
 }
 
-// Añade esta función si no existe o asegúrate de que funcione correctamente
+// AÃ±ade esta funciÃ³n si no existe o asegÃºrate de que funcione correctamente
 function exportarBoletin(boletinId) {
   if (!verificarToken()) return;
   
@@ -7573,7 +7835,7 @@ function exportarBoletin(boletinId) {
     link.style.zIndex = '9999';
     link.style.textDecoration = 'none';
     link.style.borderRadius = '5px';
-    link.textContent = 'Haga clic aquí si la descarga no inicia automáticamente';
+    link.textContent = 'Haga clic aquí­ si la descarga no inicia automÃ¡ticamente';
     
     document.body.appendChild(link);
     
@@ -7591,16 +7853,16 @@ function exportarBoletin(boletinId) {
       document.body.removeChild(loadingIndicator);
     }
     
-    console.error("Error al exportar boletín:", error);
-    alert(`Error al exportar boletín: ${error.message}`);
+    console.error("Error al exportar boletÃ­n:", error);
+    alert(`Error al exportar boletÃ­n: ${error.message}`);
   });
 }
 
 function eliminarBoletin(boletinId, estudianteId = null, cursoId = null) {
   if (!verificarToken()) return;
   
-  // Pedir confirmación antes de eliminar
-  if (!confirm("¿Está seguro de eliminar este boletín? Esta acción no se puede deshacer.")) {
+  // Pedir confirmaciÃ³n antes de eliminar
+  if (!confirm("Â¿EstÃ¡ seguro de eliminar este boletÃ­n? Esta acciÃ³n no se puede deshacer.")) {
     return;
   }
   
@@ -7609,7 +7871,7 @@ function eliminarBoletin(boletinId, estudianteId = null, cursoId = null) {
   // Mostrar indicador de carga
   const loadingIndicator = document.createElement("div");
   loadingIndicator.className = "loading-indicator";
-  loadingIndicator.innerHTML = '<div class="spinner"></div><p>Eliminando boletín...</p>';
+  loadingIndicator.innerHTML = '<div class="spinner"></div><p>Eliminando boletÃ­n...</p>';
   document.body.appendChild(loadingIndicator);
   
   fetch(window.LEARNSCAPE_API, {
@@ -7639,14 +7901,14 @@ function eliminarBoletin(boletinId, estudianteId = null, cursoId = null) {
     }
     
     if (data.data.eliminarBoletin) {
-      alert("Boletín eliminado correctamente");
+      alert("BoletÃ­n eliminado correctamente");
       
-      // Refrescar la página según el contexto
+      // Refrescar la pÃ¡gina segÃºn el contexto
       if (estudianteId && cursoId) {
-        // Si se llamó desde la vista de boletines de estudiante
+        // Si se llamÃ³ desde la vista de boletines de estudiante
         buscarBoletinesEstudiante(estudianteId, cursoId, '');
       } else {
-        // Si se llamó desde la vista de boletines por curso
+        // Si se llamÃ³ desde la vista de boletines por curso
         const cursoBoletin = document.getElementById('cursoBoletin');
         const periodoBoletin = document.getElementById('periodoBoletin');
         
@@ -7658,7 +7920,7 @@ function eliminarBoletin(boletinId, estudianteId = null, cursoId = null) {
         }
       }
     } else {
-      throw new Error("No se pudo eliminar el boletín");
+      throw new Error("No se pudo eliminar el boletÃ­n");
     }
   })
   .catch(error => {
@@ -7667,17 +7929,17 @@ function eliminarBoletin(boletinId, estudianteId = null, cursoId = null) {
       document.body.removeChild(loadingIndicator);
     }
     
-    console.error("Error al eliminar boletín:", error);
-    alert(`Error al eliminar boletín: ${error.message}`);
+    console.error("Error al eliminar boletÃ­n:", error);
+    alert(`Error al eliminar boletÃ­n: ${error.message}`);
   });
 }
 
-// ════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PERIODOS
-// ════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const APIADM = window.LEARNSCAPE_API;
 
-// ── Periodo/año automático ──
+// â”€â”€ Periodo/año automÃ¡tico â”€â”€
 function periodoAdmAuto(){
   const m = new Date().getMonth()+1;
   if(m<=3) return '1';
@@ -7688,7 +7950,7 @@ function periodoAdmAuto(){
 function anioAdmActual(){ return new Date().getFullYear(); }
 function periodoAdmLabel(){ return `${anioAdmActual()}-${periodoAdmAuto()}`; }
 
-// Genera opciones HTML para los últimos 2 años × 4 periodos (período actual primero)
+// Genera opciones HTML para los Ãºltimos 2 años Ã— 4 periodos (período actual primero)
 function opcionesPeriodos(){
   const actual = periodoAdmLabel();
   const anio = anioAdmActual();
@@ -7702,7 +7964,7 @@ function opcionesPeriodos(){
   return opts.join('');
 }
 
-// Inicializar campo pAnio con año actual al cargar la página
+// Inicializar campo pAnio con año actual al cargar la pÃ¡gina
 document.addEventListener('DOMContentLoaded', ()=>{
   const pAnioEl = document.getElementById('pAnio');
   if(pAnioEl && !pAnioEl.value) pAnioEl.value = anioAdmActual();
@@ -7732,7 +7994,7 @@ function safeDateStr(val){
 }
 function safeFmt(val){
   const d = safeDateStr(val);
-  return d ? d.toLocaleDateString('es-CO') : '—';
+  return d ? d.toLocaleDateString('es-CO') : 'â€”';
 }
 function safeIso(val){
   const d = safeDateStr(val);
@@ -7761,7 +8023,7 @@ async function cargarPeriodos(){
 
     if(!configs.length){
       grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px 20px;background:#f8fafc;border:2px dashed #e2e8f0;border-radius:12px">
-        <div style="font-size:40px;margin-bottom:12px">📅</div>
+        <div style="font-size:40px;margin-bottom:12px"><i class="fas fa-calendar-alt"></i></div>
         <p style="color:#64748b;font-size:14px;margin-bottom:16px">No hay períodos configurados para <strong>${anio}</strong>.<br>Usa la configuración rápida arriba para crear los 3 períodos del año.</p>
         <button onclick="crearTresPeriodosDefault()" style="padding:10px 22px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">✨ Crear los 3 períodos automáticamente</button>
       </div>`;
@@ -7783,7 +8045,7 @@ async function cargarPeriodos(){
             </div>
             <span style="background:#f1f5f9;color:#94a3b8;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700">SIN CONFIGURAR</span>
           </div>
-          <p style="font-size:12px;color:#94a3b8;margin:0 0 14px">Usa la configuración rápida arriba o el formulario avanzado</p>
+          <p style="font-size:12px;color:#94a3b8;margin:0 0 14px">Usa la configuración rápida de arriba o el formulario avanzado</p>
           <button onclick="preseleccionarPeriodo(${n})" style="width:100%;padding:8px;background:#f1f5f9;color:#1d4ed8;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">⚙ Configurar</button>
         </div>`;
       }
@@ -7805,7 +8067,7 @@ async function cargarPeriodos(){
         estadoLabel='EN CURSO'; estadoColor='#166534'; estadoBg='#dcfce7';
         estadoDesc=fc?`Cierra el ${fcStr}`:'Sin fecha de cierre definida';
       } else if(fa && ahora < fa){
-        estadoLabel='PRÓXIMO'; estadoColor='#1e40af'; estadoBg='#dbeafe';
+        estadoLabel='PRÃ“XIMO'; estadoColor='#1e40af'; estadoBg='#dbeafe';
         estadoDesc=`Empieza el ${faStr}`;
       } else {
         estadoLabel='ABIERTO'; estadoColor='#166534'; estadoBg='#dcfce7';
@@ -7838,12 +8100,12 @@ async function cargarPeriodos(){
         <div style="display:flex;flex-direction:column;gap:8px">
           <div style="display:flex;gap:6px">
             <input type="date" id="fc-${n}" value="${fcIso}" style="flex:1;padding:7px 8px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:12px">
-            <button onclick="actualizarFechaCierre(${n})" title="Actualizar fecha de cierre" style="padding:7px 10px;background:#f1f5f9;color:#1d4ed8;border:1.5px solid #dbeafe;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">📅 Guardar fecha</button>
+            <button onclick="actualizarFechaCierre(${n})" title="Actualizar fecha de cierre" style="padding:7px 10px;background:#f1f5f9;color:#1d4ed8;border:1.5px solid #dbeafe;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"><i class="fas fa-calendar-alt"></i> Guardar fecha</button>
           </div>
           <div style="display:flex;gap:6px">
             ${p.abierto
-              ?`<button onclick="cerrarPeriodoAdm(${n})" style="flex:1;padding:8px;background:#dc2626;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">🔒 Cerrar período</button>`
-              :`<button onclick="abrirPeriodoAdm(${n})" style="flex:1;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">🔓 Reabrir período</button>`
+              ?`<button onclick="cerrarPeriodoAdm(${n})" style="flex:1;padding:8px;background:#dc2626;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"><i class="fas fa-lock"></i> Cerrar período</button>`
+              :`<button onclick="abrirPeriodoAdm(${n})" style="flex:1;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"><i class="fas fa-lock-open"></i> Reabrir período</button>`
             }
             <button onclick="preseleccionarPeriodo(${n})" title="Configuración avanzada" style="padding:8px 12px;background:#f1f5f9;color:#374151;border:1.5px solid #e2e8f0;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">⚙</button>
           </div>
@@ -7862,7 +8124,7 @@ async function configurarPeriodoRapido(n){
   try{
     await gqlAdm(`mutation C($inp:PeriodoConfigInput!){configurarPeriodo(input:$inp){id}}`,
       {inp:{anio,numeroPeriodo:n,numCortes:cortes,...(fa?{fechaApertura:fa}:{}),...(fc?{fechaCierre:fc}:{})}});
-    showToastAdm(`✅ ${n===1?'1er':n===2?'2do':'3er'} Período configurado`,'ok');
+    showToastAdm(`${n===1?'1er':n===2?'2do':'3er'} período configurado`,'ok');
     cargarPeriodos();
   }catch(e){ showToastAdm('Error: '+e.message,'er'); }
 }
@@ -7874,7 +8136,7 @@ async function crearTresPeriodosDefault(){
       await gqlAdm(`mutation C($inp:PeriodoConfigInput!){configurarPeriodo(input:$inp){id}}`,
         {inp:{anio,numeroPeriodo:n,numCortes:3}});
     }
-    showToastAdm('✅ Los 3 períodos fueron creados','ok');
+    showToastAdm('Los 3 períodos fueron creados','ok');
     cargarPeriodos();
   }catch(e){ showToastAdm('Error: '+e.message,'er'); }
 }
@@ -7886,7 +8148,7 @@ async function actualizarFechaCierre(num){
   try{
     await gqlAdm(`mutation C($inp:PeriodoConfigInput!){configurarPeriodo(input:$inp){id}}`,
       {inp:{anio,numeroPeriodo:num,numCortes:3,fechaCierre:fecha}});
-    showToastAdm(`✅ Fecha de cierre del período ${num} actualizada`,'ok');
+    showToastAdm(`Fecha de cierre del período ${num} actualizada`,'ok');
     cargarPeriodos();
   }catch(e){ showToastAdm('Error: '+e.message,'er'); }
 }
@@ -7900,7 +8162,7 @@ async function configurarNuevoPeriodo(){
   try{
     await gqlAdm(`mutation C($inp:PeriodoConfigInput!){configurarPeriodo(input:$inp){id}}`,
       {inp:{anio,numeroPeriodo:num,numCortes:cortes,...(fechaA?{fechaApertura:fechaA}:{}),...(fecha?{fechaCierre:fecha}:{})}});
-    showToastAdm(`✅ Período ${num} configurado con ${cortes} cortes`,'ok');
+    showToastAdm(`Período ${num} configurado con ${cortes} cortes`,'ok');
     cargarPeriodos();
   }catch(e){ showToastAdm('Error: '+e.message,'er'); }
 }
@@ -7908,26 +8170,26 @@ async function configurarNuevoPeriodo(){
 async function cerrarPeriodoAdm(num){
   const anio = parseInt(document.getElementById('pAnio').value)||anioAdmActual();
   const fecha = document.getElementById(`fc-${num}`)?.value;
-  if(!confirm(`¿Cerrar el ${num===1?'1er':num===2?'2do':'3er'} Período?\n\nLos docentes no podrán ingresar ni modificar notas.\nLos boletines quedarán disponibles para los estudiantes.`)) return;
+  if(!confirm(`¿Cerrar el ${num===1?'1er':num===2?'2do':'3er'} período?\n\nLos docentes no podrán ingresar ni modificar notas.\nLos boletines quedarán disponibles para los estudiantes.`)) return;
   try{
     await gqlAdm(`mutation{cerrarPeriodo(anio:${anio},numeroPeriodo:${num}${fecha?',fechaCierre:"'+fecha+'"':''}){id abierto}}`);
-    showToastAdm(`🔒 Período ${num} cerrado — boletines habilitados`,'ok');
+    showToastAdm(`Período ${num} cerrado — boletines habilitados`,'ok');
     cargarPeriodos();
   }catch(e){ showToastAdm('Error: '+e.message,'er'); }
 }
 
 async function abrirPeriodoAdm(num){
   const anio = parseInt(document.getElementById('pAnio').value)||anioAdmActual();
-  if(!confirm(`¿Reabrir el ${num===1?'1er':num===2?'2do':'3er'} Período?\n\nLos docentes podrán volver a ingresar y modificar notas.\nLos boletines ya descargados no se verán afectados.`)) return;
+  if(!confirm(`¿Reabrir el ${num===1?'1er':num===2?'2do':'3er'} período?\n\nLos docentes podrán volver a ingresar y modificar notas.\nLos boletines ya descargados no se verán afectados.`)) return;
   try{
     await gqlAdm(`mutation{abrirPeriodo(anio:${anio},numeroPeriodo:${num}){id abierto}}`);
-    showToastAdm(`🔓 Período ${num} reactivado — docentes pueden ingresar notas`,'ok');
+    showToastAdm(`Período ${num} reactivado — docentes pueden ingresar notas`,'ok');
     cargarPeriodos();
   }catch(e){ showToastAdm('Error: '+e.message,'er'); }
 }
 
 function preseleccionarPeriodo(n){
-  // Abrir el acordeón de configuración avanzada y preseleccionar el periodo
+  // Abrir el acordeÃ³n de configuraciÃ³n avanzada y preseleccionar el periodo
   const det = document.querySelector('#tabPeriodos details');
   if(det) det.open = true;
   document.getElementById('pNuevoNum').value = n;
@@ -7949,9 +8211,9 @@ function showToastAdm(msg, tipo='ok'){
   setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(12px)';},3800);
 }
 
-// ════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // CRONOGRAMA ADMIN
-// ════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const ADM_CAL = { mes: new Date().getMonth(), anio: new Date().getFullYear(), eventos:[] };
 
 async function iniciarCronogramaAdmin(){
@@ -8012,7 +8274,7 @@ function renderCalAdmin(){
         <div style="font-size:11px;color:#94a3b8">${new Date(e.fechaInicio).toLocaleDateString('es-CO')}${e.fechaFin?' → '+new Date(e.fechaFin).toLocaleDateString('es-CO'):''}</div>
       </div>
     </div>
-    <button onclick="eliminarEvento('${e.id}')" style="background:#fee2e2;color:#dc2626;border:none;padding:4px 10px;border-radius:5px;font-size:12px;cursor:pointer">🗑️ Eliminar</button>
+    <button onclick="eliminarEvento('${e.id}')" style="background:#fee2e2;color:#dc2626;border:none;padding:4px 10px;border-radius:5px;font-size:12px;cursor:pointer"><i class="fas fa-trash"></i> Eliminar</button>
   </div>`).join('');
 }
 
@@ -8041,7 +8303,7 @@ async function guardarEvento(){
 }
 
 async function eliminarEvento(id){
-  if(!confirm('¿Eliminar este evento?'))return;
+  if(!confirm('Â¿Eliminar este evento?'))return;
   try{
     await gqlAdm(`mutation{eliminarEventoCronograma(id:"${id}")}`);
     await cargarEventosAdmin();
@@ -8054,7 +8316,7 @@ async function eliminarEvento(id){
   <div id="modalEvento" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;justify-content:center;align-items:center">
     <div style="background:#fff;border-radius:12px;padding:24px;width:460px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.2)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-        <strong style="font-size:16px">📅 Nuevo Evento</strong>
+        <strong style="font-size:16px"><i class="fas fa-calendar-plus"></i> Nuevo Evento</strong>
         <button onclick="cerrarModalEvento()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8">✕</button>
       </div>
       <div style="margin-bottom:12px">
@@ -8088,11 +8350,11 @@ async function eliminarEvento(id){
       <button onclick="guardarEvento()" style="width:100%;padding:11px;background:#4f46e5;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer">Guardar evento</button>
     </div>
   </div>
-<!-- ── MODAL CAMBIAR CONTRASEÑA ADMIN ── -->
+<!-- â”€â”€ MODAL CAMBIAR CONTRASEÃ‘A ADMIN â”€â”€ -->
 <div id="mPassAdm" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:9999;justify-content:center;align-items:center;backdrop-filter:blur(4px)" onclick="if(event.target===this)cerrarCambioPassAdm()">
   <div style="background:#fff;border-radius:16px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2);margin:20px">
     <div style="padding:18px 22px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0">
-      <h3 style="margin:0;font-size:16px;font-weight:800;color:#4361ee">🔑 Cambiar contraseña</h3>
+      <h3 style="margin:0;font-size:16px;font-weight:800;color:#4361ee"><i class="fas fa-key"></i> Cambiar contraseña</h3>
       <button onclick="cerrarCambioPassAdm()" style="border:none;background:none;font-size:22px;cursor:pointer;color:#94a3b8;width:32px;height:32px;border-radius:8px">✕</button>
     </div>
     <div style="padding:22px;display:flex;flex-direction:column;gap:14px">
@@ -8116,9 +8378,9 @@ async function eliminarEvento(id){
 
   
 
-<!-- ═══════ HORARIO ═══════ -->
+<!-- â•â•â•â•â•â•â• HORARIO â•â•â•â•â•â•â• -->
 <script>
-/* ── HORARIO ── múltiples franjas por asignatura, guarda en backend ── */
+/* â”€â”€ HORARIO â”€â”€ mÃºltiples franjas por asignatura, guarda en backend â”€â”€ */
 const DIAS = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
 const FRANJAS_H = [
   {label:'6:00',  display:'6:00 AM'},
@@ -8132,7 +8394,7 @@ const FRANJAS_H = [
 ];
 
 // horData[cursoId][asigId] = Set de "Lunes__7:00" strings
-// Así una asignatura puede estar en múltiples días/horas
+// AsÃ­ una asignatura puede estar en mÃºltiples días/horas
 let horData   = {};
 let horAsignaturas = [];
 let horCursoId = null;
@@ -8162,7 +8424,7 @@ async function horInit(){
   } catch(e){ console.warn('horInit:', e.message); }
 }
 
-// "Lunes 7:00" → múltiples entradas separadas por coma: "Lunes 7:00,Martes 8:00"
+// "Lunes 7:00" â†’ mÃºltiples entradas separadas por coma: "Lunes 7:00,Martes 8:00"
 function parseHorarios(h){
   if(!h) return new Set();
   return new Set(h.split(',').map(s=>s.trim()).filter(s=>s.includes(' ')).map(s=>{
@@ -8180,17 +8442,17 @@ async function horRenderGrid(){
   horCursoId = sel?.value;
   const grid = document.getElementById('horGrid');
   if(!horCursoId){
-    grid.innerHTML='<div style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:32px;margin-bottom:8px">📚</div>Selecciona un curso para ver su horario</div>';
+    grid.innerHTML='<div style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:32px;margin-bottom:8px"><i class="fas fa-book-open"></i></div>Selecciona un curso para ver su horario</div>';
     return;
   }
   grid.innerHTML='<div style="text-align:center;padding:40px"><div class="spin" style="margin:auto;width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:#1a56db;border-radius:50%;animation:sp .7s linear infinite"></div></div>';
   try {
-    const d = await gqlAdm('query{asignaturas{id nombre horario profesorId cursoId}}');
+    const d = await gqlAdm('query{asignaturas{id nombre horario profesorId cursoId profesor{nombre primerApellido segundoApellido}}}');
     horAsignaturas = (d.asignaturas||[]).filter(a=>String(a.cursoId)===String(horCursoId));
   } catch(e){ horAsignaturas=[]; }
 
   if(!horAsignaturas.length){
-    grid.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px"><div style="font-size:32px;margin-bottom:8px">📭</div>Este curso no tiene asignaturas registradas</div>';
+    grid.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px"><div style="font-size:32px;margin-bottom:8px"><i class="fas fa-book"></i></div>Este curso no tiene asignaturas registradas</div>';
     return;
   }
 
@@ -8212,7 +8474,7 @@ function renderHorGrid(){
   horAsignaturas.forEach((a,i)=>{ colorMap[a.id] = HOR_COLORS[i % HOR_COLORS.length]; });
 
   // Detectar choques: celda con más de una asignatura
-  const slotCount = {}; // "Lunes__7:00" → [asigId, ...]
+  const slotCount = {}; // "Lunes__7:00" -> [asigId, ...]
   horAsignaturas.forEach(a=>{
     (data[a.id]||new Set()).forEach(slot=>{
       if(!slotCount[slot]) slotCount[slot]=[];
@@ -8221,7 +8483,7 @@ function renderHorGrid(){
   });
   const conflictSlots = new Set(Object.keys(slotCount).filter(k=>slotCount[k].length>1));
 
-  // ── Tabla principal ──
+  // Tabla principal
   let html = '<div style="overflow-x:auto">';
   html += '<table style="width:100%;border-collapse:collapse;min-width:700px">';
   html += '<thead><tr>';
@@ -8240,7 +8502,7 @@ function renderHorGrid(){
       const conflict = conflictSlots.has(slot);
 
       if(asignesEnSlot.length === 0){
-        // Celda vacía — dropdown para asignar
+        // Celda vacía - dropdown para asignar
         let selEl = `<select onchange="horAddSlot('${dia}','${label}',this.value);this.value=''" `
           + `style="width:100%;padding:5px 6px;border:1px dashed #cbd5e1;border-radius:5px;font-size:11px;font-family:inherit;background:#fafbff;color:var(--muted);cursor:pointer">`;
         selEl += '<option value="">+ Agregar</option>';
@@ -8268,18 +8530,21 @@ function renderHorGrid(){
   });
   html += '</tbody></table></div>';
 
-  // ── Resumen por asignatura ──
+  // Resumen por asignatura
   html += '<div style="margin-top:16px;padding:16px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">';
   html += '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Resumen de asignaturas</div>';
   html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
   horAsignaturas.forEach(a=>{
     const c = colorMap[a.id];
+    const profesorNombre = a.profesor
+      ? `${a.profesor.nombre || ''} ${a.profesor.primerApellido || ''} ${a.profesor.segundoApellido || ''}`.trim()
+      : 'Sin profesor';
     const slots = data[a.id]||new Set();
     const dias_text = slots.size > 0
       ? [...slots].map(s=>s.replace('__',' ')).join(' · ')
       : '⚠️ Sin horario';
     html += `<div style="padding:7px 12px;border-radius:8px;background:${c.bg};color:${c.fg};border:1.5px solid ${c.border};font-size:12px;font-weight:700">`;
-    html += `${a.nombre} <span style="font-weight:500;opacity:.8;font-size:11px">· ${dias_text}</span>`;
+    html += `${a.nombre} <span style="font-weight:600;opacity:.92;font-size:11px">· ${profesorNombre}</span><br><span style="font-weight:500;opacity:.8;font-size:11px">${dias_text}</span>`;
     html += '</div>';
   });
   html += '</div></div>';
@@ -8291,10 +8556,10 @@ function renderHorGrid(){
   if(alertEl){
     if(conflictSlots.size){
       alertEl.style.display='block';
-      alertEl.innerHTML=`<div style="padding:10px 16px;border-radius:8px;background:#fee2e2;color:#991b1b;font-weight:700;font-size:13px">⚡ ${conflictSlots.size} celda${conflictSlots.size>1?'s':''} con choque — dos asignaturas en el mismo horario</div>`;
+      alertEl.innerHTML=`<div style="padding:10px 16px;border-radius:8px;background:#fee2e2;color:#991b1b;font-weight:700;font-size:13px">⚡ ${conflictSlots.size} celda${conflictSlots.size>1?'s':''} con choque - dos asignaturas en el mismo horario</div>`;
     } else {
       alertEl.style.display='block';
-      alertEl.innerHTML='<div style="padding:10px 16px;border-radius:8px;background:#dcfce7;color:#16a34a;font-weight:700;font-size:13px">✅ Sin conflictos de horario</div>';
+      alertEl.innerHTML='<div style="padding:10px 16px;border-radius:8px;background:#dcfce7;color:#16a34a;font-weight:700;font-size:13px">Sin conflictos de horario</div>';
     }
   }
 }
@@ -8332,7 +8597,7 @@ async function horGuardar(){
     } catch(e){ console.error(e); err++; }
   }
 
-  if(btn){ btn.disabled=false; btn.innerHTML='💾 Guardar horario'; }
+  if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Guardar horario'; }
   if(err)       showToastAdm(`⚠️ ${ok} guardados, ${err} con error`,'er');
   else if(ok)   showToastAdm(`✅ Horario guardado — ${ok} asignatura${ok>1?'s':''} actualizada${ok>1?'s':''}`, 'ok');
   else          showToastAdm('Sin cambios que guardar','ok');
@@ -8341,9 +8606,9 @@ async function horGuardar(){
 document.addEventListener('DOMContentLoaded', ()=>horInit());
 </script>
 
-<!-- ═══════ NAVEGACIÓN + DASHBOARD VISUAL ═══════ -->
+<!-- â•â•â•â•â•â•â• NAVEGACIÃ“N + DASHBOARD VISUAL â•â•â•â•â•â•â• -->
 <script>
-/* ── SECTION NAVIGATION ── */
+/* â”€â”€ SECTION NAVIGATION â”€â”€ */
 const SECTION_META = {
   dashboard:   {title:'Dashboard',          sub:'Resumen general del jardín'},
   estudiantes: {title:'Estudiantes',        sub:'Gestión de estudiantes'},
@@ -8375,7 +8640,7 @@ function showSection(id, btn){
   if(dashSel) dashSel.style.display = id==='dashboard'?'block':'none';
 }
 
-/* ── INIT ── */
+/* â”€â”€ INIT â”€â”€ */
 document.addEventListener('DOMContentLoaded', async function(){
   const token = sessionStorage.getItem('token');
   const userRole = sessionStorage.getItem('userRole');
@@ -8396,7 +8661,7 @@ document.addEventListener('DOMContentLoaded', async function(){
   } catch(e){ console.error('Init error:', e); }
 });
 
-/* ── DASHBOARD VISUAL ── */
+/* â”€â”€ DASHBOARD VISUAL â”€â”€ */
 const DASH = { calificaciones:[], asistencias:[], matriculas:[], estudiantes:[], asignaturas:[], charts:{} };
 
 function gc(obs){if(!obs)return null;const m=obs.match(/CORTE\s+(\d+)/i);return m?parseInt(m[1]):null;}
@@ -8417,7 +8682,7 @@ async function iniciarDashboard(){
     const [dc,da,dm,de,dasig] = await Promise.all([
       gqlDash('query{calificaciones{id asignaturaId estudianteId nota periodo corte observaciones}}'),
       gqlDash('query{asistencias{id estudianteId asignaturaId estado periodo}}'),
-      gqlDash('query{matriculas{id estudianteId curso{id nombre} asignaturas{id nombre} periodo}}').catch(()=>({matriculas:[]})),
+      gqlDash('query{matriculas{id estudiante{id cedula} curso{id nombre} asignaturas{id nombre} periodo}}').catch(()=>({matriculas:[]})),
       gqlDash('query{estudiantes{id cedula nombre primerApellido}}'),
       gqlDash('query{asignaturas{id nombre cursoId}}')
     ]);
@@ -8497,7 +8762,7 @@ function renderAlertas(cals, asists){
   asists.forEach(a=>{const k=String(a.estudianteId);if(!eA[k])eA[k]={t:0,aus:0};eA[k].t++;if(a.estado==='AUSENTE')eA[k].aus++;});
   let cnt=0;
   Object.values(eA).forEach(s=>{if(s.t>0&&(s.aus/s.t)>0.2)cnt++;});
-  if(cnt>0) al.push({t:'warning',txt:`📅 <strong>${cnt} estudiante${cnt>1?'s':''}</strong> con ausencias frecuentes (>20% de clases)`});
+  if(cnt>0) al.push({t:'warning',txt:`📌 <strong>${cnt} estudiante${cnt>1?'s':''}</strong> con ausencias frecuentes (>20% de clases)`});
 
   if(!al.length){
     cont.innerHTML=`<div class="alert-box success">✅ Sin alertas activas — todos los indicadores están dentro de parámetros normales</div>`;
@@ -8516,19 +8781,24 @@ function renderChartNotas(cals){
     const a=DASH.asignaturas.find(x=>String(x.id)===id);
     const nom=(a?.nombre||'Asig.'+id);
     const p=ns.reduce((s,n)=>s+n,0)/ns.length;
-    labels.push(nom.length>16?nom.substring(0,14)+'…':nom);
+    labels.push(nom.length>16?nom.substring(0,14)+'...':nom);
     data.push(p);
     colors.push(p>=4?'#16a34a':p>=3?'#d97706':'#e02222');
     bg.push(p>=4?'#dcfce7':p>=3?'#fef3c7':'#fee2e2');
   });
   const badge=document.getElementById('chartNotasBadge');
   if(badge) badge.textContent=labels.length+' asignaturas';
+  if(typeof Chart==='undefined'){
+    const box=ctx.parentElement;
+    if(box) box.innerHTML='<div style="height:180px;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:12px;font-weight:700;text-align:center">Gráfico no disponible sin conexión<br>pero el panel sigue funcionando</div>';
+    return;
+  }
   if(DASH.charts.notas)DASH.charts.notas.destroy();
   if(!labels.length)return;
   DASH.charts.notas=new Chart(ctx.getContext('2d'),{
     type:'bar',
     data:{labels,datasets:[{label:'Promedio',data,backgroundColor:bg,borderColor:colors,borderWidth:2,borderRadius:8,borderSkipped:false}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw.toFixed(2)} ${c.raw>=3?'✅':'❌'}`}}},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw.toFixed(2)} ${c.raw>=3?'Aprobado':'Revisar'}`}}},
       scales:{y:{min:0,max:5,grid:{color:'#e2e8f0'},ticks:{font:{family:'Plus Jakarta Sans',weight:'700',size:11},callback:v=>v.toFixed(1)}},
               x:{grid:{display:false},ticks:{font:{family:'Plus Jakarta Sans',weight:'700',size:11}}}}}
   });
@@ -8541,6 +8811,11 @@ function renderChartAsistencia(asists){
   const A=asists.filter(a=>a.estado==='AUSENTE').length;
   const T=asists.filter(a=>a.estado==='TARDE').length;
   const E=asists.filter(a=>a.estado==='EXCUSA').length;
+  if(typeof Chart==='undefined'){
+    const box=ctx.parentElement;
+    if(box) box.innerHTML='<div style="height:180px;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:12px;font-weight:700;text-align:center">Gráfico no disponible sin conexión<br>pero el panel sigue funcionando</div>';
+    return;
+  }
   if(DASH.charts.asist)DASH.charts.asist.destroy();
   if(!P&&!A&&!T&&!E)return;
   DASH.charts.asist=new Chart(ctx.getContext('2d'),{
@@ -8556,7 +8831,9 @@ function renderChartAsistencia(asists){
 function renderTopEstudiantes(cals){
   const estNotas={};
   DASH.matriculas.forEach(m=>{
-    const eid=m.estudianteId;if(!estNotas[eid])estNotas[eid]=[];
+    const eid=String(m?.estudiante?.cedula || m?.estudiante?.id || '');
+    if(!eid) return;
+    if(!estNotas[eid])estNotas[eid]=[];
     (m.asignaturas||[]).forEach(a=>{cals.filter(c=>String(c.asignaturaId)===String(a.id)).forEach(c=>estNotas[eid].push(Number(c.nota)));});
   });
   const ranking=Object.entries(estNotas)
@@ -8600,3 +8877,4 @@ function renderTopEstudiantes(cals){
   
   </body>
 </html>
+

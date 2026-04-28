@@ -9,27 +9,39 @@ import { dirname } from 'path';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
-import { User } from './core/domain/user';
 import { EstudianteRepositoryImpl } from './infrastructure/adapters/outputs/estudianteRepositoryImpl';
 import { ProfesorRepositoryImpl } from './infrastructure/adapters/outputs/profesorRepositoryImpl';
 import { CursoRepositoryImpl } from './infrastructure/adapters/outputs/CursoRepositoryImpl';
-import { AsignaturaRepositoryImpl } from './infrastructure/adapters/outputs/asignaturaRepositoryImpl';
 import { CalificacionRepositoryImpl } from './infrastructure/adapters/outputs/calificacionRepositoryImpl';
 import { BoletinRepositoryImpl } from './infrastructure/adapters/outputs/boletinRepositoryImpl';
 import { MatriculaRepositoryImpl } from './infrastructure/adapters/outputs/matriculaRepositoryImpl';
 import { EmpleadoRepositoryImpl } from './infrastructure/adapters/outputs/empleadosRepositoryImpl';
+import { AsignaturaRepositoryImpl } from './infrastructure/adapters/outputs/asignaturaRepositoryImpl';
+import { UserRepositoryImpl } from './infrastructure/adapters/outputs/userRepositoryImpl';
+import { UserModel } from './infrastructure/adapters/outputs/models/UserModel';
+import { crearAdminSiNoExiste } from './core/services/adminSetup';
+import { verificarConexionEmail } from './core/services/Emailservice';
+import { AsistenciaRepositoryImpl } from './infrastructure/adapters/outputs/asistenciaRepositoryImpl';
+import { connectMongo } from './infrastructure/config/mongo.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 dotenv.config();
 // Configuración de MongoDB Atlas
-const MONGO_URI = process.env.MONGO_URI;
+const MONGO_URI = process.env.MONGO_URI ??
+    process.env.MONGODB_URI ??
+    process.env.MONGO_URI_DIRECT ??
+    process.env.MONGODB_URI_DIRECT;
 if (!MONGO_URI) {
     throw new Error('MONGO_URI no está definida en las variables de entorno');
+}
+// Fallar inmediatamente si JWT_SECRET no está configurado
+if (!process.env.JWT_SECRET) {
+    throw new Error('FATAL: JWT_SECRET no está definido en .env — el servidor no puede arrancar sin una clave segura');
 }
 // Conexión a MongoDB Atlas
 let db;
 try {
-    await mongoose.connect(MONGO_URI);
+    await connectMongo();
     console.log('✅ Conectado a MongoDB Atlas');
     db = mongoose.connection;
 }
@@ -37,16 +49,22 @@ catch (err) {
     console.error('❌ Error conectando a MongoDB Atlas:', err);
     process.exit(1);
 }
+// Crear admin si no existe (no detiene el servidor si falla)
+await crearAdminSiNoExiste();
+// Verificar servicio de correo (no detiene el servidor si falla)
+await verificarConexionEmail();
 // Inicializar repositorios
-const repositories = {
+export const repositories = {
     estudianteRepository: new EstudianteRepositoryImpl(),
     profesorRepository: new ProfesorRepositoryImpl(),
     cursoRepository: new CursoRepositoryImpl(),
-    asignaturaRepository: new AsignaturaRepositoryImpl(),
     calificacionRepository: new CalificacionRepositoryImpl(),
     boletinRepository: new BoletinRepositoryImpl(),
     matriculaRepository: new MatriculaRepositoryImpl(),
-    empleadoRepository: new EmpleadoRepositoryImpl()
+    empleadoRepository: new EmpleadoRepositoryImpl(),
+    asignaturaRepository: new AsignaturaRepositoryImpl(),
+    userRepository: new UserRepositoryImpl(), // Agregamos el userRepository
+    asistenciaRepository: new AsistenciaRepositoryImpl(),
 };
 // Configuración de Apollo Server
 const typeDefs = readFileSync(path.join(__dirname, './infrastructure/adapters/inputs/schema.graphql'), 'utf8');
@@ -58,21 +76,28 @@ const server = new ApolloServer({
             let user = null;
             const token = req.headers.authorization?.split(' ')[1];
             if (token) {
-                const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
-                const userFromDB = await User.findById(decoded.id);
-                if (userFromDB) {
-                    user = {
-                        id: userFromDB._id,
-                        email: userFromDB.email,
-                        role: userFromDB.role
-                    };
+                try {
+                    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                    // Usar UserModel en lugar de User.findById
+                    const userFromDB = await UserModel.findById(decoded.id);
+                    if (userFromDB) {
+                        // Normalizar el rol para que las verificaciones sean consistentes
+                        const rawRole = userFromDB.role || '';
+                        const normalizedRole = ['admin', 'administrator', 'ADMIN', 'ADMINISTRATOR'].includes(rawRole) ? 'ADMIN' :
+                            ['teacher', 'profesor', 'TEACHER', 'PROFESOR'].includes(rawRole) ? 'PROFESOR' :
+                                ['student', 'estudiante', 'STUDENT', 'ESTUDIANTE'].includes(rawRole) ? 'ESTUDIANTE' :
+                                    rawRole.toUpperCase();
+                        user = {
+                            id: userFromDB._id,
+                            username: userFromDB.username,
+                            role: normalizedRole
+                        };
+                    }
+                }
+                catch (tokenError) {
+                    console.error('Error al verificar token:', tokenError);
                 }
             }
-            console.log('Context creado:', {
-                userExists: !!user,
-                repositoriesExist: !!repositories,
-                availableRepositories: Object.keys(repositories)
-            });
             return {
                 user,
                 repositories
@@ -92,13 +117,14 @@ const server = new ApolloServer({
     }
 });
 const app = express();
+const projectRoot = path.resolve(__dirname, '../..');
+const frontendAppPath = path.join(projectRoot, 'frondend', 'src', 'app');
+const frontendComponentsPath = path.join(frontendAppPath, 'components');
 app.use((req, res, next) => {
-    console.log('📝 Petición recibida:', {
-        method: req.method,
-        path: req.path,
-        headers: req.headers,
-        body: req.body
-    });
+    // Solo loguear en desarrollo — nunca en producción (contiene tokens y contraseñas)
+    if (process.env.NODE_ENV !== 'production') {
+        console.log(`📝 ${req.method} ${req.path}`);
+    }
     next();
 });
 // Middleware para CORS
@@ -112,10 +138,16 @@ app.use((req, res, next) => {
     next();
 });
 app.use(express.json());
-// Middleware para depuración de peticiones GraphQL
+// Servir frontend local para pruebas en localhost
+app.use(express.static(frontendAppPath));
+app.use(express.static(frontendComponentsPath));
+app.get('/', (_req, res) => {
+    res.sendFile(path.join(frontendComponentsPath, 'principal.html'));
+});
+// Middleware de depuración solo en desarrollo
 app.use('/graphql', (req, res, next) => {
-    if (req.method === 'POST' && req.body) {
-        console.log('📊 GraphQL Request Body:', JSON.stringify(req.body, null, 2));
+    if (process.env.NODE_ENV !== 'production' && req.method === 'POST' && req.body) {
+        console.log('📊 GraphQL:', req.body?.operationName ?? req.body?.query?.slice(0, 60));
     }
     next();
 });
