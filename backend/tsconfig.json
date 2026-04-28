@@ -19,6 +19,7 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "allowJs": true,
+    "ignoreDeprecations": "6.0",
     "declaration": true,
     "sourceMap": true,
     "experimentalDecorators": true,
