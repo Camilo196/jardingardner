@@ -32,6 +32,7 @@ export interface CalificacionBoletinData {
   nota: number;
   resumenNotas?: string;
   faltas: number;
+  faltasJustificadas?: number;
   observacion?: string;
   indicadores?: { saber: string[]; hacer: string[]; ser: string[] };
   comportamiento?: { nota?: number; nivel: string; descripcion?: string };
@@ -335,14 +336,10 @@ export class PDFService {
           ? hacer.slice(1)
           : ['Acompanamiento pedagogico en aula.'];
 
-        // Observaciones: ser + observacion + comportamiento
-        const compTexto = mat.comportamiento?.descripcion
-          ? `${mat.comportamiento.nivel}: ${mat.comportamiento.descripcion}`
-          : mat.comportamiento?.nivel || '';
+        // Observaciones: en preescolar solo van indicadores/observaciones pedagógicas.
         const obsLines = [
           ...ser.map((s) => `- ${s}`),
           ...(mat.observacion ? [`- ${mat.observacion}`] : []),
-          ...(compTexto ? [`- ${compTexto}`] : []),
         ];
         if (!obsLines.length) obsLines.push('- Sin observaciones adicionales.');
         // Calcular alturas
@@ -544,14 +541,16 @@ export class PDFService {
           ...(pNum >= 3 ? [{ label: 'III Periodo', value: notas.p3, w: 72 } as Col] : []),
         ];
 
-        const faltasW   = 58;
+        const faltasW   = 42;
+        const justW     = 58;
         const periW     = periodosCols.reduce((a, c) => a + c.w, 0);
-        const promedioW = docW - periW - faltasW;
+        const promedioW = docW - periW - faltasW - justW;
 
         const finalCols: Col[] = [
           ...periodosCols,
-          { label: 'No. Faltas',       value: String(mat.faltas ?? 0), w: faltasW },
-          { label: 'Promedio general', value: notas.promedio,           w: promedioW },
+          { label: 'Faltas',           value: String(mat.faltas ?? 0),              w: faltasW },
+          { label: 'Justificadas',     value: String(mat.faltasJustificadas ?? 0),  w: justW },
+          { label: 'Promedio general', value: notas.promedio,                       w: promedioW },
         ];
 
         // Línea separadora entre fila docente y fila columnas (dentro de la celda derecha)
@@ -719,6 +718,7 @@ export class PDFService {
         nota:        cal.nota,
         resumenNotas: cal.resumenNotas,
         faltas:      cal.faltas ?? 0,
+        faltasJustificadas: cal.faltasJustificadas ?? 0,
         observacion: cal.observaciones,
         indicadores: cal.indicadores,
         comportamiento: cal.comportamiento,

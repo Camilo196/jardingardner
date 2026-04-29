@@ -21,16 +21,26 @@ export declare const resolvers: {
             asignaturaId: string;
             periodo: string;
         }, { repositories }: any) => Promise<any>;
-        indicadoresPorAsignatura: (_: any, { asignaturaId, periodo }: any) => Promise<(mongoose.FlattenMaps<import("../outputs/models/Indicadoresmodel.js").IndicadoresDocument> & Required<{
-            _id: mongoose.FlattenMaps<unknown>;
-        }> & {
-            __v: number;
-        }) | null>;
-        indicadoresPorProfesor: (_: any, { profesorId, periodo }: any, { repositories }: any) => Promise<(mongoose.FlattenMaps<import("../outputs/models/Indicadoresmodel.js").IndicadoresDocument> & Required<{
-            _id: mongoose.FlattenMaps<unknown>;
-        }> & {
-            __v: number;
-        })[]>;
+        indicadoresPorAsignatura: (_: any, { asignaturaId, periodo, estudianteId }: any) => Promise<{
+            id: any;
+            asignaturaId: string;
+            periodo: string;
+            saber: any;
+            hacer: any;
+            ser: any;
+            estudianteIds: any;
+            creadoPor: any;
+        } | null>;
+        indicadoresPorProfesor: (_: any, { profesorId, periodo }: any, { repositories }: any) => Promise<{
+            id: any;
+            asignaturaId: string;
+            periodo: string;
+            saber: any;
+            hacer: any;
+            ser: any;
+            estudianteIds: any;
+            creadoPor: any;
+        }[]>;
         periodoConfig: (_: any, { anio, numeroPeriodo }: any) => Promise<{
             id: any;
             pesoPorCorte: number;
@@ -320,15 +330,16 @@ export declare const resolvers: {
             profesorId?: string;
         }, { user, repositories }: any) => Promise<boolean>;
         limpiarRegistrosProblematicos: (_: any, __: any, { user }: any) => Promise<boolean>;
-        guardarIndicadores: (_: any, { asignaturaId, periodo, saber, hacer, ser }: any, { user }: any) => Promise<{
+        guardarIndicadores: (_: any, { asignaturaId, periodo, saber, hacer, ser, estudianteIds }: any, { user }: any) => Promise<{
             id: string | undefined;
             asignaturaId: string;
             periodo: string;
-            saber: string[];
-            hacer: string[];
-            ser: string[];
+            saber: any;
+            hacer: any;
+            ser: any;
+            estudianteIds: string[];
             creadoPor: string;
-        } | null>;
+        }>;
         eliminarIndicadores: (_: any, { asignaturaId, periodo }: any) => Promise<boolean>;
         guardarCalificacionBoletin: (_: any, { estudianteId, asignaturaId, periodo, valoracion, nota, faltas, observacion }: any, { repositories }: any) => Promise<boolean>;
         exportarBoletinCompleto: (_: any, { estudianteId, periodo, observacionGeneral }: any, { repositories }: any) => Promise<string>;
@@ -465,6 +476,7 @@ export declare const resolvers: {
         saber: (indicador: any) => any;
         hacer: (indicador: any) => any;
         ser: (indicador: any) => any;
+        estudianteIds: (indicador: any) => any;
     };
     Boletin: {
         fecha: (boletin: any) => string;

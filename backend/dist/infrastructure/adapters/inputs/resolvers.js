@@ -112,6 +112,42 @@ function valoracionDesdeNota(nota) {
         return 'B�sico';
     return 'Bajo';
 }
+function normalizarCursoNombre(nombre = '') {
+    return String(nombre)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+}
+function esCursoPreescolarNombre(nombre = '') {
+    const n = normalizarCursoNombre(nombre);
+    return ['parvulos', 'parvulo', 'pre jardin', 'prejardin', 'jardin', 'transicion'].some(k => n.includes(k));
+}
+function indicadoresParaEstudiante(ind, estudianteId) {
+    const estId = estudianteId ? String(estudianteId) : '';
+    const porEstudiante = Array.isArray(ind?.porEstudiante) ? ind.porEstudiante : [];
+    const especifico = estId
+        ? porEstudiante.find((item) => String(item.estudianteId) === estId)
+        : null;
+    const fuente = especifico ?? (estId && porEstudiante.length ? {} : ind ?? {});
+    const estudianteIds = especifico
+        ? [String(especifico.estudianteId)]
+        : porEstudiante
+            .filter((item) => JSON.stringify(item.saber ?? []) === JSON.stringify(fuente.saber ?? []) &&
+            JSON.stringify(item.hacer ?? []) === JSON.stringify(fuente.hacer ?? []) &&
+            JSON.stringify(item.ser ?? []) === JSON.stringify(fuente.ser ?? []))
+            .map((item) => String(item.estudianteId));
+    return {
+        id: ind?._id?.toString?.() ?? ind?.id ?? '',
+        asignaturaId: String(ind?.asignaturaId ?? ''),
+        periodo: String(ind?.periodo ?? ''),
+        saber: Array.isArray(fuente.saber) ? fuente.saber : [],
+        hacer: Array.isArray(fuente.hacer) ? fuente.hacer : [],
+        ser: Array.isArray(fuente.ser) ? fuente.ser : [],
+        estudianteIds,
+        creadoPor: ind?.creadoPor,
+    };
+}
 async function calcularPuestoCurso(cursoId, periodo, estudianteObjetivoId, asigIdsCurso) {
     var _a, _b;
     const matriculas = await MatriculaModel_js_1.MatriculaModel.find({
@@ -183,6 +219,7 @@ async function generarBoletinAcumuladoBase64(repositories, estudianteId, periodo
         .findByEstudianteId(estudiante.cedula ?? estudianteId).catch(() => []);
     const mat = matriculas.find((m) => m.periodo === periodo) ?? matriculas[0];
     const curso = mat ? await repositories.cursoRepository.findById(mat.cursoId).catch(() => null) : null;
+    const esPreescolar = esCursoPreescolarNombre(curso?.nombre ?? '');
     const todasLasCalificaciones = await repositories.calificacionRepository.findByEstudianteId(estIdBoletin).catch(() => []);
     const calsAcumuladasBase = (todasLasCalificaciones || []).filter((c) => c.nombreActividad !== '__boletin__' && mismoAnioYPrevios(periodo, c.periodo));
     const asignaturasCurso = curso
@@ -195,9 +232,12 @@ async function generarBoletinAcumuladoBase64(repositories, estudianteId, periodo
         calsAcumuladas = calsAcumuladasBase.filter((c) => asigIdsCurso.has(String(c.asignaturaId)));
     }
     const calsDelPeriodo = calsAcumuladas.filter((c) => String(c.periodo) === String(periodo));
-    if (!calsDelPeriodo.length)
+    if (!calsDelPeriodo.length && !esPreescolar)
         throw new Error('No hay calificaciones para este per�odo');
-    const asigIdsUnicos = [...new Set(calsAcumuladas.map((c) => String(c.asignaturaId)))];
+    const asigIdsUnicos = [...new Set([
+            ...calsAcumuladas.map((c) => String(c.asignaturaId)),
+            ...(esPreescolar ? [...asigIdsCurso] : []),
+        ])];
     const asigsBatch = await repositories.asignaturaRepository.findByIds(asigIdsUnicos).catch(() => []);
     const asigById = {};
     for (const a of asigsBatch)
@@ -212,6 +252,13 @@ async function generarBoletinAcumuladoBase64(repositories, estudianteId, periodo
         if (!asigMap[k].notasPorPeriodo[numeroPeriodo])
             asigMap[k].notasPorPeriodo[numeroPeriodo] = [];
         asigMap[k].notasPorPeriodo[numeroPeriodo].push(Number(cal.nota));
+    }
+    if (esPreescolar) {
+        for (const a of asignaturasCurso || []) {
+            const k = String(a.id ?? a._id);
+            if (!asigMap[k])
+                asigMap[k] = { asig: asigById[k] ?? a, notasPorPeriodo: {} };
+        }
     }
     const profIdSet = new Set();
     for (const { asig } of Object.values(asigMap)) {
@@ -241,8 +288,8 @@ async function generarBoletinAcumuladoBase64(repositories, estudianteId, periodo
             periodo,
         }).lean().catch(() => []),
         AsistenciaModel_js_1.AsistenciaModel.aggregate([
-            { $match: { estudianteId: estIdStr, asignaturaId: { $in: asigIdsList }, periodo, estado: 'AUSENTE' } },
-            { $group: { _id: '$asignaturaId', count: { $sum: 1 } } },
+            { $match: { estudianteId: estIdStr, asignaturaId: { $in: asigIdsList }, periodo, estado: { $in: ['AUSENTE', 'EXCUSA'] } } },
+            { $group: { _id: { asignaturaId: '$asignaturaId', estado: '$estado' }, count: { $sum: 1 } } },
         ]).catch(() => []),
     ]);
     const indByAsig = {};
@@ -252,8 +299,15 @@ async function generarBoletinAcumuladoBase64(repositories, estudianteId, periodo
     for (const comp of comportamientosBatch)
         compByAsig[String(comp.asignaturaId)] = comp;
     const faltasByAsig = {};
-    for (const row of asistenciasData)
-        faltasByAsig[String(row._id)] = row.count;
+    const faltasJustificadasByAsig = {};
+    for (const row of asistenciasData) {
+        const asignaturaId = String(row._id?.asignaturaId ?? row._id);
+        const estado = String(row._id?.estado ?? 'AUSENTE');
+        if (estado === 'EXCUSA')
+            faltasJustificadasByAsig[asignaturaId] = row.count;
+        else
+            faltasByAsig[asignaturaId] = row.count;
+    }
     const periodoObjetivo = parsePeriodo(periodo).numeroPeriodo;
     const calificacionesBoletin = Object.entries(asigMap).map(([asignaturaId, { asig, notasPorPeriodo }]) => {
         const promediosPeriodos = [1, 2, 3].map((numeroPeriodo) => promedioNumeros(notasPorPeriodo[numeroPeriodo] ?? []));
@@ -273,9 +327,11 @@ async function generarBoletinAcumuladoBase64(repositories, estudianteId, periodo
             if (doc)
                 docenteNombre = `${doc.nombre} ${doc.primerApellido}`;
         }
-        const ind = indByAsig[asignaturaId] ?? null;
+        const ind = indByAsig[asignaturaId] ? indicadoresParaEstudiante(indByAsig[asignaturaId], estIdStr) : null;
         const comp = compByAsig[asignaturaId] ?? null;
-        const faltasCount = faltasByAsig[asignaturaId] ?? 0;
+        const faltasSinJustificar = faltasByAsig[asignaturaId] ?? 0;
+        const faltasJustificadas = faltasJustificadasByAsig[asignaturaId] ?? 0;
+        const faltasCount = faltasSinJustificar + faltasJustificadas;
         return {
             asignaturaId,
             asignaturaNombre: asig?.nombre ?? asignaturaId,
@@ -284,6 +340,7 @@ async function generarBoletinAcumuladoBase64(repositories, estudianteId, periodo
             nota: prom,
             resumenNotas,
             faltas: faltasCount,
+            faltasJustificadas,
             observacion: '',
             indicadores: {
                 saber: ind?.saber ?? [],
@@ -318,6 +375,24 @@ async function generarBoletinAcumuladoBase64(repositories, estudianteId, periodo
         puestoCurso,
     });
     return Buffer.from(buf).toString('base64');
+}
+async function validarCalificacionNoPreescolar(asignaturaId, repositories) {
+    const asignatura = await repositories.asignaturaRepository.findById(asignaturaId).catch(() => null);
+    if (!asignatura?.cursoId)
+        return;
+    const curso = await repositories.cursoRepository.findById(String(asignatura.cursoId)).catch(() => null);
+    if (curso && esCursoPreescolarNombre(curso.nombre)) {
+        throw new Error('En preescolar no se registran notas num�ricas por materia. Usa indicadores pedag�gicos.');
+    }
+}
+async function validarComportamientoNoPreescolar(asignaturaId, repositories) {
+    const asignatura = await repositories.asignaturaRepository.findById(asignaturaId).catch(() => null);
+    if (!asignatura?.cursoId)
+        return;
+    const curso = await repositories.cursoRepository.findById(String(asignatura.cursoId)).catch(() => null);
+    if (curso && esCursoPreescolarNombre(curso.nombre)) {
+        throw new Error('En preescolar no se registra comportamiento. Usa solo indicadores pedag�gicos.');
+    }
 }
 async function verificarPeriodoAbierto(periodo) {
     const { anio, numeroPeriodo } = parsePeriodo(periodo);
@@ -367,13 +442,17 @@ exports.resolvers = {
             return await repositories.calificacionRepository.findByAsignaturaYPeriodo(asignaturaId, periodo);
         },
         // Indicadores
-        indicadoresPorAsignatura: async (_, { asignaturaId, periodo }) => await Indicadoresmodel_js_1.IndicadoresModel.findOne({ asignaturaId, periodo }).lean(),
+        indicadoresPorAsignatura: async (_, { asignaturaId, periodo, estudianteId }) => {
+            const doc = await Indicadoresmodel_js_1.IndicadoresModel.findOne({ asignaturaId, periodo }).lean();
+            return doc ? indicadoresParaEstudiante(doc, estudianteId) : null;
+        },
         indicadoresPorProfesor: async (_, { profesorId, periodo }, { repositories }) => {
             const asigs = await repositories.asignaturaRepository.findByProfesorId(profesorId);
             const ids = asigs.map((a) => a.id);
             if (!ids.length)
                 return [];
-            return await Indicadoresmodel_js_1.IndicadoresModel.find({ asignaturaId: { $in: ids }, periodo }).lean();
+            const docs = await Indicadoresmodel_js_1.IndicadoresModel.find({ asignaturaId: { $in: ids }, periodo }).lean();
+            return docs.map((doc) => indicadoresParaEstudiante(doc));
         },
         // Configuración de periodos
         periodoConfig: async (_, { anio, numeroPeriodo }) => {
@@ -740,19 +819,43 @@ exports.resolvers = {
             await MatriculaModel_js_1.MatriculaModel.deleteMany({ $or: [{ estudianteId: null }, { estudianteId: '' }] }).exec();
             return true;
         },
-        // ── Indicadores ───────────────────────────────────────
-        guardarIndicadores: async (_, { asignaturaId, periodo, saber, hacer, ser }, { user }) => {
+        // -- Indicadores ---------------------------------------
+        guardarIndicadores: async (_, { asignaturaId, periodo, saber, hacer, ser, estudianteIds }, { user }) => {
             const creadoPor = user?.username ?? 'sistema';
-            const doc = await Indicadoresmodel_js_1.IndicadoresModel.findOneAndUpdate({ asignaturaId, periodo }, { asignaturaId, periodo, saber, hacer, ser, creadoPor }, { upsert: true, new: true, setDefaultsOnInsert: true }).exec();
-            if (!doc)
-                return null;
+            const seleccionados = Array.isArray(estudianteIds)
+                ? [...new Set(estudianteIds.map((id) => String(id).trim()).filter(Boolean))]
+                : [];
+            let doc = await Indicadoresmodel_js_1.IndicadoresModel.findOne({ asignaturaId, periodo }).exec();
+            if (!doc) {
+                doc = new Indicadoresmodel_js_1.IndicadoresModel({ asignaturaId, periodo, saber: [], hacer: [], ser: [], porEstudiante: [], creadoPor });
+            }
+            if (seleccionados.length) {
+                const actuales = Array.isArray(doc.porEstudiante) ? doc.porEstudiante : [];
+                for (const estudianteId of seleccionados) {
+                    const idx = actuales.findIndex((item) => String(item.estudianteId) === estudianteId);
+                    const item = { estudianteId, saber, hacer, ser };
+                    if (idx >= 0)
+                        actuales[idx] = item;
+                    else
+                        actuales.push(item);
+                }
+                doc.porEstudiante = actuales;
+            }
+            else {
+                doc.saber = saber;
+                doc.hacer = hacer;
+                doc.ser = ser;
+            }
+            doc.creadoPor = creadoPor;
+            await doc.save();
             return {
                 id: doc._id?.toString(),
                 asignaturaId: String(doc.asignaturaId),
                 periodo: doc.periodo,
-                saber: doc.saber || [],
-                hacer: doc.hacer || [],
-                ser: doc.ser || [],
+                saber: saber || [],
+                hacer: hacer || [],
+                ser: ser || [],
+                estudianteIds: seleccionados,
                 creadoPor: doc.creadoPor,
             };
         },
@@ -760,7 +863,7 @@ exports.resolvers = {
             const result = await Indicadoresmodel_js_1.IndicadoresModel.deleteOne({ asignaturaId, periodo }).exec();
             return result.deletedCount > 0;
         },
-        // ── Boletín avanzado ──────────────────────────────────
+        // -- Boletín avanzado ──────────────────────────────────
         guardarCalificacionBoletin: async (_, { estudianteId, asignaturaId, periodo, valoracion, nota, faltas, observacion }, { repositories }) => {
             // Fix N+1: buscar directamente sin traer todas las calificaciones a memoria
             const todasDelEstudiante = await repositories.calificacionRepository.findByEstudianteId(estudianteId);
@@ -929,6 +1032,7 @@ exports.resolvers = {
                 throw new Error('El asignaturaId es requerido');
             // Verificar que el periodo esté abierto
             await verificarPeriodoAbierto(input.periodo);
+            await validarCalificacionNoPreescolar(input.asignaturaId, repositories);
             const cal = await repositories.calificacionRepository.create(input);
             // Notificación email — best-effort, en background
             (async () => {
@@ -968,6 +1072,7 @@ exports.resolvers = {
         actualizarCalificacion: async (_, { id, input }, { user, repositories }) => {
             if (!user || !['ADMIN', 'PROFESOR'].includes(user.role))
                 throw new Error('No autorizado: se requiere rol ADMIN o PROFESOR');
+            await validarCalificacionNoPreescolar(input.asignaturaId, repositories);
             return await repositories.calificacionRepository.update(id, input);
         },
         eliminarCalificacion: async (_, { id }, { user, repositories }) => {
@@ -1235,6 +1340,7 @@ exports.resolvers = {
             const profesor = await repositories.profesorRepository.findByCedula(user.username).catch(() => null);
             if (!profesor)
                 throw new Error('Solo profesores pueden registrar comportamiento');
+            await validarComportamientoNoPreescolar(input.asignaturaId, repositories);
             // Calcular nivel automáticamente desde la nota si se proporciona
             let nivel = input.nivel;
             if (input.nota !== undefined && input.nota !== null) {
@@ -1253,8 +1359,8 @@ exports.resolvers = {
         },
         // ── Cronograma ───────────────────────────────────────
         crearEventoCronograma: async (_, { input }, { user }) => {
-            if (user?.role !== 'ADMIN')
-                throw new Error('Solo administradores');
+            if (!['ADMIN', 'PROFESOR'].includes(user?.role))
+                throw new Error('Solo administradores o profesores');
             const doc = await CronogramaModel_js_1.CronogramaModel.create({ ...input, creadoPor: user.username });
             const obj = doc.toObject();
             return {
@@ -1401,6 +1507,7 @@ exports.resolvers = {
         saber: (indicador) => Array.isArray(indicador?.saber) ? indicador.saber : [],
         hacer: (indicador) => Array.isArray(indicador?.hacer) ? indicador.hacer : [],
         ser: (indicador) => Array.isArray(indicador?.ser) ? indicador.ser : [],
+        estudianteIds: (indicador) => Array.isArray(indicador?.estudianteIds) ? indicador.estudianteIds : [],
     },
     Boletin: {
         fecha: (boletin) => {

@@ -6,6 +6,12 @@ export interface IndicadoresDocument extends Document {
   saber: string[];
   hacer: string[];
   ser: string[];
+  porEstudiante?: {
+    estudianteId: string;
+    saber: string[];
+    hacer: string[];
+    ser: string[];
+  }[];
   creadoPor: string;   // profesorId
   updatedAt: Date;
 }
@@ -17,6 +23,12 @@ const IndicadoresSchema: Schema = new Schema(
     saber:        [{ type: String }],
     hacer:        [{ type: String }],
     ser:          [{ type: String }],
+    porEstudiante: [{
+      estudianteId: { type: String, required: true },
+      saber:        [{ type: String }],
+      hacer:        [{ type: String }],
+      ser:          [{ type: String }],
+    }],
     creadoPor:    { type: String },
   },
   { timestamps: true }

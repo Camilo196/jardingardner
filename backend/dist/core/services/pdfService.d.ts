@@ -6,6 +6,7 @@ export interface CalificacionBoletinData {
     nota: number;
     resumenNotas?: string;
     faltas: number;
+    faltasJustificadas?: number;
     observacion?: string;
     indicadores?: {
         saber: string[];

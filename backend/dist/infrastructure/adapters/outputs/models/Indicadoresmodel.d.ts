@@ -5,6 +5,12 @@ export interface IndicadoresDocument extends Document {
     saber: string[];
     hacer: string[];
     ser: string[];
+    porEstudiante?: {
+        estudianteId: string;
+        saber: string[];
+        hacer: string[];
+        ser: string[];
+    }[];
     creadoPor: string;
     updatedAt: Date;
 }

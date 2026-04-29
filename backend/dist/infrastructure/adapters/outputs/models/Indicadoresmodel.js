@@ -41,6 +41,12 @@ const IndicadoresSchema = new mongoose_1.Schema({
     saber: [{ type: String }],
     hacer: [{ type: String }],
     ser: [{ type: String }],
+    porEstudiante: [{
+            estudianteId: { type: String, required: true },
+            saber: [{ type: String }],
+            hacer: [{ type: String }],
+            ser: [{ type: String }],
+        }],
     creadoPor: { type: String },
 }, { timestamps: true });
 // Índice único: una sola entrada por asignatura+período
