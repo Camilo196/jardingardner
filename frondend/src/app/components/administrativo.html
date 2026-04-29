@@ -921,6 +921,24 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         </div>
       </div>
       <div >
+                <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
+                  <input
+                    type="text"
+                    id="buscarMatricula"
+                    placeholder="Buscar estudiante, cédula, curso o estado..."
+                    oninput="filtrarMatriculasAdmin()"
+                    class="search-input"
+                    style="max-width:360px"
+                  />
+                  <select
+                    id="filtroCursoMatricula"
+                    onchange="filtrarMatriculasAdmin()"
+                    class="search-input"
+                    style="max-width:260px"
+                  >
+                    <option value="">Todos los cursos</option>
+                  </select>
+                </div>
                 <div style="display:none">
                   <button
                     class="action-btn green"
@@ -931,9 +949,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
                   <div class="search-container">
                     <input
                       type="text"
-                      id="buscarMatricula"
+                      id="buscarMatriculaOculto"
                       placeholder="Buscar por nombre..."
-                      onkeyup="buscarMatriculas()"
+                      onkeyup="filtrarMatriculasAdmin()"
                       class="search-input"
                     />
                   </div>
@@ -1154,7 +1172,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
       <!-- Leyenda -->
       <div style="margin-top:12px;font-size:12px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-        <span><i class="fas fa-lightbulb"></i> Selecciona una asignatura en cada celda para asignarle ese día y hora</span>
+        <span><i class="fas fa-lightbulb"></i> Agrega la hora que necesites y selecciona una asignatura en cada celda</span>
         <span style="background:var(--red-lt);color:var(--red);padding:3px 10px;border-radius:8px"><i class="fas fa-bolt"></i> Choque detectado</span>
         <span style="background:var(--green-lt);color:var(--green);padding:3px 10px;border-radius:8px"><i class="fas fa-check-circle"></i> Sin conflictos</span>
       </div>
@@ -2384,6 +2402,21 @@ function seleccionarProfesor(profesor) {
     <script>
       // Variables globales
       let estudiantes = [];
+      function ordenarEstudiantesPorApellido(lista) {
+        return [...(lista || [])].sort((a, b) => {
+          const an = `${a?.primerApellido || ''} ${a?.segundoApellido || ''} ${a?.nombre || ''} ${a?.cedula || ''}`.trim();
+          const bn = `${b?.primerApellido || ''} ${b?.segundoApellido || ''} ${b?.nombre || ''} ${b?.cedula || ''}`.trim();
+          return an.localeCompare(bn, 'es', { sensitivity: 'base' });
+        });
+      }
+
+      function buscarEstudianteRef(ref) {
+        if (typeof ref === 'number') return estudiantes[ref];
+        return (estudiantes || []).find(est =>
+          String(est.id) === String(ref) || String(est.cedula) === String(ref)
+        );
+      }
+
       function buscarEstudiantes() {
         const searchTerm = document
           .getElementById("buscarEstudiante")
@@ -2402,7 +2435,7 @@ function seleccionarProfesor(profesor) {
             est.segundoApellido?.toLowerCase().includes(searchTerm)
         );
 
-        estudiantesFiltrados.forEach((est, index) => {
+        ordenarEstudiantesPorApellido(estudiantesFiltrados).forEach((est) => {
           const ini=(est.nombre?.[0]||'?').toUpperCase()+(est.primerApellido?.[0]||'').toUpperCase();
           const nombreCompleto=`${est.nombre||''} ${est.primerApellido||''} ${est.segundoApellido||''}`.trim();
           tabla.innerHTML += `
@@ -2414,7 +2447,7 @@ function seleccionarProfesor(profesor) {
               <td style="max-width:140px"><span style="font-size:11px;color:#94a3b8;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${est.direccion||''}">${est.direccion||'—'}</span></td>
               <td><span style="font-size:12px;color:#475569">${est.acudiente||'<span style="color:#cbd5e1">—</span>'}</span></td>
               <td><div class="tbl-actions">
-                <button class="tbl-btn tbl-btn-edit" onclick="editarEstudiante(${index})"><i class="fas fa-pen"></i> Editar</button>
+                <button class="tbl-btn tbl-btn-edit" onclick="editarEstudiante('${est.id || est.cedula}')"><i class="fas fa-pen"></i> Editar</button>
                 <button class="tbl-btn tbl-btn-del" onclick="eliminarEstudiante('${est.id}')"><i class="fas fa-trash"></i></button>
               </div></td>
             </tr>`;
@@ -2455,7 +2488,7 @@ function seleccionarProfesor(profesor) {
                 "Error al cargar estudiantes: " + JSON.stringify(data.errors)
               );
             }
-            estudiantes = data.data.estudiantes;
+            estudiantes = ordenarEstudiantesPorApellido(data.data.estudiantes);
             actualizarTablaEstudiantes();
             return estudiantes;
           })
@@ -2470,7 +2503,7 @@ function seleccionarProfesor(profesor) {
         if (!tabla) return;
 
         tabla.innerHTML = "";
-        estudiantes.forEach((est, index) => {
+        ordenarEstudiantesPorApellido(estudiantes).forEach((est) => {
           const ini=(est.nombre?.[0]||'?').toUpperCase()+(est.primerApellido?.[0]||'').toUpperCase();
           const nombreCompleto=`${est.nombre||''} ${est.primerApellido||''} ${est.segundoApellido||''}`.trim();
           tabla.innerHTML += `
@@ -2482,7 +2515,7 @@ function seleccionarProfesor(profesor) {
               <td style="max-width:140px"><span style="font-size:11px;color:#94a3b8;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${est.direccion||''}">${est.direccion||'—'}</span></td>
               <td><span style="font-size:12px;color:#475569">${est.acudiente||'<span style="color:#cbd5e1">—</span>'}</span></td>
               <td><div class="tbl-actions">
-                <button class="tbl-btn tbl-btn-edit" onclick="editarEstudiante(${index})"><i class="fas fa-pen"></i> Editar</button>
+                <button class="tbl-btn tbl-btn-edit" onclick="editarEstudiante('${est.id || est.cedula}')"><i class="fas fa-pen"></i> Editar</button>
                 <button class="tbl-btn tbl-btn-del" onclick="eliminarEstudiante('${est.id}')"><i class="fas fa-trash"></i></button>
               </div></td>
             </tr>`;
@@ -2585,12 +2618,12 @@ function seleccionarProfesor(profesor) {
             alert("Error al crear estudiante: " + error.message);
           });
       }
-      function editarEstudiante(index) {
+      function editarEstudiante(ref) {
   const token = sessionStorage.getItem("token");
-  let est = estudiantes[index];
+  let est = buscarEstudianteRef(ref);
 
   if (!est) {
-    console.error("Estudiante no encontrado:", index);
+    console.error("Estudiante no encontrado:", ref);
     return;
   }
 
@@ -3320,6 +3353,7 @@ const CURSOS_PREDEFINIDOS = [
   "Párvulos",
   "Pre-jardín",
   "Jardín",
+  "Jardín Jornada tarde",
   "Transición",
   "Primero",
   "Segundo",
@@ -4131,13 +4165,14 @@ document.head.appendChild(cursosStyle);
         const grupos = {};
         lista.forEach((a, idx) => {
           if (!grupos[a.nombre]) grupos[a.nombre] = { nombre: a.nombre, items: [] };
-          grupos[a.nombre].items.push({ ...a, _idx: idx });
+          grupos[a.nombre].items.push({ ...a });
         });
         let gi = 0;
         cont.innerHTML = Object.values(grupos).map(g => {
           const ico = g.nombre.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
           const gid = 'amg' + gi++;
           const total = g.items.length;
+          const nombreGrupoArg = encodeURIComponent(g.nombre);
           const cursosHtml = g.items.map(a => {
             const prof = a.profesor ? `${a.profesor.nombre} ${a.profesor.primerApellido}${a.profesor.segundoApellido?' '+a.profesor.segundoApellido:''}`.trim() : 'Sin asignar';
             const curso = a.curso ? a.curso.nombre : 'Sin asignar';
@@ -4151,7 +4186,7 @@ document.head.appendChild(cursosStyle);
                 </div>
               </div>
               <div class="asig-c-actions">
-                <button class="asig-btn-edit" onclick="editarAsignatura(${a._idx})"><i class="fas fa-pen"></i> Editar</button>
+                <button class="asig-btn-edit" onclick="editarAsignatura('${a.id}')"><i class="fas fa-pen"></i> Editar</button>
                 <button class="asig-btn-del" onclick="eliminarAsignatura('${a.id}')"><i class="fas fa-trash"></i> Eliminar</button>
               </div>
             </div>`;
@@ -4163,6 +4198,7 @@ document.head.appendChild(cursosStyle);
                 <div><div class="asig-m-nombre">${g.nombre}</div><div class="asig-m-sub">${total} curso${total!==1?'s':''} asignado${total!==1?'s':''}</div></div>
               </div>
               <div class="asig-m-right">
+                <button class="asig-btn-edit" type="button" onclick="event.stopPropagation(); abrirEditarGrupoAsignatura(decodeURIComponent('${nombreGrupoArg}'))"><i class="fas fa-pen"></i> Editar</button>
                 <span class="asig-m-pill">${total} curso${total!==1?'s':''}</span>
                 <span class="asig-m-tog" id="togg${gid}">▼</span>
               </div>
@@ -4387,6 +4423,71 @@ function openModalAsignatura() {
   });
 }
 
+function abrirEditarGrupoAsignatura(nombre) {
+  document.getElementById('formAsignatura').reset();
+  document.getElementById('idAsignatura').value = '';
+  document.getElementById('modalAsignaturaTitulo').textContent = 'Editar asignatura';
+  document.getElementById('modoAsignaturaGroup').style.display = 'none';
+  document.getElementById('panelUnCurso').style.display = 'none';
+  document.getElementById('panelVariosCursos').style.display = '';
+  document.getElementById('modoVarios').checked = true;
+  document.getElementById('guardarAsignatura').onclick = crearAsignatura;
+  document.getElementById('buscarProfesorAsignatura').value = '';
+  document.getElementById('profesorAsignatura').value = '';
+  document.getElementById('listaProfesoresAsignatura').innerHTML = '';
+  document.getElementById('listaProfesoresAsignatura').style.display = 'none';
+
+  const buscarInput = document.getElementById('buscarProfesorAsignatura');
+  const nuevoInput = buscarInput.cloneNode(true);
+  buscarInput.parentNode.replaceChild(nuevoInput, buscarInput);
+  nuevoInput.addEventListener('input', function() { buscarProfesorAsignatura(this.value.toLowerCase()); });
+
+  const loading = document.createElement('div');
+  loading.className = 'loading-indicator';
+  loading.innerHTML = '<div class="spinner"></div><p>Cargando datos...</p>';
+  document.body.appendChild(loading);
+
+  Promise.all([
+    profesores.length === 0 ? cargarProfesores() : Promise.resolve(profesores),
+    cursos.length === 0 ? cargarCursos() : Promise.resolve(cursos)
+  ]).then(() => {
+    document.body.removeChild(loading);
+    cargarCursosEnSelect();
+    construirListaCursosMulti();
+    document.getElementById('modoVarios').checked = true;
+    toggleModoAsignatura();
+    poblarSelectorAsignatura(nombre || '');
+
+    const existentes = (asignaturas || []).filter(a => String(a.nombre) === String(nombre));
+    const conProfesor = existentes.find(a => a.profesor);
+    if (conProfesor?.profesor) {
+      const p = conProfesor.profesor;
+      document.getElementById('buscarProfesorAsignatura').value = `${p.nombre || ''} ${p.primerApellido || ''} ${p.segundoApellido || ''}`.trim();
+      document.getElementById('profesorAsignatura').value = p.id || p.cedula || '';
+    }
+
+    const cursosYaAsignados = new Set(existentes.map(a => String(a.curso?.id || '')).filter(Boolean));
+    cursosYaAsignados.forEach(id => {
+      const chk = document.getElementById(`chkCurso_${id}`);
+      if (!chk) return;
+      chk.checked = false;
+      chk.disabled = true;
+      const fila = chk.closest('div');
+      if (fila) {
+        fila.style.opacity = '.55';
+        fila.style.background = '#f8fafc';
+        const label = fila.querySelector('label');
+        if (label && !label.querySelector('.ya-asignado')) label.insertAdjacentHTML('beforeend', ' <span class="ya-asignado" style="font-size:11px;color:#64748b;font-weight:700">Ya asignado</span>');
+      }
+    });
+
+    openModal('modalAsignatura');
+  }).catch(err => {
+    if (document.body.contains(loading)) document.body.removeChild(loading);
+    alert('Error al cargar datos: ' + err.message);
+  });
+}
+
 async function crearAsignatura() {
   const nombre     = obtenerNombreAsignaturaSeleccionada();
   const profesorId = document.getElementById('profesorAsignatura').value;
@@ -4441,12 +4542,13 @@ async function crearAsignatura() {
 }
 
 
-function editarAsignatura(index) {
+function editarAsignatura(ref) {
   const token = sessionStorage.getItem("token");
-  let asi = asignaturas[index];
+  let asi = (asignaturas || []).find(a => String(a.id) === String(ref));
+  if (!asi && typeof ref === "number") asi = asignaturas[ref];
 
   if (!asi || !asi.id) {
-    console.error("Asignatura no encontrada o sin ID:", index);
+    console.error("Asignatura no encontrada o sin ID:", ref);
     return;
   }
 
@@ -4921,6 +5023,7 @@ function exportarBoletin(boletinId) {
         const cedulaInput = document.getElementById("cedulaEstudiante");
         if (cedulaInput) {
           cedulaInput.required = false;
+          cedulaInput.disabled = false;
           cedulaInput.value = "";
         }
 
@@ -5677,8 +5780,9 @@ function cargarMatriculas() {
         if (data.errors) {
             throw new Error(data.errors[0].message);
         }
-        matriculas = data.data.matriculas;
-        actualizarTablaMatriculas(matriculas);
+        matriculas = data.data.matriculas || [];
+        poblarFiltroCursosMatriculas(matriculas);
+        filtrarMatriculasAdmin();
         return matriculas;
     })
     .catch(error => {
@@ -5687,11 +5791,59 @@ function cargarMatriculas() {
     });
 }
 
+function poblarFiltroCursosMatriculas(lista) {
+    const sel = document.getElementById("filtroCursoMatricula");
+    if (!sel) return;
+    const actual = sel.value;
+    const cursos = [...new Map((lista || [])
+        .filter(m => m.curso?.id)
+        .map(m => [m.curso.id, m.curso.nombre || "Sin curso"])
+    )].sort((a, b) => a[1].localeCompare(b[1], "es", { sensitivity: "base" }));
+    sel.innerHTML = '<option value="">Todos los cursos</option>' + cursos
+        .map(([id, nombre]) => `<option value="${id}">${nombre}</option>`)
+        .join("");
+    if (cursos.some(([id]) => id === actual)) sel.value = actual;
+}
+
+function filtrarMatriculasAdmin() {
+    const q = (document.getElementById("buscarMatricula")?.value || "").trim().toLowerCase();
+    const cursoId = document.getElementById("filtroCursoMatricula")?.value || "";
+    const filtradas = (matriculas || []).filter(m => {
+        const est = m.estudiante || {};
+        const texto = [
+            m.id,
+            est.cedula,
+            est.nombre,
+            est.primerApellido,
+            m.curso?.nombre,
+            m.estado,
+            m.periodo
+        ].filter(Boolean).join(" ").toLowerCase();
+        return (!cursoId || String(m.curso?.id) === String(cursoId)) && (!q || texto.includes(q));
+    });
+    actualizarTablaMatriculas(filtradas);
+}
+
+function buscarMatriculas() {
+    filtrarMatriculasAdmin();
+}
+
 function actualizarTablaMatriculas(matriculas) {
     const tabla = document.querySelector("#tablaMatriculas tbody");
     if (!tabla) return;
 
-    tabla.innerHTML = matriculas.map(matricula => {
+    const listaOrdenada = [...(matriculas || [])].sort((a, b) => {
+      const ca = a.curso?.nombre || '';
+      const cb = b.curso?.nombre || '';
+      const ea = `${a.estudiante?.primerApellido || ''} ${a.estudiante?.nombre || ''}`;
+      const eb = `${b.estudiante?.primerApellido || ''} ${b.estudiante?.nombre || ''}`;
+      return ca.localeCompare(cb, 'es', { sensitivity:'base' }) || ea.localeCompare(eb, 'es', { sensitivity:'base' });
+    });
+
+    if (!listaOrdenada.length) {
+      tabla.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#64748b">No hay matrículas para ese filtro.</td></tr>';
+    } else {
+    tabla.innerHTML = listaOrdenada.map(matricula => {
       const est=matricula.estudiante;
       const ini=est?((est.nombre?.[0]||'?')+(est.primerApellido?.[0]||'')).toUpperCase():'??';
       const nom=est?`${est.nombre||''} ${est.primerApellido||''}`.trim():'No asignado';
@@ -5709,10 +5861,11 @@ function actualizarTablaMatriculas(matriculas) {
         <td><div class="tb-acts"><button class="tb-btn tb-edit" onclick="editarMatricula('${matricula.id}')"><i class="fas fa-pen"></i> Editar</button><button class="tb-btn tb-del" onclick="eliminarMatricula('${matricula.id}')"><i class="fas fa-trash"></i></button></div></td>
       </tr>`;
     }).join('');
+    }
 
     const totalElement = document.getElementById("totalMatriculas");
     if (totalElement) {
-        totalElement.textContent = matriculas.length;
+        totalElement.textContent = listaOrdenada.length;
     }
 }
 
@@ -8382,20 +8535,53 @@ async function eliminarEvento(id){
 <script>
 /* â”€â”€ HORARIO â”€â”€ mÃºltiples franjas por asignatura, guarda en backend â”€â”€ */
 const DIAS = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
-const FRANJAS_H = [
-  {label:'6:00',  display:'6:00 AM'},
-  {label:'7:00',  display:'7:00 AM'},
-  {label:'8:00',  display:'8:00 AM'},
-  {label:'9:00',  display:'9:00 AM'},
-  {label:'10:00', display:'10:00 AM'},
-  {label:'11:00', display:'11:00 AM'},
-  {label:'12:00', display:'12:00 M'},
-  {label:'13:00', display:'1:00 PM'},
-];
+let FRANJAS_H = Array.from({length:8},(_,i)=>({label:`__fila${i+1}`, display:'', libre:true, orden:i}));
+
+function horNormalizarHora(valor){
+  if(!valor) return '';
+  const m=String(valor).trim().match(/^(\d{1,2})(?::(\d{2}))?/);
+  if(!m) return '';
+  const h=Math.max(0, Math.min(23, parseInt(m[1],10)));
+  const min=m[2] ? Math.max(0, Math.min(59, parseInt(m[2],10))) : 0;
+  return `${h}:${String(min).padStart(2,'0')}`;
+}
+
+function horMinutos(label){
+  if(String(label||'').startsWith('__fila')) return 100000 + (parseInt(String(label).replace('__fila',''),10)||0);
+  const [h,m='0']=String(label).split(':');
+  return (parseInt(h,10)||0)*60 + (parseInt(m,10)||0);
+}
+
+function horDisplay(label){
+  const [hRaw,mRaw='00']=String(label).split(':');
+  const h=parseInt(hRaw,10)||0;
+  const suf=h>=12?'PM':'AM';
+  const h12=h===0?12:h>12?h-12:h;
+  return `${h12}:${String(mRaw).padStart(2,'0')} ${suf}`;
+}
+
+function horAsegurarFranja(label){
+  const hora=horNormalizarHora(label);
+  if(!hora) return '';
+  const existente=FRANJAS_H.find(f=>f.label===hora);
+  if(!existente){
+    const libre=FRANJAS_H.find(f=>f.libre);
+    if(libre){
+      libre.label=hora;
+      libre.display=horDisplay(hora);
+      libre.libre=false;
+    }else{
+      FRANJAS_H.push({label:hora,display:horDisplay(hora),libre:false,orden:FRANJAS_H.length});
+    }
+    FRANJAS_H.sort((a,b)=>horMinutos(a.label)-horMinutos(b.label));
+  }
+  return hora;
+}
 
 // horData[cursoId][asigId] = Set de "Lunes__7:00" strings
 // AsÃ­ una asignatura puede estar en mÃºltiples días/horas
 let horData   = {};
+let horRangos = {};
 let horAsignaturas = [];
 let horCursoId = null;
 
@@ -8427,14 +8613,87 @@ async function horInit(){
 // "Lunes 7:00" â†’ mÃºltiples entradas separadas por coma: "Lunes 7:00,Martes 8:00"
 function parseHorarios(h){
   if(!h) return new Set();
-  return new Set(h.split(',').map(s=>s.trim()).filter(s=>s.includes(' ')).map(s=>{
+  return new Set(h.split(',').map(s=>s.trim().replace('__',' ')).filter(s=>s.includes(' ')).map(s=>{
     const [dia,...rest] = s.split(' ');
-    return dia+'__'+rest.join(' ');
-  }));
+    const rango=rest.join(' ').split('-').map(x=>x.trim());
+    const hora=horAsegurarFranja(rango[0]);
+    const fin=horNormalizarHora(rango[1]);
+    if(horCursoId && hora && fin){
+      if(!horRangos[horCursoId]) horRangos[horCursoId]={};
+      horRangos[horCursoId][hora]=fin;
+    }
+    return hora ? dia+'__'+hora : null;
+  }).filter(Boolean));
 }
 
 function setToHorario(s){
-  return [...s].map(k=>k.replace('__',' ')).join(',');
+  return [...s].sort((a,b)=>{
+    const [da,ha]=a.split('__');
+    const [db,hb]=b.split('__');
+    return DIAS.indexOf(da)-DIAS.indexOf(db) || horMinutos(ha)-horMinutos(hb);
+  }).map(k=>{
+    const [dia,hora]=k.split('__');
+    const fin=horRangos[horCursoId]?.[hora];
+    return `${dia} ${hora}${fin?'-'+fin:''}`;
+  }).join(',');
+}
+
+function horInputValue(hora){
+  const h=horNormalizarHora(hora);
+  if(!h) return '';
+  const [hh,mm]=h.split(':');
+  return `${String(parseInt(hh,10)).padStart(2,'0')}:${mm}`;
+}
+
+function horSetInicio(horaActual, valor){
+  if(!horCursoId) return;
+  const anterior=String(horaActual||'');
+  const nuevo=horNormalizarHora(valor);
+  if(!anterior || !nuevo || anterior===nuevo) return;
+  if(FRANJAS_H.some(f=>f.label===nuevo)){
+    showToastAdm('Ya existe una fila con esa hora de inicio','er');
+    renderHorGrid();
+    return;
+  }
+
+  FRANJAS_H=FRANJAS_H.map(f=>f.label===anterior?{...f,label:nuevo,display:horDisplay(nuevo),libre:false}:f)
+    .sort((a,b)=>horMinutos(a.label)-horMinutos(b.label));
+
+  if(horRangos[horCursoId]?.[anterior]){
+    horRangos[horCursoId][nuevo]=horRangos[horCursoId][anterior];
+    delete horRangos[horCursoId][anterior];
+  }
+
+  const cursoData=horData[horCursoId]||{};
+  Object.keys(cursoData).forEach(asigId=>{
+    const actualizado=new Set();
+    (cursoData[asigId]||new Set()).forEach(slot=>{
+      const [dia,hora]=slot.split('__');
+      actualizado.add(`${dia}__${hora===anterior?nuevo:hora}`);
+    });
+    cursoData[asigId]=actualizado;
+  });
+  renderHorGrid();
+}
+
+function horSetFin(hora, valor){
+  if(!horCursoId) return;
+  const inicio=horNormalizarHora(hora);
+  const fin=horNormalizarHora(valor);
+  if(!inicio) return;
+  if(!horRangos[horCursoId]) horRangos[horCursoId]={};
+  if(!fin){
+    delete horRangos[horCursoId][inicio];
+    renderHorGrid();
+    return;
+  }
+  if(horMinutos(fin)<=horMinutos(inicio)){
+    showToastAdm('La hora final debe ser mayor que la hora inicial','er');
+    renderHorGrid();
+    return;
+  }
+  horRangos[horCursoId][inicio]=fin;
+  renderHorGrid();
 }
 
 async function horRenderGrid(){
@@ -8487,7 +8746,7 @@ function renderHorGrid(){
   let html = '<div style="overflow-x:auto">';
   html += '<table style="width:100%;border-collapse:collapse;min-width:700px">';
   html += '<thead><tr>';
-  html += '<th style="padding:10px 14px;background:var(--surface);border-bottom:2px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);text-align:left;min-width:90px">Hora</th>';
+  html += '<th style="padding:10px 14px;background:var(--surface);border-bottom:2px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);text-align:left;min-width:150px">Hora</th>';
   DIAS.forEach(d=>{
     html+=`<th style="padding:10px 14px;background:var(--surface);border-bottom:2px solid var(--border);font-size:12px;font-weight:700;color:var(--ink);text-align:center;min-width:130px">${d}</th>`;
   });
@@ -8495,7 +8754,18 @@ function renderHorGrid(){
 
   FRANJAS_H.forEach(({label, display})=>{
     html += '<tr>';
-    html += `<td style="padding:8px 14px;font-size:11px;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface);white-space:nowrap">${display}</td>`;
+    const esLibre=String(label).startsWith('__fila');
+    const fin=horRangos[horCursoId]?.[label]||'';
+    html += `<td style="padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface);white-space:nowrap;min-width:150px">
+      <div style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:5px">
+        <span>inicio</span>
+        <input type="time" step="300" value="${esLibre?'':horInputValue(label)}" onchange="horSetInicio('${label}',this.value)" style="width:86px;padding:3px 5px;border:1px solid #cbd5e1;border-radius:5px;font-size:11px;font-family:inherit;background:#fff;color:var(--ink)">
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--muted)">
+        <span>hasta&nbsp;</span>
+        <input type="time" step="300" value="${fin?horInputValue(fin):''}" ${esLibre?'disabled':''} onchange="horSetFin('${label}',this.value)" style="width:86px;padding:3px 5px;border:1px solid #cbd5e1;border-radius:5px;font-size:11px;font-family:inherit;background:#fff;color:var(--ink)">
+      </div>
+    </td>`;
     DIAS.forEach(dia=>{
       const slot = dia+'__'+label;
       const asignesEnSlot = horAsignaturas.filter(a=>(data[a.id]||new Set()).has(slot));
@@ -8503,9 +8773,9 @@ function renderHorGrid(){
 
       if(asignesEnSlot.length === 0){
         // Celda vacía - dropdown para asignar
-        let selEl = `<select onchange="horAddSlot('${dia}','${label}',this.value);this.value=''" `
+        let selEl = `<select ${esLibre?'disabled':''} onchange="horAddSlot('${dia}','${label}',this.value);this.value=''" `
           + `style="width:100%;padding:5px 6px;border:1px dashed #cbd5e1;border-radius:5px;font-size:11px;font-family:inherit;background:#fafbff;color:var(--muted);cursor:pointer">`;
-        selEl += '<option value="">+ Agregar</option>';
+        selEl += `<option value="">${esLibre?'Define inicio':'+ Agregar'}</option>`;
         horAsignaturas.forEach(a=>{
           selEl += `<option value="${a.id}">${a.nombre}</option>`;
         });
@@ -8541,7 +8811,7 @@ function renderHorGrid(){
       : 'Sin profesor';
     const slots = data[a.id]||new Set();
     const dias_text = slots.size > 0
-      ? [...slots].map(s=>s.replace('__',' ')).join(' · ')
+      ? [...slots].map(s=>{const [dia,hora]=s.split('__');const fin=horRangos[horCursoId]?.[hora];return `${dia} ${hora}${fin?'-'+fin:''}`;}).join(' · ')
       : '⚠️ Sin horario';
     html += `<div style="padding:7px 12px;border-radius:8px;background:${c.bg};color:${c.fg};border:1.5px solid ${c.border};font-size:12px;font-weight:700">`;
     html += `${a.nombre} <span style="font-weight:600;opacity:.92;font-size:11px">· ${profesorNombre}</span><br><span style="font-weight:500;opacity:.8;font-size:11px">${dias_text}</span>`;
@@ -8877,4 +9147,3 @@ function renderTopEstudiantes(cals){
   
   </body>
 </html>
-

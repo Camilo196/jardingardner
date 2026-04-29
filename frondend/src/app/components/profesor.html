@@ -474,6 +474,16 @@ table.t tbody tr:last-child td{border-bottom:none}
         <span style="font-size:13px;font-weight:700;color:var(--ink)"><i class="fas fa-calendar-alt"></i> Período del boletín:</span>
         <select id="indPeriodoSel" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;cursor:pointer;outline:none" onchange="onIndPeriodoCambio()"></select>
       </div>
+      <div style="margin-bottom:16px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        <div style="background:var(--surface);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <strong style="font-size:13px;color:var(--ink)"><i class="fas fa-users"></i> Estudiantes que reciben estos indicadores</strong>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn bo" type="button" style="padding:5px 10px;font-size:11px" onclick="marcarTodosIndicadores(true)">Todos</button>
+            <button class="btn bd" type="button" style="padding:5px 10px;font-size:11px" onclick="marcarTodosIndicadores(false)">Ninguno</button>
+          </div>
+        </div>
+        <div id="ind-estudiantes" style="padding:10px 14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px"></div>
+      </div>
       <div style="margin-bottom:16px;border:1.5px solid var(--blue-lt);border-radius:8px;overflow:hidden">
         <div style="background:var(--blue);color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
           <strong id="indLabel-saber" style="font-size:13px"><i class="fas fa-book"></i> SABER - ¿Qué aprende?</strong>
@@ -570,11 +580,13 @@ table.t tbody tr:last-child td{border-bottom:none}
         <input type="hidden" id="actCursoTipo" value="TRABAJO">
       </div>
       <div class="fgroup"><label>NOMBRE DE LA ACTIVIDAD</label><input type="text" id="actCursoNombre" placeholder="Ej: Taller 1 - Sumas"></div>
-      <div class="fgroup"><label>NOTA BASE (0 - 5)</label><input type="number" id="actCursoNota" min="0" max="5" step="0.1"></div>
       <div class="fgroup"><label>PERIODO</label><select id="actCursoPeriodo"><option value="">Seleccionar periodo...</option></select></div>
-      <div class="fgroup"><label>FECHA DE LA ACTIVIDAD</label><input type="date" id="actCursoFecha"></div>
-      <div class="fgroup"><label>OBSERVACIONES <span style="font-weight:400;opacity:.6">(opcional)</span></label><textarea id="actCursoObs" rows="2" placeholder="Notas adicionales..."></textarea></div>
-      <button class="btn bp" style="width:100%;justify-content:center;padding:12px;font-size:14px" onclick="guardarActividadCurso()"><i class="fas fa-paper-plane"></i> Publicar actividad al curso</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="fgroup"><label>FECHA INICIO</label><input type="date" id="actCursoFecha"></div>
+        <div class="fgroup"><label>FECHA FIN <span style="font-weight:400;opacity:.6">(opcional)</span></label><input type="date" id="actCursoFechaFin"></div>
+      </div>
+      <div class="fgroup"><label>DESCRIPCIÓN <span style="font-weight:400;opacity:.6">(opcional)</span></label><textarea id="actCursoObs" rows="2" placeholder="Qué se trabajará durante esas fechas..."></textarea></div>
+      <button class="btn bp" style="width:100%;justify-content:center;padding:12px;font-size:14px" onclick="guardarActividadCurso()"><i class="fas fa-paper-plane"></i> Publicar en cronograma</button>
     </div>
   </div>
 </div>
@@ -661,7 +673,8 @@ const W = {
   profId:null, profNombre:'',
   asignaturas:[],
   cursoNombre:'',
-  estId:null, asigId:null, periodo:null,
+  estId:null, asigId:null, asigActual:null, periodo:null,
+  indEstudiantes:[], indSeleccionados:new Set(),
   cals:[], calTab:'cAct',
   asEst:[], asEstados:{}, asObs:{},
   calMesActual:new Date().getMonth(), calAnioActual:new Date().getFullYear(), calEventos:[],
@@ -736,7 +749,7 @@ function renderAsignaturas(){
       const totalC=(a.matriculas||[]).length;
       const periodo=a.matriculas?.[0]?.periodo||'-';
       const periodoLabel2=periodo.match(/^(\d{4})-(\d)$/)?`${{'1':'1er','2':'2do','3':'3er','4':'4to'}[periodo.split('-')[1]]||'P'+periodo.split('-')[1]} Período ${periodo.split('-')[0]}`:periodo;
-      const filas=(a.matriculas||[]).filter(m=>m.estudiante).map((m,mi)=>{
+      const filas=ordenarMatriculasPorApellido(a.matriculas||[]).filter(m=>m.estudiante).map((m,mi)=>{
         const e=m.estudiante; const n=`${e.nombre} ${e.primerApellido} ${e.segundoApellido||''}`.trim();
         const initials=(n.split(' ').slice(0,2).map(w=>w[0]).join('')).toUpperCase();
         return `<tr data-n="${n.toLowerCase()}" data-c="${e.cedula}">
@@ -815,6 +828,21 @@ function togMateria(b,t){
   const body=document.getElementById(b); body.classList.toggle('o');
   const tog=document.getElementById(t); if(tog) tog.style.transform=body.classList.contains('o')?'rotate(180deg)':'rotate(0deg)';
 }
+function ordenarEstudiantesPorApellido(lista){
+  return [...(lista||[])].sort((a,b)=>{
+    const an=`${a?.primerApellido||''} ${a?.segundoApellido||''} ${a?.nombre||''} ${a?.cedula||''}`.trim();
+    const bn=`${b?.primerApellido||''} ${b?.segundoApellido||''} ${b?.nombre||''} ${b?.cedula||''}`.trim();
+    return an.localeCompare(bn,'es',{sensitivity:'base'});
+  });
+}
+function ordenarMatriculasPorApellido(lista){
+  return [...(lista||[])].sort((a,b)=>{
+    const ea=a?.estudiante||{}, eb=b?.estudiante||{};
+    const an=`${ea.primerApellido||''} ${ea.segundoApellido||''} ${ea.nombre||''} ${ea.cedula||''}`.trim();
+    const bn=`${eb.primerApellido||''} ${eb.segundoApellido||''} ${eb.nombre||''} ${eb.cedula||''}`.trim();
+    return an.localeCompare(bn,'es',{sensitivity:'base'});
+  });
+}
 function filtrar(tid,q){ const t=document.getElementById(tid);if(!t)return;const f=q.toLowerCase(); t.querySelectorAll('tbody tr').forEach(r=>{r.style.display=(r.dataset.n||'').includes(f)||(r.dataset.c||'').includes(f)?'':'none';}); }
 
 function verDetalles(matId){
@@ -831,13 +859,17 @@ async function abrirCalificaciones(matId){
   let mat=null,asig=null;
   for(const a of W.asignaturas){const m=(a.matriculas||[]).find(x=>x.id===matId);if(m){mat=m;asig=a;break;}}
   if(!mat?.estudiante||!asig)return;
-  const est=mat.estudiante; W.estId=est.cedula; W.asigId=asig.id; W.periodo=mat.periodo||periodoLabel(); W.cursoNombre=asig.curso?.nombre||'';
+  const est=mat.estudiante; W.estId=est.cedula; W.asigId=asig.id; W.asigActual=asig; W.periodo=mat.periodo||periodoLabel(); W.cursoNombre=asig.curso?.nombre||'';
+  W.indEstudiantes=ordenarEstudiantesPorApellido((asig.matriculas||[]).filter(m=>m.estudiante && (m.estado||'ACTIVA')==='ACTIVA').map(m=>m.estudiante));
   const n=`${est.nombre} ${est.primerApellido} ${est.segundoApellido||''}`.trim();
   document.getElementById('calTit').textContent=n; document.getElementById('calSub').textContent=asig.nombre;
-  document.getElementById('mCal').classList.add('o'); switchCalTab('cAct'); await recargarCals();
+  const esPre=esCursoPreescolarNombre(W.cursoNombre);
+  ['ctbtn1','ctbtn2','ctbtn4'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display=esPre?'none':''; });
+  document.getElementById('mCal').classList.add('o'); switchCalTab(esPre?'cIndicadores':'cAct'); await recargarCals();
 }
 
 function switchCalTab(id){
+  if(esCursoPreescolarNombre(W.cursoNombre) && ['cAct','cCortes','cComportamiento'].includes(id)) id='cIndicadores';
   W.calTab=id;
   document.getElementById('ctbtn1').classList.toggle('on',id==='cAct');
   document.getElementById('ctbtn2').classList.toggle('on',id==='cCortes');
@@ -851,6 +883,12 @@ function switchCalTab(id){
 }
 
 async function recargarCals(){
+  if(esCursoPreescolarNombre(W.cursoNombre)){
+    W.cals=[];
+    document.getElementById('tbActiv').innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">Preescolar se registra solo con indicadores pedagógicos.</td></tr>';
+    document.getElementById('cortesContent').innerHTML='<p style="text-align:center;padding:24px;color:var(--muted)">Preescolar no maneja notas por materia.</p>';
+    return;
+  }
   document.getElementById('tbActiv').innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px">Cargando...</td></tr>';
   try{
     const de=await gql(`query{estudiantes{id cedula}}`);
@@ -906,6 +944,7 @@ function abrirActividadCurso(){
   const sel=document.getElementById('actCursoAsig');
   sel.innerHTML='<option value="">Seleccionar curso / asignatura...</option>';
   W.asignaturas.forEach(a=>{
+    if(esCursoPreescolarNombre(a.curso?.nombre||'')) return;
     const total=(a.matriculas||[]).filter(m=>m.estudiante && (m.estado||'ACTIVA')==='ACTIVA').length;
     const opt=document.createElement('option');
     opt.value=a.id;
@@ -916,9 +955,9 @@ function abrirActividadCurso(){
   const basePeriodo=document.getElementById('actPeriodo');
   if(periodoSel && basePeriodo) periodoSel.innerHTML=basePeriodo.innerHTML;
   document.getElementById('actCursoNombre').value='';
-  document.getElementById('actCursoNota').value='';
   document.getElementById('actCursoObs').value='';
   document.getElementById('actCursoFecha').value=new Date().toISOString().split('T')[0];
+  document.getElementById('actCursoFechaFin').value='';
   setPeriodoSelectById('actCursoPeriodo', W.periodo||periodoLabel());
   document.querySelectorAll('#mActCurso .tchip').forEach(c=>c.classList.remove('sel'));
   const chip=document.querySelector('#mActCurso .tchip.TRABAJO');
@@ -930,42 +969,54 @@ async function guardarActividadCurso(){
   const asigId=document.getElementById('actCursoAsig').value;
   const tipo=document.getElementById('actCursoTipo').value;
   const nombre=document.getElementById('actCursoNombre').value.trim();
-  const nota=parseFloat(document.getElementById('actCursoNota').value);
   const periodo=document.getElementById('actCursoPeriodo').value.trim();
   const fecha=document.getElementById('actCursoFecha').value;
+  const fechaFin=document.getElementById('actCursoFechaFin').value;
   const obs=document.getElementById('actCursoObs').value.trim();
-  if(!asigId||!nombre||isNaN(nota)||!periodo||!fecha){ toast('Completa todos los campos obligatorios','er'); return; }
-  if(nota<0||nota>5){ toast('La nota debe estar entre 0.0 y 5.0','er'); return; }
+  if(!asigId||!nombre||!periodo||!fecha){ toast('Completa curso, nombre, periodo y fecha de inicio','er'); return; }
+  if(fechaFin && fechaFin < fecha){ toast('La fecha fin no puede ser anterior a la fecha de inicio','er'); return; }
   const asig=W.asignaturas.find(a=>a.id===asigId);
   if(!asig){ toast('No se encontró la asignatura seleccionada','er'); return; }
-  const mats=(asig.matriculas||[]).filter(m=>m.estudiante && (m.estado||'ACTIVA')==='ACTIVA');
-  if(!mats.length){ toast('Ese curso no tiene estudiantes activos','er'); return; }
-  const resultados=await Promise.allSettled(mats.map(m=>gql(`mutation C($inp:CalificacionInput!){crearCalificacion(input:$inp){id}}`,{
-    inp:{
-      estudianteId:m.estudiante.cedula,
-      asignaturaId:asigId,
-      nota,
-      periodo,
-      fecha,
-      observaciones:obs,
-      tipoActividad:tipo,
-      nombreActividad:nombre
-    }
-  })));
-  const ok=resultados.filter(r=>r.status==='fulfilled').length;
-  const fail=resultados.length-ok;
-  if(ok) toast(fail?`Actividad enviada a ${ok} estudiantes. ${fail} fallaron.`:`Actividad publicada para ${ok} estudiantes`, fail?'er':'ok');
-  if(ok) cerrarMActCurso();
+  const cursoId=asig.curso?.id||asig.cursoId;
+  if(!cursoId){ toast('La asignatura no tiene curso asociado','er'); return; }
+  const tipoCronograma = tipo === 'EXAMEN' ? 'EXAMEN' : 'OTRO';
+  const descripcion = [
+    `Asignatura: ${asig.nombre}`,
+    `Curso: ${asig.curso?.nombre||'Sin curso'}`,
+    `Periodo: ${periodo}`,
+    `Tipo: ${tipo}`,
+    obs
+  ].filter(Boolean).join('\n');
+  try{
+    await gql(`mutation C($inp:EventoCronogramaInput!){crearEventoCronograma(input:$inp){id}}`,{
+      inp:{
+        titulo:nombre,
+        tipo:tipoCronograma,
+        fechaInicio:fecha,
+        ...(fechaFin?{fechaFin}:{}),
+        cursoId,
+        color: tipoCronograma==='EXAMEN' ? '#f59e0b' : '#4361ee',
+        descripcion
+      }
+    });
+    toast('Actividad publicada en el cronograma del curso');
+    cerrarMActCurso();
+    if(document.getElementById('sec-cronograma')?.classList.contains('active')) await iniciarCronograma();
+  }catch(err){
+    toast('Error: '+err.message,'er');
+  }
 }
-function abrirNuevaAct(){ document.getElementById('actId').value=''; document.getElementById('actTit').textContent='Nueva Actividad'; document.getElementById('actNombre').value=''; document.getElementById('actNota').value=''; document.getElementById('actObs').value=''; document.getElementById('actFecha').value=new Date().toISOString().split('T')[0]; setPeriodoSelect(W.periodo||periodoLabel()); document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); document.querySelector('.tchip.TRABAJO').classList.add('sel'); document.getElementById('actTipo').value='TRABAJO'; document.getElementById('mAct').classList.add('o'); }
+function abrirNuevaAct(){ if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; } document.getElementById('actId').value=''; document.getElementById('actTit').textContent='Nueva Actividad'; document.getElementById('actNombre').value=''; document.getElementById('actNota').value=''; document.getElementById('actObs').value=''; document.getElementById('actFecha').value=new Date().toISOString().split('T')[0]; setPeriodoSelect(W.periodo||periodoLabel()); document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); document.querySelector('.tchip.TRABAJO').classList.add('sel'); document.getElementById('actTipo').value='TRABAJO'; document.getElementById('mAct').classList.add('o'); }
 function editarAct(id){ const cal=W.cals.find(c=>c.id===id);if(!cal)return; document.getElementById('actId').value=id; document.getElementById('actTit').textContent='Editar Actividad'; document.getElementById('actNombre').value=cal.nombreActividad||''; document.getElementById('actNota').value=cal.nota; document.getElementById('actObs').value=cal.observaciones||''; document.getElementById('actFecha').value=cal.fecha?(new Date(cal.fecha).toISOString().split('T')[0]):new Date().toISOString().split('T')[0]; setPeriodoSelect(cal.periodo||W.periodo||periodoLabel()); document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); const chip=document.querySelector(`.tchip.${cal.tipoActividad||'EXAMEN'}`); if(chip)chip.classList.add('sel'); document.getElementById('actTipo').value=cal.tipoActividad||'EXAMEN'; document.getElementById('mAct').classList.add('o'); }
 function selTipo(chip){ document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); chip.classList.add('sel'); document.getElementById('actTipo').value=chip.dataset.t; }
 async function guardarActividad(){
+  if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; }
   const id=document.getElementById('actId').value; const tipo=document.getElementById('actTipo').value; const nombre=document.getElementById('actNombre').value.trim(); const nota=parseFloat(document.getElementById('actNota').value); const periodo=document.getElementById('actPeriodo').value.trim(); const fecha=document.getElementById('actFecha').value; const obs=document.getElementById('actObs').value.trim();
   if(!nombre||isNaN(nota)||!periodo||!fecha){toast('Completa todos los campos obligatorios','er');return;} if(nota<0||nota>5){toast('La nota debe estar entre 0.0 y 5.0','er');return;}
   try{ if(id){ await gql(`mutation A($id:ID!,$inp:CalificacionInput!){actualizarCalificacion(id:$id,input:$inp){id}}`,{id,inp:{estudianteId:W.estId,asignaturaId:W.asigId,nota,periodo,observaciones:obs,tipoActividad:tipo,nombreActividad:nombre}}); toast('Actividad actualizada'); }else{ await gql(`mutation C($inp:CalificacionInput!){crearCalificacion(input:$inp){id}}`,{inp:{estudianteId:W.estId,asignaturaId:W.asigId,nota,periodo,observaciones:obs,tipoActividad:tipo,nombreActividad:nombre}}); toast('Actividad registrada'); } cerrarMAct(); await recargarCals(); }catch(err){toast('Error: '+err.message,'er');}
 }
 async function guardarActividadV2(){
+  if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; }
   const id=document.getElementById('actId').value;
   const tipo=document.getElementById('actTipo').value;
   const nombre=document.getElementById('actNombre').value.trim();
@@ -1003,7 +1054,7 @@ async function cargarLista(){
   W.asEst=[];W.asEstados={};W.asObs={};
   try{
     const dm=await gql(`query{matriculasPorAsignatura(asignaturaId:"${asigId}"){id estado estudiante{cedula nombre primerApellido segundoApellido}}}`);
-    const mats=(dm.matriculasPorAsignatura||[]).filter(m=>m.estado==='ACTIVA'&&m.estudiante); W.asEst=mats.map(m=>m.estudiante);
+    const mats=(dm.matriculasPorAsignatura||[]).filter(m=>m.estado==='ACTIVA'&&m.estudiante); W.asEst=ordenarEstudiantesPorApellido(mats.map(m=>m.estudiante));
     if(!W.asEst.length){toast('No hay estudiantes activos en esta asignatura','er');return;}
     try{ const da=await gql(`query{asistenciasPorFecha(asignaturaId:"${asigId}",fecha:"${fecha}"){estudianteId estado observaciones}}`); const ex={};(da.asistenciasPorFecha||[]).forEach(r=>{ex[r.estudianteId]=r;}); W.asEst.forEach(e=>{const r=ex[e.cedula];W.asEstados[e.cedula]=r?r.estado:'P';W.asObs[e.cedula]=r?r.observaciones||'':'';}); }catch{ W.asEst.forEach(e=>{W.asEstados[e.cedula]='P';W.asObs[e.cedula]='';});  }
     renderLista(fecha); await cargarHistorial(asigId,periodo);
@@ -1045,7 +1096,7 @@ function renderHistResumen(data){
   const mapaE={};W.asEst.forEach(e=>{mapaE[e.cedula]=e;});
   const tb=document.getElementById('hTbodyResumen');
   if(!data.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Sin registros en este período</td></tr>';return;}
-  tb.innerHTML=data.map(r=>{ const e=mapaE[r.estudianteId]; const n=e?`${e.nombre} ${e.primerApellido}`.trim():r.estudianteId; const pct=r.porcentajeAsistencia; const cls=pct>=80?'bpct-ok':pct>=60?'bpct-w':'bpct-r';
+  tb.innerHTML=[...data].sort((a,b)=>{ const ea=mapaE[a.estudianteId], eb=mapaE[b.estudianteId]; const an=ea?`${ea.primerApellido||''} ${ea.segundoApellido||''} ${ea.nombre||''}`:String(a.estudianteId); const bn=eb?`${eb.primerApellido||''} ${eb.segundoApellido||''} ${eb.nombre||''}`:String(b.estudianteId); return an.localeCompare(bn,'es',{sensitivity:'base'}); }).map(r=>{ const e=mapaE[r.estudianteId]; const n=e?`${e.nombre} ${e.primerApellido}`.trim():r.estudianteId; const pct=r.porcentajeAsistencia; const cls=pct>=80?'bpct-ok':pct>=60?'bpct-w':'bpct-r';
     return `<tr><td><strong style="font-size:13px">${n}</strong><br><span style="font-size:11px;color:var(--muted)">${r.estudianteId}</span></td><td style="font-weight:700">${r.totalClases}</td><td style="color:var(--green);font-weight:700">${r.presentes}</td><td style="color:var(--red);font-weight:700">${r.ausentes}</td><td style="color:var(--amber);font-weight:700">${r.tardes}</td><td style="color:var(--purple);font-weight:700">${r.excusas}</td><td><span class="bpct ${cls}">${pct}%</span></td></tr>`;
   }).join('');
 }
@@ -1125,10 +1176,12 @@ function poblarCompEstPeriodo(){
 }
 
 async function iniciarCompEstudiante(){
+  if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar se maneja solo con indicadores pedagógicos','er'); return; }
   poblarCompEstPeriodo(); await cargarCompEstudiante();
 }
 
 async function cargarCompEstudiante(){
+  if(esCursoPreescolarNombre(W.cursoNombre)) return;
   const periodo=document.getElementById('compEstPeriodo').value;
   document.getElementById('compEstNota').value=''; actualizarNivelUI(null); document.getElementById('compEstDesc').value='';
   const estado=document.getElementById('compEstEstado'); estado.textContent='Cargando...'; estado.style.background='var(--surface)'; estado.style.color='var(--muted)';
@@ -1147,6 +1200,7 @@ async function cargarCompEstudiante(){
 }
 
 async function guardarCompEstudiante(){
+  if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar se maneja solo con indicadores pedagógicos','er'); return; }
   const periodo=document.getElementById('compEstPeriodo').value;
   const nota=parseFloat(document.getElementById('compEstNota').value);
   const desc=document.getElementById('compEstDesc').value.trim();
@@ -1267,6 +1321,33 @@ function actualizarIndicadoresUI(){
   setTxt('indLabel-ser',meta.ser);
 }
 
+function renderIndEstudiantes(){
+  const cont=document.getElementById('ind-estudiantes'); if(!cont) return;
+  const estudiantes=W.indEstudiantes||[];
+  if(!estudiantes.length){
+    cont.innerHTML='<div style="color:var(--muted);font-size:13px;font-style:italic">No hay estudiantes activos en este salón.</div>';
+    return;
+  }
+  cont.innerHTML=estudiantes.map(e=>{
+    const nombre=`${e.nombre} ${e.primerApellido} ${e.segundoApellido||''}`.trim();
+    const checked=W.indSeleccionados.has(String(e.cedula))?'checked':'';
+    return `<label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:13px;cursor:pointer">
+      <input type="checkbox" value="${e.cedula}" ${checked} onchange="toggleIndEstudiante('${e.cedula}',this.checked)" style="width:16px;height:16px">
+      <span><strong style="display:block;color:var(--ink)">${nombre}</strong><small style="color:var(--muted)">${e.cedula}</small></span>
+    </label>`;
+  }).join('');
+}
+
+function toggleIndEstudiante(cedula,on){
+  if(on) W.indSeleccionados.add(String(cedula));
+  else W.indSeleccionados.delete(String(cedula));
+}
+
+function marcarTodosIndicadores(on){
+  W.indSeleccionados=new Set(on?(W.indEstudiantes||[]).map(e=>String(e.cedula)):[]);
+  renderIndEstudiantes();
+}
+
 function poblarIndPeriodoSel(preferido){
   const sel=document.getElementById('indPeriodoSel'); if(!sel) return;
   const ay=anioActual();
@@ -1296,17 +1377,20 @@ async function cargarIndicadores(periodoForzado){
   const periodo=periodoForzado||getIndPeriodo();
   const render=()=>{ renderIndLista('saber'); renderIndLista('hacer'); renderIndLista('ser'); };
   try{
-    const d=await gql(`query{indicadoresPorAsignatura(asignaturaId:"${W.asigId}",periodo:"${periodo}"){saber hacer ser}}`);
+    const d=await gql(`query{indicadoresPorAsignatura(asignaturaId:"${W.asigId}",periodo:"${periodo}",estudianteId:"${W.estId}"){saber hacer ser estudianteIds}}`);
     const ind=d.indicadoresPorAsignatura;
     IND.saber=ind?.saber?[...ind.saber]:[];
     IND.hacer=ind?.hacer?[...ind.hacer]:[];
     IND.ser=ind?.ser?[...ind.ser]:[];
+    W.indSeleccionados=new Set((ind?.estudianteIds?.length?ind.estudianteIds:[W.estId]).map(String));
     const el=document.getElementById('indEstado');
     if(el){ const total=IND.saber.length+IND.hacer.length+IND.ser.length; el.textContent=total?`${total} indicadores para ${periodo}`:`Sin indicadores para ${periodo}`; el.style.background=total?'var(--green-lt)':'var(--surface)'; el.style.color=total?'var(--green)':'var(--muted)'; }
   }catch{
     IND.saber=[];IND.hacer=[];IND.ser=[];
+    W.indSeleccionados=new Set(W.estId?[String(W.estId)]:[]);
     const el=document.getElementById('indEstado'); if(el){ el.textContent='Sin indicadores'; el.style.background='var(--surface)'; el.style.color='var(--muted)'; }
   }
+  renderIndEstudiantes();
   render();
 }
 
@@ -1331,12 +1415,14 @@ function eliminarInd(tipo,i){ IND[tipo].splice(i,1); renderIndLista(tipo); }
 async function guardarIndicadores(){
   const periodo=getIndPeriodo();
   const saber=IND.saber; const hacer=IND.hacer; const ser=IND.ser;
+  const estudianteIds=[...W.indSeleccionados];
+  if(!estudianteIds.length){ toast('Selecciona al menos un estudiante','er'); return; }
   try{
-    await gql(`mutation{guardarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}",saber:${JSON.stringify(saber)},hacer:${JSON.stringify(hacer)},ser:${JSON.stringify(ser)}){id}}`);
+    await gql(`mutation{guardarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}",saber:${JSON.stringify(saber)},hacer:${JSON.stringify(hacer)},ser:${JSON.stringify(ser)},estudianteIds:${JSON.stringify(estudianteIds)}){id}}`);
     IND.saber=saber;IND.hacer=hacer;IND.ser=ser;
     const el=document.getElementById('indEstado');
-    if(el){ const total=saber.length+hacer.length+ser.length; el.textContent=`Guardado para ${periodo} (${total} indicadores)`; el.style.background='var(--green-lt)'; el.style.color='var(--green)'; }
-    toast('Indicadores guardados');
+    if(el){ const total=saber.length+hacer.length+ser.length; el.textContent=`Guardado para ${estudianteIds.length} estudiante(s) - ${periodo} (${total} indicadores)`; el.style.background='var(--green-lt)'; el.style.color='var(--green)'; }
+    toast('Indicadores guardados para los estudiantes seleccionados');
   }catch(err){ toast('Error: '+err.message,'er'); }
 }
 

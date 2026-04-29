@@ -419,10 +419,28 @@ const API=window.LEARNSCAPE_API;
 const SECTION_LABELS={resumen:['Resumen','Tus cursos y estado académico'],horario:['Mi Horario','Horario semanal de clases'],notas:['Mis Notas','Calificaciones por asignatura'],asistencia:['Mi Asistencia','Registro de asistencia'],cronograma:['Cronograma','Calendario institucional'],actividades:['Calendario de actividades','Actividades asignadas por tus profesores'],boletin:['Boletín PDF','Descarga tus boletines']};
 const DIAS=['lunes','martes','miercoles','jueves','viernes'];
 const DLAB={lunes:'Lunes',martes:'Martes',miercoles:'Miércoles',jueves:'Jueves',viernes:'Viernes'};
-const FRANJAS=[{id:'F1',h:6,l:'6:00'},{id:'F2',h:7,l:'7:00'},{id:'F3',h:8,l:'8:00'},{id:'F4',h:9,l:'9:00'},{id:'F5',h:10,l:'10:00'},{id:'F6',h:11,l:'11:00'},{id:'F7',h:12,l:'12:00'},{id:'F8',h:13,l:'13:00'},{id:'F9',h:14,l:'14:00'},{id:'FA',h:15,l:'15:00'},{id:'FB',h:16,l:'16:00'},{id:'FC',h:17,l:'17:00'}];
+let FRANJAS=[{id:'F1',h:6,l:'6:00'},{id:'F2',h:7,l:'7:00'},{id:'F3',h:8,l:'8:00'},{id:'F4',h:9,l:'9:00'},{id:'F5',h:10,l:'10:00'},{id:'F6',h:11,l:'11:00'},{id:'F7',h:12,l:'12:00'},{id:'F8',h:13,l:'13:00'},{id:'F9',h:14,l:'14:00'},{id:'FA',h:15,l:'15:00'},{id:'FB',h:16,l:'16:00'},{id:'FC',h:17,l:'17:00'}];
 const DIA_MAP={lun:'lunes',lunes:'lunes',mar:'martes',martes:'martes',mie:'miercoles',mié:'miercoles',miercoles:'miercoles',miércoles:'miercoles',jue:'jueves',jueves:'jueves',vie:'viernes',viernes:'viernes'};
 const DCLS={lunes:'lun',martes:'mar',miercoles:'mie',jueves:'jue',viernes:'vie'};
 const G={id:null,email:'',nombre:'',cursos:[],cals:[],asistencias:[],cargado:false,calMesActual:new Date().getMonth(),calAnioActual:new Date().getFullYear(),calEventos:[],actMesActual:new Date().getMonth(),actAnioActual:new Date().getFullYear(),actEventos:[]};
+
+function normalizarHoraHorario(valor){
+  const m=String(valor||'').trim().match(/^(\d{1,2})(?::(\d{2}))?/);
+  if(!m) return '';
+  return `${parseInt(m[1],10)}:${String(m[2]||'00').padStart(2,'0')}`;
+}
+function minutosHorario(label){ const [h,m='0']=String(label).split(':'); return (parseInt(h,10)||0)*60+(parseInt(m,10)||0); }
+function asegurarFranjaHorario(label){
+  const hora=normalizarHoraHorario(label);
+  if(!hora) return null;
+  let f=FRANJAS.find(x=>x.l===hora);
+  if(!f){
+    f={id:'FH'+hora.replace(':',''),h:parseInt(hora.split(':')[0],10),l:hora};
+    FRANJAS.push(f);
+    FRANJAS.sort((a,b)=>minutosHorario(a.l)-minutosHorario(b.l));
+  }
+  return f;
+}
 
 function showSection(id,btn){ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active')); document.getElementById('sec-'+id).classList.add('active'); if(btn)btn.classList.add('active'); const lbl=SECTION_LABELS[id]||[id,'']; document.getElementById('topTitle').textContent=lbl[0]; document.getElementById('topSub').textContent=lbl[1]; if(id==='horario'&&G.cargado)cargarHorario(); if(id==='notas'&&G.cargado)renderNotas(); if(id==='asistencia'&&G.cargado)cargarAsistencia(); if(id==='cronograma'&&G.cargado)iniciarCronograma(); if(id==='actividades'&&G.cargado)iniciarCalendarioActividades(); if(id==='boletin'&&G.cargado)renderBoletin(); }
 
@@ -501,7 +519,7 @@ function renderResumen(){
   if(!G.cursos.length){c.innerHTML='<div class="empty"><div class="empty-ico">Cursos</div><p>No estas inscrito en ningun curso aun.</p></div>';return;}
   c.innerHTML=G.cursos.map((cu,i)=>{
     const asigs=cu.asignaturas.map(a=>{ const cals=G.cals.filter(x=>String(x.asignaturaId)===String(a.id)); const p=promAsig(cals); const ps=p!==null?p.toFixed(2):'-'; const pc=p===null?'n':p>=4?'g':p>=3?'a':'r';
-      const horTexto=parsearSlots(a.horario).map(p=>p.dia.charAt(0).toUpperCase()+p.dia.slice(1)+' '+FRANJAS.find(f=>f.id===p.fId)?.l).join(', ')||a.horario||'Sin horario'; return `<div class="arow"><div><div class="anm">${a.nombre}</div><div class="ame">Docente: ${a.prof} &nbsp;|&nbsp; Horario: ${horTexto}</div></div><div class="aacts"><span class="pill ${pc}">Nota ${ps}</span><button class="btn btn-o" onclick="abrirModal('${a.id}','${a.nombre.replace(/'/g,"\\'")}')">Ver notas</button></div></div>`; }).join('');
+      const horTexto=parsearSlots(a.horario).map(p=>p.dia.charAt(0).toUpperCase()+p.dia.slice(1)+' '+(p.rango||FRANJAS.find(f=>f.id===p.fId)?.l||p.hora)).join(', ')||a.horario||'Sin horario'; return `<div class="arow"><div><div class="anm">${a.nombre}</div><div class="ame">Docente: ${a.prof} &nbsp;|&nbsp; Horario: ${horTexto}</div></div><div class="aacts"><span class="pill ${pc}">Nota ${ps}</span><button class="btn btn-o" onclick="abrirModal('${a.id}','${a.nombre.replace(/'/g,"\\'")}')">Ver notas</button></div></div>`; }).join('');
     return `<div class="cc"><div class="ch" onclick="togCurso('cb${i}','ct${i}')"><div><h3>${cu.nombre}</h3><div class="ch-meta">Periodo: ${periodoLabel(cu.periodo)} &nbsp;|&nbsp; ${cu.asignaturas.length} asignatura(s)</div></div><span class="ctog" id="ct${i}">v</span></div><div class="cbody" id="cb${i}">${asigs||'<p style="padding:14px;color:var(--muted)">Sin asignaturas.</p>'}</div></div>`;
   }).join('');
 }
@@ -522,13 +540,11 @@ function parsearSlots(s){
     let dia = null;
     for(const [k,v] of Object.entries(DIA_MAP)){ if(lo.startsWith(norm(k))||lo.includes(norm(k)+' ')||lo.includes(norm(k))){ dia=v; break; } }
     if(!dia) return null;
-    // Buscar hora: numero seguido de :MM opcional
-    const m = lo.match(/(\d{1,2})(?::(\d{2}))?/);
-    if(!m) return null;
-    const h = parseInt(m[1]);
-    const f = FRANJAS.find(x=>x.h===h);
+    const rango=part.replace(/^[^\s]+\s+/, '').split('-').map(x=>x.trim());
+    const f = asegurarFranjaHorario(rango[0]);
     if(!f) return null;
-    return {dia, fId:f.id, hora:`${h}:00`};
+    const fin=normalizarHoraHorario(rango[1]);
+    return {dia, fId:f.id, hora:f.l, rango:fin?`${f.l}-${fin}`:f.l};
   }).filter(Boolean);
 }
 
@@ -573,6 +589,7 @@ function renderHorario(todas){
   const c=document.getElementById('horarioC');
   if(!todas) todas=G.cursos.flatMap(cu=>cu.asignaturas.map(a=>({...a,cursoNombre:cu.nombre})));
   if(!todas.length){c.innerHTML='<div class="empty"><div class="empty-ico">Horario</div><p>Sin asignaturas registradas.</p></div>';return;}
+  todas.forEach(a=>parsearSlots(a.horario));
 
   // Asignar color unico por asignatura (por nombre para que sea consistente)
   const asigNombresUnicos=[...new Set(todas.map(a=>a.nombre))];
@@ -734,7 +751,22 @@ function renderAsistencia(){
 
 function soloFecha(v){return String(v||'').split('T')[0];}
 async function iniciarCronograma(){ await cargarEventosCronograma(); renderCalendario(); }
-async function cargarEventosCronograma(){ try{ const d=await gql(`query{cronograma(anio:${G.calAnioActual}){id titulo tipo fechaInicio fechaFin color descripcion}}`); G.calEventos=d.cronograma||[]; }catch(e){ G.calEventos=[]; } }
+async function cargarEventosCronograma(){
+  try{
+    const cursos=[...new Set((G.cursos||[]).map(c=>c.id).filter(Boolean))];
+    if(!cursos.length){
+      const d=await gql(`query{cronograma(anio:${G.calAnioActual}){id titulo tipo fechaInicio fechaFin color descripcion cursoId}}`);
+      G.calEventos=d.cronograma||[];
+      return;
+    }
+    const res=await Promise.all(cursos.map(cursoId=>
+      gql(`query($cursoId:ID!,$anio:Int!){cronogramaPorCurso(cursoId:$cursoId,anio:$anio){id titulo tipo fechaInicio fechaFin color descripcion cursoId}}`,{cursoId,anio:G.calAnioActual}).catch(()=>({cronogramaPorCurso:[]}))
+    ));
+    const map=new Map();
+    res.flatMap(r=>r.cronogramaPorCurso||[]).forEach(e=>map.set(e.id,e));
+    G.calEventos=[...map.values()];
+  }catch(e){ G.calEventos=[]; }
+}
 function calMes(delta){ G.calMesActual+=delta; if(G.calMesActual>11){G.calMesActual=0;G.calAnioActual++;} if(G.calMesActual<0){G.calMesActual=11;G.calAnioActual--;} cargarEventosCronograma().then(()=>renderCalendario()); }
 function renderCalendario(){
   const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -754,8 +786,19 @@ function renderCalendario(){
   grid.innerHTML=html;
 }
 
-function cargarEventosActividades(){
-  G.actEventos=(G.cals||[])
+async function cargarEventosActividades(){
+  if(!G.calEventos?.length) await cargarEventosCronograma();
+  const eventosCronograma=(G.calEventos||[])
+    .filter(e=>e.cursoId)
+    .map(e=>({
+      id:e.id,
+      titulo:e.titulo,
+      tipo:e.tipo||'ACTIVIDAD',
+      fechaInicio:soloFecha(e.fechaInicio),
+      fechaFin:soloFecha(e.fechaFin||e.fechaInicio),
+      descripcion:e.descripcion||''
+    }));
+  const eventosNotas=(G.cals||[])
     .filter(c=>c.fecha)
     .map(c=>({
       id:c.id,
@@ -765,8 +808,11 @@ function cargarEventosActividades(){
       fechaFin:soloFecha(c.fecha),
       descripcion:[c.tipoActividad,c.observaciones].filter(Boolean).join(' - ')
     }));
+  const map=new Map();
+  [...eventosCronograma,...eventosNotas].forEach(e=>map.set(`${e.tipo}-${e.id}`,e));
+  G.actEventos=[...map.values()];
 }
-async function iniciarCalendarioActividades(){ cargarEventosActividades(); renderCalendarioActividades(); }
+async function iniciarCalendarioActividades(){ await cargarEventosActividades(); renderCalendarioActividades(); }
 function actMes(delta){ G.actMesActual+=delta; if(G.actMesActual>11){G.actMesActual=0;G.actAnioActual++;} if(G.actMesActual<0){G.actMesActual=11;G.actAnioActual--;} renderCalendarioActividades(); }
 function renderCalendarioActividades(){
   const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
