@@ -678,7 +678,7 @@ const W = {
   cals:[], calTab:'cAct',
   asEst:[], asEstados:{}, asObs:{},
   calMesActual:new Date().getMonth(), calAnioActual:new Date().getFullYear(), calEventos:[],
-  periodoConfigCache:{}
+  periodoConfigCache:{}, periodosCalificacion:[]
 };
 
 const tk=()=>sessionStorage.getItem('token');
@@ -696,10 +696,9 @@ async function init(){
   const t=tk(); if(!t){ window.location.href='principal.html'; return; }
   const d=decJWT(t); if(!d?.username){ window.location.href='principal.html'; return; }
   W.profId=d.username;
-  const pl=periodoLabel(); const ay=anioActual();
+  const pl=periodoLabel();
   document.getElementById('asSelPeriodo').value=pl;
-  const actPeriodoSel=document.getElementById('actPeriodo');
-  if(actPeriodoSel){ actPeriodoSel.innerHTML=''; [1,2,3].forEach(n=>{ const val=`${ay}-${n}`; const labels={1:'1er Período',2:'2do Período',3:'3er Período'}; const opt=document.createElement('option'); opt.value=val; opt.textContent=`${labels[n]} (${val})`; if(val===pl)opt.selected=true; actPeriodoSel.appendChild(opt); }); }
+  await cargarPeriodosCalificacion(pl);
   try{ const dp=await gql(`query{ profesor(id:"${W.profId}"){ nombre primerApellido } }`); const p=dp.profesor; W.profNombre=p?`${p.nombre} ${p.primerApellido}`:W.profId; }catch{ W.profNombre=W.profId; }
   document.getElementById('sbName').textContent=`Prof. ${W.profNombre}`;
   const parts=W.profNombre.split(' ');
@@ -928,6 +927,54 @@ function renderCortes(cals){
   cont.innerHTML=html;
 }
 
+function periodoAbiertoParaNota(cfg){
+  if(!cfg) return true;
+  if(cfg.abierto===false) return false;
+  const ahora=new Date();
+  if(cfg.fechaApertura && ahora < new Date(cfg.fechaApertura)) return false;
+  if(cfg.fechaCierre){
+    const cierre=new Date(cfg.fechaCierre);
+    cierre.setHours(23,59,59,999);
+    if(ahora > cierre) return false;
+  }
+  return true;
+}
+
+async function cargarPeriodosCalificacion(preferido){
+  const sel=document.getElementById('actPeriodo'); if(!sel) return;
+  const ay=anioActual(); const labels={1:'1er Período',2:'2do Período',3:'3er Período'};
+  let configs=[];
+  try{
+    const d=await gql(`query{periodosConfig(anio:${ay}){numeroPeriodo abierto fechaApertura fechaCierre}}`);
+    configs=d.periodosConfig||[];
+  }catch{ configs=[]; }
+  W.periodosCalificacion=[1,2,3].map(n=>{
+    const cfg=configs.find(c=>Number(c.numeroPeriodo)===n);
+    const abierto=periodoAbiertoParaNota(cfg);
+    const val=`${ay}-${n}`;
+    return {numero:n,val,label:labels[n],abierto};
+  });
+  const elegido=preferido&&W.periodosCalificacion.some(p=>p.val===preferido&&p.abierto)
+    ? preferido
+    : (W.periodosCalificacion.find(p=>p.abierto)?.val || preferido || periodoLabel());
+  sel.innerHTML='';
+  W.periodosCalificacion.forEach(p=>{
+    const opt=document.createElement('option');
+    opt.value=p.val;
+    opt.textContent=`${p.label} (${p.val})${p.abierto?'':' - cerrado'}`;
+    opt.disabled=!p.abierto;
+    if(p.val===elegido) opt.selected=true;
+    sel.appendChild(opt);
+  });
+}
+
+function periodoNotaHabilitado(){
+  const sel=document.getElementById('actPeriodo');
+  if(!sel) return false;
+  const opt=sel.options[sel.selectedIndex];
+  return !!sel.value && (!opt || !opt.disabled);
+}
+
 function setPeriodoSelect(val){ const sel=document.getElementById('actPeriodo'); if(!sel)return; let found=false; for(const opt of sel.options){if(opt.value===val){opt.selected=true;found=true;break;}} if(!found&&val){const opt=document.createElement('option');opt.value=val;opt.textContent=val;opt.selected=true;sel.appendChild(opt);} }
 function setPeriodoSelectById(id,val){
   const sel=document.getElementById(id); if(!sel)return;
@@ -1006,12 +1053,13 @@ async function guardarActividadCurso(){
     toast('Error: '+err.message,'er');
   }
 }
-function abrirNuevaAct(){ if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; } document.getElementById('actId').value=''; document.getElementById('actTit').textContent='Nueva Actividad'; document.getElementById('actNombre').value=''; document.getElementById('actNota').value=''; document.getElementById('actObs').value=''; document.getElementById('actFecha').value=new Date().toISOString().split('T')[0]; setPeriodoSelect(W.periodo||periodoLabel()); document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); document.querySelector('.tchip.TRABAJO').classList.add('sel'); document.getElementById('actTipo').value='TRABAJO'; document.getElementById('mAct').classList.add('o'); }
-function editarAct(id){ const cal=W.cals.find(c=>c.id===id);if(!cal)return; document.getElementById('actId').value=id; document.getElementById('actTit').textContent='Editar Actividad'; document.getElementById('actNombre').value=cal.nombreActividad||''; document.getElementById('actNota').value=cal.nota; document.getElementById('actObs').value=cal.observaciones||''; document.getElementById('actFecha').value=cal.fecha?(new Date(cal.fecha).toISOString().split('T')[0]):new Date().toISOString().split('T')[0]; setPeriodoSelect(cal.periodo||W.periodo||periodoLabel()); document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); const chip=document.querySelector(`.tchip.${cal.tipoActividad||'EXAMEN'}`); if(chip)chip.classList.add('sel'); document.getElementById('actTipo').value=cal.tipoActividad||'EXAMEN'; document.getElementById('mAct').classList.add('o'); }
+async function abrirNuevaAct(){ if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; } document.getElementById('actId').value=''; document.getElementById('actTit').textContent='Nueva Actividad'; document.getElementById('actNombre').value=''; document.getElementById('actNota').value=''; document.getElementById('actObs').value=''; document.getElementById('actFecha').value=new Date().toISOString().split('T')[0]; await cargarPeriodosCalificacion(W.periodo||periodoLabel()); document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); document.querySelector('.tchip.TRABAJO').classList.add('sel'); document.getElementById('actTipo').value='TRABAJO'; document.getElementById('mAct').classList.add('o'); }
+async function editarAct(id){ const cal=W.cals.find(c=>c.id===id);if(!cal)return; document.getElementById('actId').value=id; document.getElementById('actTit').textContent='Editar Actividad'; document.getElementById('actNombre').value=cal.nombreActividad||''; document.getElementById('actNota').value=cal.nota; document.getElementById('actObs').value=cal.observaciones||''; document.getElementById('actFecha').value=cal.fecha?(new Date(cal.fecha).toISOString().split('T')[0]):new Date().toISOString().split('T')[0]; await cargarPeriodosCalificacion(cal.periodo||W.periodo||periodoLabel()); setPeriodoSelect(cal.periodo||W.periodo||periodoLabel()); document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); const chip=document.querySelector(`.tchip.${cal.tipoActividad||'EXAMEN'}`); if(chip)chip.classList.add('sel'); document.getElementById('actTipo').value=cal.tipoActividad||'EXAMEN'; document.getElementById('mAct').classList.add('o'); }
 function selTipo(chip){ document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); chip.classList.add('sel'); document.getElementById('actTipo').value=chip.dataset.t; }
 async function guardarActividad(){
   if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; }
   const id=document.getElementById('actId').value; const tipo=document.getElementById('actTipo').value; const nombre=document.getElementById('actNombre').value.trim(); const nota=parseFloat(document.getElementById('actNota').value); const periodo=document.getElementById('actPeriodo').value.trim(); const fecha=document.getElementById('actFecha').value; const obs=document.getElementById('actObs').value.trim();
+  if(!periodoNotaHabilitado()){toast('Ese período no está habilitado para calificar','er');return;}
   if(!nombre||isNaN(nota)||!periodo||!fecha){toast('Completa todos los campos obligatorios','er');return;} if(nota<0||nota>5){toast('La nota debe estar entre 0.0 y 5.0','er');return;}
   try{ if(id){ await gql(`mutation A($id:ID!,$inp:CalificacionInput!){actualizarCalificacion(id:$id,input:$inp){id}}`,{id,inp:{estudianteId:W.estId,asignaturaId:W.asigId,nota,periodo,observaciones:obs,tipoActividad:tipo,nombreActividad:nombre}}); toast('Actividad actualizada'); }else{ await gql(`mutation C($inp:CalificacionInput!){crearCalificacion(input:$inp){id}}`,{inp:{estudianteId:W.estId,asignaturaId:W.asigId,nota,periodo,observaciones:obs,tipoActividad:tipo,nombreActividad:nombre}}); toast('Actividad registrada'); } cerrarMAct(); await recargarCals(); }catch(err){toast('Error: '+err.message,'er');}
 }
@@ -1024,6 +1072,7 @@ async function guardarActividadV2(){
   const periodo=document.getElementById('actPeriodo').value.trim();
   const fecha=document.getElementById('actFecha').value;
   const obs=document.getElementById('actObs').value.trim();
+  if(!periodoNotaHabilitado()){toast('Ese período no está habilitado para calificar','er');return;}
   if(!nombre||isNaN(nota)||!periodo||!fecha){toast('Completa todos los campos obligatorios','er');return;}
   if(nota<0||nota>5){toast('La nota debe estar entre 0.0 y 5.0','er');return;}
   const inp={estudianteId:W.estId,asignaturaId:W.asigId,nota,periodo,fecha,observaciones:obs,tipoActividad:tipo,nombreActividad:nombre};
