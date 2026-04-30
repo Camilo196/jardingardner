@@ -9,10 +9,12 @@ exports.enviarPasswordRecuperacion = enviarPasswordRecuperacion;
 exports.notificarNuevaCalificacion = notificarNuevaCalificacion;
 exports.enviarConfirmacionMatricula = enviarConfirmacionMatricula;
 const nodemailer_1 = __importDefault(require("nodemailer"));
+const mail_1 = __importDefault(require("@sendgrid/mail"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const GMAIL_USER = process.env.GMAIL_USER?.trim() || '';
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, '').trim() || '';
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY?.trim() || '';
 // Crear transporter usando Gmail
 const transporter = nodemailer_1.default.createTransport({
     service: 'gmail',
@@ -21,10 +23,43 @@ const transporter = nodemailer_1.default.createTransport({
         pass: GMAIL_APP_PASSWORD,
     },
 });
-const FROM_EMAIL = GMAIL_USER;
+if (SENDGRID_API_KEY) {
+    mail_1.default.setApiKey(SENDGRID_API_KEY);
+}
+const FROM_EMAIL = process.env.MAIL_FROM?.trim() ||
+    process.env.SENDGRID_FROM_EMAIL?.trim() ||
+    GMAIL_USER;
 const APP_URL = process.env.APP_URL || 'http://localhost:4200';
+async function enviarEmail(params) {
+    if (SENDGRID_API_KEY) {
+        await mail_1.default.send({
+            from: {
+                email: FROM_EMAIL,
+                name: 'LearnScape',
+            },
+            to: params.to,
+            subject: params.subject,
+            html: params.html,
+        });
+        return;
+    }
+    await transporter.sendMail({
+        from: `"LearnScape" <${FROM_EMAIL}>`,
+        to: params.to,
+        subject: params.subject,
+        html: params.html,
+    });
+}
 // Verificar conexiÃ³n al iniciar
 async function verificarConexionEmail() {
+    if (SENDGRID_API_KEY) {
+        console.log('Servicio de correo configurado con SendGrid');
+        return;
+    }
+    if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+        console.warn('Servicio de correo no configurado. Define SENDGRID_API_KEY y MAIL_FROM, o GMAIL_USER y GMAIL_APP_PASSWORD.');
+        return;
+    }
     try {
         await transporter.verify();
     }
@@ -70,8 +105,7 @@ async function enviarCredenciales(params) {
     <p>Saludos cordiales,<br><strong>Equipo LearnScape</strong></p>
   `;
     try {
-        await transporter.sendMail({
-            from: `"LearnScape" <${FROM_EMAIL}>`,
+        await enviarEmail({
             to: email,
             subject: 'Credenciales de acceso - LearnScape',
             html: plantillaBase(contenido),
@@ -102,8 +136,7 @@ async function enviarPasswordRecuperacion(params) {
     <p>Saludos cordiales,<br><strong>Equipo LearnScape</strong></p>
   `;
     try {
-        await transporter.sendMail({
-            from: `"LearnScape" <${FROM_EMAIL}>`,
+        await enviarEmail({
             to: email,
             subject: 'RecuperaciÃ³n de contraseÃ±a - LearnScape',
             html: plantillaBase(contenido),
@@ -154,8 +187,7 @@ async function notificarNuevaCalificacion(params) {
     <p>Saludos,<br><strong>Equipo LearnScape</strong></p>
   `;
     try {
-        await transporter.sendMail({
-            from: `"LearnScape" <${FROM_EMAIL}>`,
+        await enviarEmail({
             to: email,
             subject: `Nueva nota registrada â€” ${asignaturaNombre} (${nota.toFixed(1)}/5.0)`,
             html: plantillaBase(contenido),
@@ -188,8 +220,7 @@ async function enviarConfirmacionMatricula(params) {
     <p>Saludos cordiales,<br><strong>Equipo LearnScape</strong></p>
   `;
     try {
-        await transporter.sendMail({
-            from: `"LearnScape" <${FROM_EMAIL}>`,
+        await enviarEmail({
             to: email,
             subject: 'ConfirmaciÃ³n de matrÃ­cula - LearnScape',
             html: plantillaBase(contenido),

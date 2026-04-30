@@ -1,9 +1,11 @@
 import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 import dotenv from 'dotenv';
 dotenv.config();
 const GMAIL_USER = process.env.GMAIL_USER?.trim() || '';
 const GMAIL_APP_PASSWORD =
   process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, '').trim() || '';
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY?.trim() || '';
 
 // Crear transporter usando Gmail
 const transporter = nodemailer.createTransport({
@@ -14,11 +16,54 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const FROM_EMAIL = GMAIL_USER;
+if (SENDGRID_API_KEY) {
+  sgMail.setApiKey(SENDGRID_API_KEY);
+}
+
+const FROM_EMAIL =
+  process.env.MAIL_FROM?.trim() ||
+  process.env.SENDGRID_FROM_EMAIL?.trim() ||
+  GMAIL_USER;
 const APP_URL = process.env.APP_URL || 'http://localhost:4200';
+
+async function enviarEmail(params: {
+  to: string;
+  subject: string;
+  html: string;
+}): Promise<void> {
+  if (SENDGRID_API_KEY) {
+    await sgMail.send({
+      from: {
+        email: FROM_EMAIL,
+        name: 'LearnScape',
+      },
+      to: params.to,
+      subject: params.subject,
+      html: params.html,
+    });
+    return;
+  }
+
+  await transporter.sendMail({
+    from: `"LearnScape" <${FROM_EMAIL}>`,
+    to: params.to,
+    subject: params.subject,
+    html: params.html,
+  });
+}
 
 // Verificar conexiÃ³n al iniciar
 export async function verificarConexionEmail(): Promise<void> {
+  if (SENDGRID_API_KEY) {
+    console.log('Servicio de correo configurado con SendGrid');
+    return;
+  }
+
+  if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+    console.warn('Servicio de correo no configurado. Define SENDGRID_API_KEY y MAIL_FROM, o GMAIL_USER y GMAIL_APP_PASSWORD.');
+    return;
+  }
+
   try {
     await transporter.verify();
   } catch (error) {
@@ -74,8 +119,7 @@ export async function enviarCredenciales(params: {
   `;
 
   try {
-    await transporter.sendMail({
-      from: `"LearnScape" <${FROM_EMAIL}>`,
+    await enviarEmail({
       to: email,
       subject: 'Credenciales de acceso - LearnScape',
       html: plantillaBase(contenido),
@@ -113,8 +157,7 @@ export async function enviarPasswordRecuperacion(params: {
   `;
 
   try {
-    await transporter.sendMail({
-      from: `"LearnScape" <${FROM_EMAIL}>`,
+    await enviarEmail({
       to: email,
       subject: 'RecuperaciÃ³n de contraseÃ±a - LearnScape',
       html: plantillaBase(contenido),
@@ -180,8 +223,7 @@ export async function notificarNuevaCalificacion(params: {
   `;
 
   try {
-    await transporter.sendMail({
-      from: `"LearnScape" <${FROM_EMAIL}>`,
+    await enviarEmail({
       to: email,
       subject: `Nueva nota registrada â€” ${asignaturaNombre} (${nota.toFixed(1)}/5.0)`,
       html: plantillaBase(contenido),
@@ -223,8 +265,7 @@ export async function enviarConfirmacionMatricula(params: {
   `;
 
   try {
-    await transporter.sendMail({
-      from: `"LearnScape" <${FROM_EMAIL}>`,
+    await enviarEmail({
       to: email,
       subject: 'ConfirmaciÃ³n de matrÃ­cula - LearnScape',
       html: plantillaBase(contenido),
