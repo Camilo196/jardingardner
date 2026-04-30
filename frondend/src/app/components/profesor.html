@@ -674,7 +674,7 @@ const W = {
   asignaturas:[],
   cursoNombre:'',
   estId:null, asigId:null, asigActual:null, periodo:null,
-  indEstudiantes:[], indSeleccionados:new Set(),
+  indEstudiantes:[], indSeleccionados:new Set(), indObservaciones:{},
   cals:[], calTab:'cAct',
   asEst:[], asEstados:{}, asObs:{},
   calMesActual:new Date().getMonth(), calAnioActual:new Date().getFullYear(), calEventos:[],
@@ -756,7 +756,7 @@ function renderAsignaturas(){
           <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1a56db,#3b5bdb);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">${initials}</div><div><div class="est-name">${n}</div><div class="est-ced">${e.cedula}</div></div></div></td>
           <td style="font-size:12px;color:#64748b">${e.email||'-'}</td>
           <td><span class="pill ${m.estado==='ACTIVA'?'pill-ok':'pill-er'}">${m.estado||'ACTIVA'}</span></td>
-          <td><div class="est-actions"><button class="btn-det" onclick="verDetalles('${m.id}')"><i class="fas fa-user"></i> Perfil</button><button class="btn-notas" onclick="abrirCalificaciones('${m.id}')"><i class="fas fa-edit"></i> Ver notas</button></div></td></tr>`;
+          <td><div class="est-actions"><button class="btn-det" onclick="verDetalles('${m.id}')"><i class="fas fa-user"></i> Perfil</button><button class="btn-notas" onclick="abrirCalificaciones('${m.id}')"><i class="fas fa-edit"></i> ${esCursoPreescolarNombre(a.curso?.nombre||'')?'Seguimiento':'Ver notas'}</button></div></td></tr>`;
       }).join('')||`<tr><td colspan="4" style="text-align:center;padding:20px;color:#94a3b8;font-style:italic">Sin estudiantes matriculados</td></tr>`;
 
       return `<div class="curso-item">
@@ -1319,6 +1319,13 @@ function actualizarIndicadoresUI(){
   setTxt('indLabel-saber',meta.saber);
   setTxt('indLabel-hacer',meta.hacer);
   setTxt('indLabel-ser',meta.ser);
+  const esPre=esCursoPreescolarNombre(W.cursoNombre);
+  const labelEst=document.querySelector('#ind-estudiantes')?.parentElement?.querySelector('strong');
+  if(labelEst) labelEst.innerHTML=esPre?'<i class="fas fa-users"></i> Observaciones por estudiante':'<i class="fas fa-users"></i> Estudiantes que reciben estos indicadores';
+  const btns=document.querySelector('#ind-estudiantes')?.parentElement?.querySelector('div[style*="display:flex;gap:8px"]');
+  if(btns) btns.style.display=esPre?'none':'flex';
+  const serBox=document.getElementById('ind-ser')?.parentElement;
+  if(serBox) serBox.style.display=esPre?'none':'block';
 }
 
 function renderIndEstudiantes(){
@@ -1326,6 +1333,19 @@ function renderIndEstudiantes(){
   const estudiantes=W.indEstudiantes||[];
   if(!estudiantes.length){
     cont.innerHTML='<div style="color:var(--muted);font-size:13px;font-style:italic">No hay estudiantes activos en este salón.</div>';
+    return;
+  }
+  if(esCursoPreescolarNombre(W.cursoNombre)){
+    cont.innerHTML=estudiantes.map(e=>{
+      const ced=String(e.cedula);
+      const nombre=`${e.nombre} ${e.primerApellido} ${e.segundoApellido||''}`.trim();
+      const val=(W.indObservaciones&&W.indObservaciones[ced])||'';
+      return `<div style="display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid var(--border);border-radius:8px;background:#fff">
+        <strong style="font-size:13px;color:var(--ink)">${nombre}</strong>
+        <small style="color:var(--muted);font-size:11px">${ced}</small>
+        <textarea rows="3" placeholder="Observación para el boletín..." oninput="setIndObs('${ced}',this.value)" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;resize:vertical">${val.replace(/</g,'&lt;')}</textarea>
+      </div>`;
+    }).join('');
     return;
   }
   cont.innerHTML=estudiantes.map(e=>{
@@ -1341,6 +1361,10 @@ function renderIndEstudiantes(){
 function toggleIndEstudiante(cedula,on){
   if(on) W.indSeleccionados.add(String(cedula));
   else W.indSeleccionados.delete(String(cedula));
+}
+
+function setIndObs(cedula,valor){
+  W.indObservaciones[String(cedula)]=valor;
 }
 
 function marcarTodosIndicadores(on){
@@ -1377,17 +1401,31 @@ async function cargarIndicadores(periodoForzado){
   const periodo=periodoForzado||getIndPeriodo();
   const render=()=>{ renderIndLista('saber'); renderIndLista('hacer'); renderIndLista('ser'); };
   try{
-    const d=await gql(`query{indicadoresPorAsignatura(asignaturaId:"${W.asigId}",periodo:"${periodo}",estudianteId:"${W.estId}"){saber hacer ser estudianteIds}}`);
+    const esPre=esCursoPreescolarNombre(W.cursoNombre);
+    const d=await gql(`query{indicadoresPorAsignatura(asignaturaId:"${W.asigId}",periodo:"${periodo}"${esPre?'':`,estudianteId:"${W.estId}"`}){saber hacer ser estudianteIds}}`);
     const ind=d.indicadoresPorAsignatura;
     IND.saber=ind?.saber?[...ind.saber]:[];
     IND.hacer=ind?.hacer?[...ind.hacer]:[];
-    IND.ser=ind?.ser?[...ind.ser]:[];
-    W.indSeleccionados=new Set((ind?.estudianteIds?.length?ind.estudianteIds:[W.estId]).map(String));
+    IND.ser=esPre?[]:(ind?.ser?[...ind.ser]:[]);
+    if(esPre){
+      W.indSeleccionados=new Set((W.indEstudiantes||[]).map(e=>String(e.cedula)));
+      W.indObservaciones={};
+      await Promise.all((W.indEstudiantes||[]).map(async e=>{
+        try{
+          const ced=String(e.cedula);
+          const r=await gql(`query{indicadoresPorAsignatura(asignaturaId:"${W.asigId}",periodo:"${periodo}",estudianteId:"${ced}"){ser}}`);
+          W.indObservaciones[ced]=(r.indicadoresPorAsignatura?.ser||[]).join('\n');
+        }catch{}
+      }));
+    }else{
+      W.indSeleccionados=new Set((ind?.estudianteIds?.length?ind.estudianteIds:[W.estId]).map(String));
+    }
     const el=document.getElementById('indEstado');
     if(el){ const total=IND.saber.length+IND.hacer.length+IND.ser.length; el.textContent=total?`${total} indicadores para ${periodo}`:`Sin indicadores para ${periodo}`; el.style.background=total?'var(--green-lt)':'var(--surface)'; el.style.color=total?'var(--green)':'var(--muted)'; }
   }catch{
     IND.saber=[];IND.hacer=[];IND.ser=[];
     W.indSeleccionados=new Set(W.estId?[String(W.estId)]:[]);
+    W.indObservaciones={};
     const el=document.getElementById('indEstado'); if(el){ el.textContent='Sin indicadores'; el.style.background='var(--surface)'; el.style.color='var(--muted)'; }
   }
   renderIndEstudiantes();
@@ -1415,6 +1453,20 @@ function eliminarInd(tipo,i){ IND[tipo].splice(i,1); renderIndLista(tipo); }
 async function guardarIndicadores(){
   const periodo=getIndPeriodo();
   const saber=IND.saber; const hacer=IND.hacer; const ser=IND.ser;
+  if(esCursoPreescolarNombre(W.cursoNombre)){
+    try{
+      await gql(`mutation{guardarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}",saber:${JSON.stringify(saber)},hacer:${JSON.stringify(hacer)},ser:[],estudianteIds:[]){id}}`);
+      for(const e of (W.indEstudiantes||[])){
+        const ced=String(e.cedula);
+        const obs=(W.indObservaciones[ced]||'').split('\n').map(x=>x.trim()).filter(Boolean);
+        await gql(`mutation{guardarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}",saber:[],hacer:[],ser:${JSON.stringify(obs)},estudianteIds:["${ced}"]){id}}`);
+      }
+      const el=document.getElementById('indEstado');
+      if(el){ const total=saber.length+hacer.length; el.textContent=`Guardado para preescolar - ${periodo} (${total} textos y observaciones)`; el.style.background='var(--green-lt)'; el.style.color='var(--green)'; }
+      toast('Seguimiento de preescolar guardado');
+    }catch(err){ toast('Error: '+err.message,'er'); }
+    return;
+  }
   const estudianteIds=[...W.indSeleccionados];
   if(!estudianteIds.length){ toast('Selecciona al menos un estudiante','er'); return; }
   try{

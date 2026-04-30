@@ -422,7 +422,19 @@ const DLAB={lunes:'Lunes',martes:'Martes',miercoles:'Miércoles',jueves:'Jueves'
 let FRANJAS=[{id:'F1',h:6,l:'6:00'},{id:'F2',h:7,l:'7:00'},{id:'F3',h:8,l:'8:00'},{id:'F4',h:9,l:'9:00'},{id:'F5',h:10,l:'10:00'},{id:'F6',h:11,l:'11:00'},{id:'F7',h:12,l:'12:00'},{id:'F8',h:13,l:'13:00'},{id:'F9',h:14,l:'14:00'},{id:'FA',h:15,l:'15:00'},{id:'FB',h:16,l:'16:00'},{id:'FC',h:17,l:'17:00'}];
 const DIA_MAP={lun:'lunes',lunes:'lunes',mar:'martes',martes:'martes',mie:'miercoles',mié:'miercoles',miercoles:'miercoles',miércoles:'miercoles',jue:'jueves',jueves:'jueves',vie:'viernes',viernes:'viernes'};
 const DCLS={lunes:'lun',martes:'mar',miercoles:'mie',jueves:'jue',viernes:'vie'};
-const G={id:null,email:'',nombre:'',cursos:[],cals:[],asistencias:[],cargado:false,calMesActual:new Date().getMonth(),calAnioActual:new Date().getFullYear(),calEventos:[],actMesActual:new Date().getMonth(),actAnioActual:new Date().getFullYear(),actEventos:[]};
+const G={id:null,email:'',nombre:'',cursos:[],cals:[],asistencias:[],cargado:false,esPreescolar:false,calMesActual:new Date().getMonth(),calAnioActual:new Date().getFullYear(),calEventos:[],actMesActual:new Date().getMonth(),actAnioActual:new Date().getFullYear(),actEventos:[]};
+
+function normalizarCursoNombre(nombre=''){ return String(nombre||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
+function esCursoPreescolarNombre(nombre=''){ const n=normalizarCursoNombre(nombre); return ['parvulos','parvulo','pre jardin','prejardin','jardin','transicion'].some(k=>n.includes(k)); }
+function actualizarVistaNivel(){
+  G.esPreescolar=(G.cursos||[]).some(c=>esCursoPreescolarNombre(c.nombre)) && !(G.cursos||[]).some(c=>['primero','segundo','tercero','cuarto','quinto'].some(k=>normalizarCursoNombre(c.nombre).includes(k)));
+  const notasBtn=[...document.querySelectorAll('.sb-item')].find(b=>String(b.getAttribute('onclick')||'').includes("'notas'"));
+  if(notasBtn) notasBtn.style.display=G.esPreescolar?'none':'';
+  const secNotas=document.getElementById('sec-notas');
+  if(secNotas) secNotas.style.display=G.esPreescolar?'none':'';
+  const promedioCard=document.getElementById('stP')?.closest('.kpi');
+  if(promedioCard) promedioCard.style.display=G.esPreescolar?'none':'';
+}
 
 function normalizarHoraHorario(valor){
   const m=String(valor||'').trim().match(/^(\d{1,2})(?::(\d{2}))?/);
@@ -442,7 +454,7 @@ function asegurarFranjaHorario(label){
   return f;
 }
 
-function showSection(id,btn){ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active')); document.getElementById('sec-'+id).classList.add('active'); if(btn)btn.classList.add('active'); const lbl=SECTION_LABELS[id]||[id,'']; document.getElementById('topTitle').textContent=lbl[0]; document.getElementById('topSub').textContent=lbl[1]; if(id==='horario'&&G.cargado)cargarHorario(); if(id==='notas'&&G.cargado)renderNotas(); if(id==='asistencia'&&G.cargado)cargarAsistencia(); if(id==='cronograma'&&G.cargado)iniciarCronograma(); if(id==='actividades'&&G.cargado)iniciarCalendarioActividades(); if(id==='boletin'&&G.cargado)renderBoletin(); }
+function showSection(id,btn){ if(id==='notas'&&G.esPreescolar) id='resumen'; document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active')); document.getElementById('sec-'+id).classList.add('active'); if(btn&&id!=='resumen')btn.classList.add('active'); const lbl=SECTION_LABELS[id]||[id,'']; document.getElementById('topTitle').textContent=lbl[0]; document.getElementById('topSub').textContent=lbl[1]; if(id==='horario'&&G.cargado)cargarHorario(); if(id==='notas'&&G.cargado)renderNotas(); if(id==='asistencia'&&G.cargado)cargarAsistencia(); if(id==='cronograma'&&G.cargado)iniciarCronograma(); if(id==='actividades'&&G.cargado)iniciarCalendarioActividades(); if(id==='boletin'&&G.cargado)renderBoletin(); }
 
 function tk(){return sessionStorage.getItem('token');}
 function jwt(t){ try{return JSON.parse(decodeURIComponent(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')));}catch{return null;} }
@@ -485,6 +497,7 @@ async function cargar(){
   try{
     const dm=await gql(`query{matriculasPorEstudiante(estudianteId:"${G.id}"){id estado periodo curso{id nombre} asignaturas{id nombre horario profesor{nombre primerApellido}}}}`);
     G.cursos=(dm.matriculasPorEstudiante||[]).map(m=>({id:m.curso?.id||'',nombre:m.curso?.nombre||'Sin curso',periodo:m.periodo||'',asignaturas:(m.asignaturas||[]).map(a=>({id:String(a.id),nombre:a.nombre,horario:a.horario||'',prof:a.profesor?`${a.profesor.nombre} ${a.profesor.primerApellido}`:'Sin docente'}))}));
+    actualizarVistaNivel();
     try{ const de=await gql(`query{estudiante(id:"${G.id}"){nombre primerApellido segundoApellido}}`); const est=de.estudiante; G.nombre=est?`${est.nombre||''} ${est.primerApellido||''} ${est.segundoApellido||''}`.trim():G.email?.split('@')[0]||G.id; }catch{ G.nombre=G.email?.split('@')[0]||G.id; }
     const parts=G.nombre.split(' ');
     document.getElementById('sbAvatar').textContent=(parts.length>=2?parts[0][0]+parts[1][0]:G.nombre.substring(0,2)).toUpperCase();
@@ -508,18 +521,20 @@ function getAsignaturaLookup(){
 }
 
 function renderResumen(){
+  actualizarVistaNivel();
   const asigIds=new Set(G.cursos.flatMap(c=>c.asignaturas.map(a=>a.id)));
   document.getElementById('stC').textContent=G.cursos.length;
   document.getElementById('stA').textContent=asigIds.size;
   const pg=promGen();
-  document.getElementById('stP').textContent=pg>0?pg.toFixed(2):'-';
+  document.getElementById('stP').textContent=G.esPreescolar?'-':(pg>0?pg.toFixed(2):'-');
   const el=document.getElementById('stE');
-  if(pg>0){el.innerHTML=pg>=3?'<span style="color:var(--green)">Al dia</span>':'<span style="color:var(--red)">Revisar</span>';}else el.textContent='-';
+  if(G.esPreescolar){ el.innerHTML='<span style="color:var(--green)">Seguimiento</span>'; }
+  else if(pg>0){el.innerHTML=pg>=3?'<span style="color:var(--green)">Al dia</span>':'<span style="color:var(--red)">Revisar</span>';}else el.textContent='-';
   const c=document.getElementById('cursosC');
   if(!G.cursos.length){c.innerHTML='<div class="empty"><div class="empty-ico">Cursos</div><p>No estas inscrito en ningun curso aun.</p></div>';return;}
   c.innerHTML=G.cursos.map((cu,i)=>{
     const asigs=cu.asignaturas.map(a=>{ const cals=G.cals.filter(x=>String(x.asignaturaId)===String(a.id)); const p=promAsig(cals); const ps=p!==null?p.toFixed(2):'-'; const pc=p===null?'n':p>=4?'g':p>=3?'a':'r';
-      const horTexto=parsearSlots(a.horario).map(p=>p.dia.charAt(0).toUpperCase()+p.dia.slice(1)+' '+(p.rango||FRANJAS.find(f=>f.id===p.fId)?.l||p.hora)).join(', ')||a.horario||'Sin horario'; return `<div class="arow"><div><div class="anm">${a.nombre}</div><div class="ame">Docente: ${a.prof} &nbsp;|&nbsp; Horario: ${horTexto}</div></div><div class="aacts"><span class="pill ${pc}">Nota ${ps}</span><button class="btn btn-o" onclick="abrirModal('${a.id}','${a.nombre.replace(/'/g,"\\'")}')">Ver notas</button></div></div>`; }).join('');
+      const horTexto=parsearSlots(a.horario).map(p=>p.dia.charAt(0).toUpperCase()+p.dia.slice(1)+' '+(p.rango||FRANJAS.find(f=>f.id===p.fId)?.l||p.hora)).join(', ')||a.horario||'Sin horario'; const acciones=G.esPreescolar?'<span class="pill g">Seguimiento pedagógico</span>':`<span class="pill ${pc}">Nota ${ps}</span><button class="btn btn-o" onclick="abrirModal('${a.id}','${a.nombre.replace(/'/g,"\\'")}')">Ver notas</button>`; return `<div class="arow"><div><div class="anm">${a.nombre}</div><div class="ame">Docente: ${a.prof} &nbsp;|&nbsp; Horario: ${horTexto}</div></div><div class="aacts">${acciones}</div></div>`; }).join('');
     return `<div class="cc"><div class="ch" onclick="togCurso('cb${i}','ct${i}')"><div><h3>${cu.nombre}</h3><div class="ch-meta">Periodo: ${periodoLabel(cu.periodo)} &nbsp;|&nbsp; ${cu.asignaturas.length} asignatura(s)</div></div><span class="ctog" id="ct${i}">v</span></div><div class="cbody" id="cb${i}">${asigs||'<p style="padding:14px;color:var(--muted)">Sin asignaturas.</p>'}</div></div>`;
   }).join('');
 }
@@ -649,6 +664,10 @@ function renderHorario(todas){
 
 function renderNotas(){
   const c=document.getElementById('notasC');
+  if(G.esPreescolar){
+    c.innerHTML='<div class="empty"><div class="empty-ico">Seguimiento</div><p>Preescolar no maneja notas numéricas. El avance se consulta en el boletín pedagógico.</p></div>';
+    return;
+  }
   const sel=document.getElementById('notasPeriodoSel');
   const periodos=[...new Set([...G.cursos.map(c=>c.periodo),...G.cals.map(c=>c.periodo)])].filter(Boolean).sort().reverse();
   const selVal=sel.value;
@@ -867,6 +886,7 @@ msg.textContent=`Boletín ${per} descargado correctamente`;msg.style.color='var(
 }
 
 function abrirModal(id,nombre){
+  if(G.esPreescolar) return;
   // Sin filtro de periodo: mostrar todas las notas de la asignatura
   const cals=G.cals.filter(c=>String(c.asignaturaId)===String(id));
   document.getElementById('mTit').textContent=`${nombre}`;

@@ -129,7 +129,15 @@ function indicadoresParaEstudiante(ind, estudianteId) {
     const especifico = estId
         ? porEstudiante.find((item) => String(item.estudianteId) === estId)
         : null;
-    const fuente = especifico ?? (estId && porEstudiante.length ? {} : ind ?? {});
+    const base = ind ?? {};
+    const fuente = especifico
+        ? {
+            ...especifico,
+            saber: Array.isArray(especifico.saber) && especifico.saber.length ? especifico.saber : base.saber,
+            hacer: Array.isArray(especifico.hacer) && especifico.hacer.length ? especifico.hacer : base.hacer,
+            ser: Array.isArray(especifico.ser) ? especifico.ser : base.ser,
+        }
+        : (estId && porEstudiante.length ? {} : base);
     const estudianteIds = especifico
         ? [String(especifico.estudianteId)]
         : porEstudiante
