@@ -14,6 +14,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const GMAIL_USER = process.env.GMAIL_USER?.trim() || '';
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, '').trim() || '';
+const RESEND_API_KEY = process.env.RESEND_API_KEY?.trim() || '';
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY?.trim() || '';
 const GMAIL_API_CLIENT_ID = process.env.GMAIL_API_CLIENT_ID?.trim() || '';
 const GMAIL_API_CLIENT_SECRET = process.env.GMAIL_API_CLIENT_SECRET?.trim() || '';
@@ -36,6 +37,25 @@ const FROM_EMAIL = process.env.MAIL_FROM?.trim() ||
     GMAIL_API_USER ||
     GMAIL_USER;
 const APP_URL = process.env.APP_URL || 'http://localhost:4200';
+async function enviarEmailResend(params) {
+    const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            from: `LearnScape <${FROM_EMAIL}>`,
+            to: [params.to],
+            subject: params.subject,
+            html: params.html,
+        }),
+    });
+    if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`Resend no pudo enviar el correo (${res.status}) ${text}`);
+    }
+}
 function limpiarHeader(valor) {
     return String(valor || '').replace(/[\r\n]+/g, ' ').trim();
 }
@@ -91,6 +111,10 @@ async function enviarEmailGmailApi(params) {
     }
 }
 async function enviarEmail(params) {
+    if (RESEND_API_KEY) {
+        await enviarEmailResend(params);
+        return;
+    }
     if (GMAIL_API_READY) {
         await enviarEmailGmailApi(params);
         return;
@@ -116,6 +140,10 @@ async function enviarEmail(params) {
 }
 // Verificar conexiÃ³n al iniciar
 async function verificarConexionEmail() {
+    if (RESEND_API_KEY) {
+        console.log('Servicio de correo configurado con Resend');
+        return;
+    }
     if (GMAIL_API_READY) {
         console.log('Servicio de correo configurado con Gmail API OAuth');
         return;
@@ -125,7 +153,7 @@ async function verificarConexionEmail() {
         return;
     }
     if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
-        console.warn('Servicio de correo no configurado. Define variables de Gmail API OAuth, SENDGRID_API_KEY y MAIL_FROM, o GMAIL_USER y GMAIL_APP_PASSWORD.');
+        console.warn('Servicio de correo no configurado. Define RESEND_API_KEY y MAIL_FROM, variables de Gmail API OAuth, SENDGRID_API_KEY y MAIL_FROM, o GMAIL_USER y GMAIL_APP_PASSWORD.');
         return;
     }
     try {
