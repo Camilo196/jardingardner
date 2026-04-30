@@ -5,6 +5,7 @@ dotenv.config();
 const GMAIL_USER = process.env.GMAIL_USER?.trim() || '';
 const GMAIL_APP_PASSWORD =
   process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, '').trim() || '';
+const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER?.trim().toLowerCase() || '';
 const RESEND_API_KEY = process.env.RESEND_API_KEY?.trim() || '';
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY?.trim() || '';
 const GMAIL_API_CLIENT_ID = process.env.GMAIL_API_CLIENT_ID?.trim() || '';
@@ -32,6 +33,30 @@ const FROM_EMAIL =
   GMAIL_API_USER ||
   GMAIL_USER;
 const APP_URL = process.env.APP_URL || 'http://localhost:4200';
+
+function providerActivo(): 'resend' | 'gmail-api' | 'sendgrid' | 'gmail-smtp' | 'none' {
+  if (EMAIL_PROVIDER === 'resend') return RESEND_API_KEY ? 'resend' : 'none';
+  if (EMAIL_PROVIDER === 'gmail-api') return GMAIL_API_READY ? 'gmail-api' : 'none';
+  if (EMAIL_PROVIDER === 'sendgrid') return SENDGRID_API_KEY ? 'sendgrid' : 'none';
+  if (EMAIL_PROVIDER === 'gmail-smtp') return GMAIL_USER && GMAIL_APP_PASSWORD ? 'gmail-smtp' : 'none';
+  if (RESEND_API_KEY) return 'resend';
+  if (GMAIL_API_READY) return 'gmail-api';
+  if (SENDGRID_API_KEY) return 'sendgrid';
+  if (GMAIL_USER && GMAIL_APP_PASSWORD) return 'gmail-smtp';
+  return 'none';
+}
+
+function detalleErrorEmail(error: any): string {
+  const body = error?.response?.body;
+  if (body) {
+    try {
+      return `${error.message} ${JSON.stringify(body)}`;
+    } catch {
+      return `${error.message} ${String(body)}`;
+    }
+  }
+  return error?.message || String(error);
+}
 
 async function enviarEmailResend(params: {
   to: string;
@@ -126,17 +151,19 @@ async function enviarEmail(params: {
   subject: string;
   html: string;
 }): Promise<void> {
-  if (RESEND_API_KEY) {
+  const provider = providerActivo();
+
+  if (provider === 'resend') {
     await enviarEmailResend(params);
     return;
   }
 
-  if (GMAIL_API_READY) {
+  if (provider === 'gmail-api') {
     await enviarEmailGmailApi(params);
     return;
   }
 
-  if (SENDGRID_API_KEY) {
+  if (provider === 'sendgrid') {
     await sgMail.send({
       from: {
         email: FROM_EMAIL,
@@ -149,6 +176,10 @@ async function enviarEmail(params: {
     return;
   }
 
+  if (provider === 'none') {
+    throw new Error(`Servicio de correo no configurado para EMAIL_PROVIDER="${EMAIL_PROVIDER || 'auto'}"`);
+  }
+
   await transporter.sendMail({
     from: `"LearnScape" <${FROM_EMAIL}>`,
     to: params.to,
@@ -159,23 +190,25 @@ async function enviarEmail(params: {
 
 // Verificar conexiÃ³n al iniciar
 export async function verificarConexionEmail(): Promise<void> {
-  if (RESEND_API_KEY) {
+  const provider = providerActivo();
+
+  if (provider === 'resend') {
     console.log('Servicio de correo configurado con Resend');
     return;
   }
 
-  if (GMAIL_API_READY) {
+  if (provider === 'gmail-api') {
     console.log('Servicio de correo configurado con Gmail API OAuth');
     return;
   }
 
-  if (SENDGRID_API_KEY) {
+  if (provider === 'sendgrid') {
     console.log('Servicio de correo configurado con SendGrid');
     return;
   }
 
-  if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
-    console.warn('Servicio de correo no configurado. Define RESEND_API_KEY y MAIL_FROM, variables de Gmail API OAuth, SENDGRID_API_KEY y MAIL_FROM, o GMAIL_USER y GMAIL_APP_PASSWORD.');
+  if (provider === 'none') {
+    console.warn('Servicio de correo no configurado. Define EMAIL_PROVIDER=sendgrid con SENDGRID_API_KEY y MAIL_FROM, o configura otro proveedor.');
     return;
   }
 
@@ -241,7 +274,7 @@ export async function enviarCredenciales(params: {
     });
     return true;
   } catch (error: any) {
-    console.error(`âŒ Error al enviar correo a ${email}:`, error.message);
+    console.error(`âŒ Error al enviar correo a ${email}:`, detalleErrorEmail(error));
     return false;
   }
 }
@@ -279,7 +312,7 @@ export async function enviarPasswordRecuperacion(params: {
     });
     return true;
   } catch (error: any) {
-    console.error(`âŒ Error al enviar correo de recuperaciÃ³n a ${email}:`, error.message);
+    console.error(`âŒ Error al enviar correo de recuperaciÃ³n a ${email}:`, detalleErrorEmail(error));
     return false;
   }
 }
@@ -346,7 +379,7 @@ export async function notificarNuevaCalificacion(params: {
     return true;
   } catch (error: any) {
     // No lanzar error â€” el email es best-effort, no debe bloquear la respuesta
-    console.error(`Error al notificar calificaciÃ³n a ${email}:`, error.message);
+    console.error(`Error al notificar calificaciÃ³n a ${email}:`, detalleErrorEmail(error));
     return false;
   }
 }
@@ -387,7 +420,7 @@ export async function enviarConfirmacionMatricula(params: {
     });
     return true;
   } catch (error: any) {
-    console.error(`âŒ Error al enviar correo de matrÃ­cula a ${email}:`, error.message);
+    console.error(`âŒ Error al enviar correo de matrÃ­cula a ${email}:`, detalleErrorEmail(error));
     return false;
   }
 }
