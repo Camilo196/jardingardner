@@ -15,6 +15,11 @@ dotenv_1.default.config();
 const GMAIL_USER = process.env.GMAIL_USER?.trim() || '';
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, '').trim() || '';
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY?.trim() || '';
+const GMAIL_API_CLIENT_ID = process.env.GMAIL_API_CLIENT_ID?.trim() || '';
+const GMAIL_API_CLIENT_SECRET = process.env.GMAIL_API_CLIENT_SECRET?.trim() || '';
+const GMAIL_API_REFRESH_TOKEN = process.env.GMAIL_API_REFRESH_TOKEN?.trim() || '';
+const GMAIL_API_USER = process.env.GMAIL_API_USER?.trim() || GMAIL_USER;
+const GMAIL_API_READY = !!(GMAIL_API_CLIENT_ID && GMAIL_API_CLIENT_SECRET && GMAIL_API_REFRESH_TOKEN && GMAIL_API_USER);
 // Crear transporter usando Gmail
 const transporter = nodemailer_1.default.createTransport({
     service: 'gmail',
@@ -28,9 +33,68 @@ if (SENDGRID_API_KEY) {
 }
 const FROM_EMAIL = process.env.MAIL_FROM?.trim() ||
     process.env.SENDGRID_FROM_EMAIL?.trim() ||
+    GMAIL_API_USER ||
     GMAIL_USER;
 const APP_URL = process.env.APP_URL || 'http://localhost:4200';
+function limpiarHeader(valor) {
+    return String(valor || '').replace(/[\r\n]+/g, ' ').trim();
+}
+function base64Url(valor) {
+    return Buffer.from(valor, 'utf8')
+        .toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/g, '');
+}
+async function obtenerAccessTokenGmailApi() {
+    const body = new URLSearchParams({
+        client_id: GMAIL_API_CLIENT_ID,
+        client_secret: GMAIL_API_CLIENT_SECRET,
+        refresh_token: GMAIL_API_REFRESH_TOKEN,
+        grant_type: 'refresh_token',
+    });
+    const res = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
+    });
+    const data = await res.json();
+    if (!res.ok || !data.access_token) {
+        throw new Error(data.error_description || data.error || 'No se pudo obtener token de Gmail API');
+    }
+    return data.access_token;
+}
+async function enviarEmailGmailApi(params) {
+    const accessToken = await obtenerAccessTokenGmailApi();
+    const subject = Buffer.from(limpiarHeader(params.subject), 'utf8').toString('base64');
+    const raw = [
+        `From: "LearnScape" <${limpiarHeader(FROM_EMAIL)}>`,
+        `To: ${limpiarHeader(params.to)}`,
+        `Subject: =?UTF-8?B?${subject}?=`,
+        'MIME-Version: 1.0',
+        'Content-Type: text/html; charset=UTF-8',
+        'Content-Transfer-Encoding: 8bit',
+        '',
+        params.html,
+    ].join('\r\n');
+    const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ raw: base64Url(raw) }),
+    });
+    if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`Gmail API no pudo enviar el correo (${res.status}) ${text}`);
+    }
+}
 async function enviarEmail(params) {
+    if (GMAIL_API_READY) {
+        await enviarEmailGmailApi(params);
+        return;
+    }
     if (SENDGRID_API_KEY) {
         await mail_1.default.send({
             from: {
@@ -52,12 +116,16 @@ async function enviarEmail(params) {
 }
 // Verificar conexiÃ³n al iniciar
 async function verificarConexionEmail() {
+    if (GMAIL_API_READY) {
+        console.log('Servicio de correo configurado con Gmail API OAuth');
+        return;
+    }
     if (SENDGRID_API_KEY) {
         console.log('Servicio de correo configurado con SendGrid');
         return;
     }
     if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
-        console.warn('Servicio de correo no configurado. Define SENDGRID_API_KEY y MAIL_FROM, o GMAIL_USER y GMAIL_APP_PASSWORD.');
+        console.warn('Servicio de correo no configurado. Define variables de Gmail API OAuth, SENDGRID_API_KEY y MAIL_FROM, o GMAIL_USER y GMAIL_APP_PASSWORD.');
         return;
     }
     try {
