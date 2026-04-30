@@ -409,13 +409,13 @@ function renderResumen(){
   const pg = promGen();
   document.getElementById('stP').textContent = pg>0?pg.toFixed(2):'—';
   const el = document.getElementById('stE');
-  if(pg>0){ el.innerHTML = pg>=3?'<span style="color:var(--green)">✅ Al día</span>':'<span style="color:var(--red)">⚠ Revisar</span>'; }else el.textContent='—';
+  if(pg>0){ el.innerHTML = pg>=3.5?'<span style="color:var(--green)">✅ Al día</span>':'<span style="color:var(--red)">⚠ Revisar</span>'; }else el.textContent='—';
   document.getElementById('stAs').textContent = '—'; // se actualiza al cargar asistencia
 
   const c = document.getElementById('cursosC');
   if(!G.cursos.length){ c.innerHTML='<div class="empty"><div class="empty-ico">📚</div><p>El estudiante no está inscrito en ningún curso aún.</p></div>'; return; }
   c.innerHTML = G.cursos.map((cu,i)=>{
-    const asigs = cu.asignaturas.map(a=>{ const cals=G.cals.filter(x=>String(x.asignaturaId)===String(a.id)&&(!x.periodo||!cu.periodo||x.periodo===cu.periodo)); const p=promAsig(cals); const ps=p!==null?p.toFixed(2):'—'; const pc=p===null?'n':p>=4?'g':p>=3?'a':'r';
+    const asigs = cu.asignaturas.map(a=>{ const cals=G.cals.filter(x=>String(x.asignaturaId)===String(a.id)&&(!x.periodo||!cu.periodo||x.periodo===cu.periodo)); const p=promAsig(cals); const ps=p!==null?p.toFixed(2):'—'; const pc=p===null?'n':p>=4?'g':p>=3.5?'a':'r';
       return `<div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><div style="font-weight:700;font-size:14px">${a.nombre}</div><div style="font-size:12px;color:var(--muted);margin-top:3px">👤 ${a.prof}</div></div><span class="pill ${pc}">⭐ ${ps}</span></div>`; }).join('');
     return `<div style="border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden;background:var(--white)"><div style="background:linear-gradient(135deg,var(--teal),#0f766e);color:#fff;padding:16px 20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between" onclick="togCC('cb${i}','ct${i}')"><div><div style="font-size:15px;font-weight:800">${cu.nombre}</div><div style="font-size:11px;opacity:.8;margin-top:3px">📅 ${periodoLabel(cu.periodo)} • ${cu.asignaturas.length} asignatura(s)</div></div><span id="ct${i}" style="font-size:16px;transition:.25s">▼</span></div><div id="cb${i}" style="display:none">${asigs||'<p style="padding:14px;color:var(--muted)">Sin asignaturas.</p>'}</div></div>`;
   }).join('');
@@ -439,13 +439,13 @@ function bloqueAsig(a,cals){
   const pc2=pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===2).map(c=>c.nota));
   const pc3=pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===3).map(c=>c.nota));
   const pf=pPond(pc1,pc2,pc3);
-  let h=`<div class="asig-blk"><div class="asig-blk-h"><div><span>${a.nombre}</span> <small style="font-size:11px;color:var(--muted)">— 👤 ${a.prof}</small></div>${pf!==null?`<span class="pill ${pf>=4?'g':pf>=3?'a':'r'}">Final: ${pf.toFixed(2)} ${pf>=3?'✅':'❌'}</span>`:''}</div>`;
+  let h=`<div class="asig-blk"><div class="asig-blk-h"><div><span>${a.nombre}</span> <small style="font-size:11px;color:var(--muted)">— 👤 ${a.prof}</small></div>${pf!==null?`<span class="pill ${pf>=4?'g':pf>=3.5?'a':'r'}">Final: ${pf.toFixed(2)} ${pf>=3.5?'✅':'❌'}</span>`:''}</div>`;
   if(!cals.length){ h+=`<p style="padding:14px;color:var(--muted);font-style:italic;font-size:13px">Sin calificaciones registradas.</p>`; }
   else{
     const sorted=[...cals].sort((a,b)=>((a.corte||0)-(b.corte||0)));
     h+=`<table class="ntbl"><thead><tr><th>Actividad</th><th>Tipo</th><th>Corte</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>`;
     sorted.forEach(c=>{ const n=Number(c.nota); const cor=c.corte||gc(c.observaciones)||'—'; const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'—';
-      h+=`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.tipoActividad||'—'}</span></td><td style="font-size:12px;color:var(--muted)">${cor===1?'1° Corte':cor===2?'2° Corte':cor===3?'3° Corte':cor}</td><td><span class="pill ${n>=4?'g':n>=3?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`; });
+      h+=`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.tipoActividad||'—'}</span></td><td style="font-size:12px;color:var(--muted)">${cor===1?'1° Corte':cor===2?'2° Corte':cor===3?'3° Corte':cor}</td><td><span class="pill ${n>=4?'g':n>=3.5?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`; });
     h+=`</tbody></table>`;
   }
   return h+`</div>`;

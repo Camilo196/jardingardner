@@ -493,7 +493,7 @@
       'Cédula':      b.estudiante?.cedula || '',
       'Estudiante':  b.estudiante ? `${b.estudiante.nombre} ${b.estudiante.primerApellido} ${b.estudiante.segundoApellido || ''}`.trim() : '—',
       'Promedio':    Number(b.promedio.toFixed(2)),
-      'Estado':      b.promedio >= 3.0 ? 'Aprobado' : 'Reprobado',
+      'Estado':      b.promedio >= 3.5 ? 'Aprobado' : 'Reprobado',
       'Período':     b.periodo,
       'Curso':       b.curso?.nombre || '',
     })).sort((a, b) => b['Promedio'] - a['Promedio']);
@@ -509,7 +509,7 @@
   // ══════════════════════════════════════════════════════════
   function notaClass(val) {
     if (val >= 4.0) return 'nota-alta';
-    if (val >= 3.0) return 'nota-media';
+    if (val >= 3.5) return 'nota-media';
     return 'nota-baja';
   }
 

@@ -110,9 +110,9 @@ function promedioNumeros(numeros: number[]): number | null {
 
 function valoracionDesdeNota(nota: number | null): string {
     if (nota === null) return 'Sin nota';
-    if (nota >= 4.5) return 'Superior';
+    if (nota >= 4.6) return 'Superior';
     if (nota >= 4.0) return 'Alto';
-    if (nota >= 3.0) return 'Básico';
+    if (nota >= 3.5) return 'Básico';
     return 'Bajo';
 }
 function normalizarCursoNombre(nombre = ''): string {
@@ -1509,7 +1509,7 @@ export const resolvers = {
                 const n = parseFloat(input.nota);
                 if (n >= 4.6)      nivel = 'Superior';
                 else if (n >= 4.0) nivel = 'Alto';
-                else if (n >= 3.0) nivel = 'Basico';
+                else if (n >= 3.5) nivel = 'Basico';
                 else               nivel = 'Bajo';
             }
 

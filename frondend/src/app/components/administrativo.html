@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
@@ -1573,7 +1573,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       'Cédula':      b.estudiante?.cedula || '',
       'Estudiante':  b.estudiante ? `${b.estudiante.nombre} ${b.estudiante.primerApellido} ${b.estudiante.segundoApellido || ''}`.trim() : '—',
       'Promedio':    Number(b.promedio.toFixed(2)),
-      'Estado':      b.promedio >= 3.0 ? 'Aprobado' : 'Reprobado',
+      'Estado':      b.promedio >= 3.5 ? 'Aprobado' : 'Reprobado',
       'Período':     b.periodo,
       'Curso':       b.curso?.nombre || '',
     })).sort((a, b) => b['Promedio'] - a['Promedio']);
@@ -1589,7 +1589,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   function notaClass(val) {
     if (val >= 4.0) return 'nota-alta';
-    if (val >= 3.0) return 'nota-media';
+    if (val >= 3.5) return 'nota-media';
     return 'nota-baja';
   }
 
@@ -6907,7 +6907,7 @@ function generarReporteCalificaciones() {
           } else {
             // Mostrar cada calificaciÃ³n en una fila
             calificaciones.forEach((calificacion, calIndex) => {
-              const colorNota = calificacion.nota >= 3.5 ? 'success' : calificacion.nota >= 3.0 ? 'warning' : 'danger';
+              const colorNota = calificacion.nota >= 4 ? 'success' : calificacion.nota >= 3.5 ? 'warning' : 'danger';
               
               html += `
                 <tr>
@@ -8992,10 +8992,10 @@ function actualizarDashboard(){
   const pEl = document.getElementById('kpiPromedio');
   if(pEl){
     pEl.textContent = pg!==null?pg.toFixed(2):'—';
-    pEl.style.color = !pg?'var(--amber)': pg>=4?'var(--green)': pg>=3?'var(--amber)':'var(--red)';
+    pEl.style.color = !pg?'var(--amber)': pg>=4?'var(--green)': pg>=3.5?'var(--amber)':'var(--red)';
   }
   const phEl = document.getElementById('kpiPromHint');
-  if(phEl) phEl.textContent = pg!==null?(pg>=3?'✅ Aprobatorio':'⚠ Bajo mínimo'):'sin datos';
+  if(phEl) phEl.textContent = pg!==null?(pg>=3.5?'✅ Aprobatorio':'⚠ Bajo mínimo'):'sin datos';
 
   // Asistencia
   const total=asists.length, pres=asists.filter(a=>['PRESENTE','EXCUSA'].includes(a.estado)).length;
@@ -9055,8 +9055,8 @@ function renderChartNotas(cals){
     const p=ns.reduce((s,n)=>s+n,0)/ns.length;
     labels.push(nom.length>16?nom.substring(0,14)+'...':nom);
     data.push(p);
-    colors.push(p>=4?'#16a34a':p>=3?'#d97706':'#e02222');
-    bg.push(p>=4?'#dcfce7':p>=3?'#fef3c7':'#fee2e2');
+    colors.push(p>=4?'#16a34a':p>=3.5?'#d97706':'#e02222');
+    bg.push(p>=4?'#dcfce7':p>=3.5?'#fef3c7':'#fee2e2');
   });
   const badge=document.getElementById('chartNotasBadge');
   if(badge) badge.textContent=labels.length+' asignaturas';
@@ -9070,7 +9070,7 @@ function renderChartNotas(cals){
   DASH.charts.notas=new Chart(ctx.getContext('2d'),{
     type:'bar',
     data:{labels,datasets:[{label:'Promedio',data,backgroundColor:bg,borderColor:colors,borderWidth:2,borderRadius:8,borderSkipped:false}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw.toFixed(2)} ${c.raw>=3?'Aprobado':'Revisar'}`}}},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw.toFixed(2)} ${c.raw>=3.5?'Aprobado':'Revisar'}`}}},
       scales:{y:{min:0,max:5,grid:{color:'#e2e8f0'},ticks:{font:{family:'Plus Jakarta Sans',weight:'700',size:11},callback:v=>v.toFixed(1)}},
               x:{grid:{display:false},ticks:{font:{family:'Plus Jakarta Sans',weight:'700',size:11}}}}}
   });
@@ -9119,8 +9119,8 @@ function renderTopEstudiantes(cals){
     .sort((a,b)=>b.prom-a.prom);
 
   const medals=['🥇','🥈','🥉'];
-  const sc=(p)=>`font-size:13px;font-weight:900;color:${p>=4?'var(--green)':p>=3?'var(--amber)':'var(--red)'}`;
-  const bg=(p)=>`top-item ${p>=4?'green':p>=3?'amber':'red'}`;
+  const sc=(p)=>`font-size:13px;font-weight:900;color:${p>=4?'var(--green)':p>=3.5?'var(--amber)':'var(--red)'}`;
+  const bg=(p)=>`top-item ${p>=4?'green':p>=3.5?'amber':'red'}`;
 
   const topEl=document.getElementById('topMejores');
   if(topEl){

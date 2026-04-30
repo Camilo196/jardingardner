@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -529,11 +529,11 @@ function renderResumen(){
   document.getElementById('stP').textContent=G.esPreescolar?'-':(pg>0?pg.toFixed(2):'-');
   const el=document.getElementById('stE');
   if(G.esPreescolar){ el.innerHTML='<span style="color:var(--green)">Seguimiento</span>'; }
-  else if(pg>0){el.innerHTML=pg>=3?'<span style="color:var(--green)">Al dia</span>':'<span style="color:var(--red)">Revisar</span>';}else el.textContent='-';
+  else if(pg>0){el.innerHTML=pg>=3.5?'<span style="color:var(--green)">Al dia</span>':'<span style="color:var(--red)">Revisar</span>';}else el.textContent='-';
   const c=document.getElementById('cursosC');
   if(!G.cursos.length){c.innerHTML='<div class="empty"><div class="empty-ico">Cursos</div><p>No estas inscrito en ningun curso aun.</p></div>';return;}
   c.innerHTML=G.cursos.map((cu,i)=>{
-    const asigs=cu.asignaturas.map(a=>{ const cals=G.cals.filter(x=>String(x.asignaturaId)===String(a.id)); const p=promAsig(cals); const ps=p!==null?p.toFixed(2):'-'; const pc=p===null?'n':p>=4?'g':p>=3?'a':'r';
+    const asigs=cu.asignaturas.map(a=>{ const cals=G.cals.filter(x=>String(x.asignaturaId)===String(a.id)); const p=promAsig(cals); const ps=p!==null?p.toFixed(2):'-'; const pc=p===null?'n':p>=4?'g':p>=3.5?'a':'r';
       const horTexto=parsearSlots(a.horario).map(p=>p.dia.charAt(0).toUpperCase()+p.dia.slice(1)+' '+(p.rango||FRANJAS.find(f=>f.id===p.fId)?.l||p.hora)).join(', ')||a.horario||'Sin horario'; const acciones=G.esPreescolar?'<span class="pill g">Seguimiento pedagógico</span>':`<span class="pill ${pc}">Nota ${ps}</span><button class="btn btn-o" onclick="abrirModal('${a.id}','${a.nombre.replace(/'/g,"\\'")}')">Ver notas</button>`; return `<div class="arow"><div><div class="anm">${a.nombre}</div><div class="ame">Docente: ${a.prof} &nbsp;|&nbsp; Horario: ${horTexto}</div></div><div class="aacts">${acciones}</div></div>`; }).join('');
     return `<div class="cc"><div class="ch" onclick="togCurso('cb${i}','ct${i}')"><div><h3>${cu.nombre}</h3><div class="ch-meta">Periodo: ${periodoLabel(cu.periodo)} &nbsp;|&nbsp; ${cu.asignaturas.length} asignatura(s)</div></div><span class="ctog" id="ct${i}">v</span></div><div class="cbody" id="cb${i}">${asigs||'<p style="padding:14px;color:var(--muted)">Sin asignaturas.</p>'}</div></div>`;
   }).join('');
@@ -720,9 +720,9 @@ function renderNotas(){
 }
 function bloqueAsig(a,cals){
   const plbl=p=>{ const m=(p||'').match(/^(\d{4})-(\d)$/); return m?`${{1:'1er',2:'2do',3:'3er',4:'4to'}[m[2]]||'P'+m[2]} Periodo ${m[1]}`:p; };
-  const rp=p=>p!==null?`<span class="pill ${p>=4?'g':p>=3?'a':'r'}" style="font-size:11px">${p.toFixed(1)}</span>`:`<span class="pill n" style="font-size:11px">-</span>`;
+  const rp=p=>p!==null?`<span class="pill ${p>=4?'g':p>=3.5?'a':'r'}" style="font-size:11px">${p.toFixed(1)}</span>`:`<span class="pill n" style="font-size:11px">-</span>`;
   const pg=cals.length?cals.reduce((s,c)=>s+Number(c.nota),0)/cals.length:null;
-  let h=`<div class="asig-blk"><div class="asig-blk-h"><div><span>${a.nombre}</span> <small>- Docente: ${a.prof}</small></div>${pg!==null?`<span class="pill ${pg>=4?'g':pg>=3?'a':'r'}">Prom: ${pg.toFixed(2)} ${pg>=3?'OK':'Revisar'}</span>`:''}</div>`;
+  let h=`<div class="asig-blk"><div class="asig-blk-h"><div><span>${a.nombre}</span> <small>- Docente: ${a.prof}</small></div>${pg!==null?`<span class="pill ${pg>=4?'g':pg>=3.5?'a':'r'}">Prom: ${pg.toFixed(2)} ${pg>=3.5?'OK':'Revisar'}</span>`:''}</div>`;
   if(!cals.length){
     h+=`<p style="padding:14px;color:var(--muted);font-style:italic;font-size:13px">Sin calificaciones registradas.</p>`;
   } else {
@@ -732,7 +732,7 @@ function bloqueAsig(a,cals){
       const avg=acts.length?acts.reduce((s,c)=>s+Number(c.nota),0)/acts.length:null;
       h+=`<div style="padding:8px 14px 4px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:700;color:#475569">Periodo: ${plbl(per)}</span>${rp(avg)}</div>`;
       h+=`<table class="ntbl"><thead><tr><th>Actividad</th><th>Tipo</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>`;
-      acts.forEach(c=>{const n=Number(c.nota);const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'-'; h+=`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.tipoActividad||'-'}</span></td><td><span class="pill ${n>=4?'g':n>=3?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`;});
+      acts.forEach(c=>{const n=Number(c.nota);const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'-'; h+=`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.tipoActividad||'-'}</span></td><td><span class="pill ${n>=4?'g':n>=3.5?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`;});
       h+=`</tbody></table>`;
     });
   }
@@ -897,30 +897,30 @@ function abrirModal(id,nombre){
   } else {
     // Agrupar por periodo
     const periodos=[...new Set(cals.map(c=>c.periodo||'Sin periodo'))].sort();
-    const rp=p=>p!==null?`<span class="pill ${p>=4?'g':p>=3?'a':'r'}">${p.toFixed(2)}</span>`:`<span class="pill n">-</span>`;
+    const rp=p=>p!==null?`<span class="pill ${p>=4?'g':p>=3.5?'a':'r'}">${p.toFixed(2)}</span>`:`<span class="pill n">-</span>`;
     const plabel=p=>{ const m=p.match(/^(\d{4})-(\d)$/); return m?`${{1:'1er',2:'2do',3:'3er',4:'4to'}[m[2]]||'P'+m[2]} Periodo ${m[1]}`:p; };
 
     periodos.forEach(per=>{
       const acts=cals.filter(c=>(c.periodo||'Sin periodo')===per);
       const avg=acts.length?acts.reduce((s,c)=>s+Number(c.nota),0)/acts.length:null;
-      const ap=avg!==null&&avg>=3;
+      const ap=avg!==null&&avg>=3.5;
       h+=`<div style="margin-bottom:20px">
         <div style="display:flex;justify-content:space-between;align-items:center;background:${ap?'#f0fdf4':'#f8fafc'};border:1px solid ${ap?'#86efac':'#e2e8f0'};border-radius:10px;padding:12px 16px;margin-bottom:10px">
           <div><div style="font-weight:800;font-size:14px">${plabel(per)}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${acts.length} actividad(es)</div></div>
           <div style="text-align:right">${rp(avg)}<div style="font-size:11px;font-weight:700;color:${ap?'var(--green)':'var(--red)'};margin-top:3px">${avg!==null?(ap?'Aprobado':'Reprobado'):'-'}</div></div>
         </div>
         <table class="ntbl"><thead><tr><th>Actividad</th><th>Tipo</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>
-        ${acts.map(c=>{ const n=Number(c.nota);const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'-'; return`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);font-weight:700">${c.tipoActividad||'-'}</span></td><td><span class="pill ${n>=4?'g':n>=3?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`; }).join('')}
+        ${acts.map(c=>{ const n=Number(c.nota);const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'-'; return`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);font-weight:700">${c.tipoActividad||'-'}</span></td><td><span class="pill ${n>=4?'g':n>=3.5?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`; }).join('')}
         </tbody></table>
       </div>`;
     });
 
     // Promedio general
     const pg=cals.reduce((s,c)=>s+Number(c.nota),0)/cals.length;
-    h+=`<div style="background:${pg>=3?'#f0fdf4':'#fff1f2'};border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border:1px solid ${pg>=3?'#86efac':'#fca5a5'}">
+    h+=`<div style="background:${pg>=3.5?'#f0fdf4':'#fff1f2'};border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border:1px solid ${pg>=3.5?'#86efac':'#fca5a5'}">
       <span style="font-weight:800;font-size:14px">Promedio General</span>
-      <div><span class="pill ${pg>=4?'g':pg>=3?'a':'r'}" style="font-size:15px">${pg.toFixed(2)}</span>
-      <span style="font-size:12px;margin-left:8px;font-weight:700;color:${pg>=3?'var(--green)':'var(--red)'}">${pg>=3?'APROBADO':'REPROBADO'}</span></div>
+      <div><span class="pill ${pg>=4?'g':pg>=3.5?'a':'r'}" style="font-size:15px">${pg.toFixed(2)}</span>
+      <span style="font-size:12px;margin-left:8px;font-weight:700;color:${pg>=3.5?'var(--green)':'var(--red)'}">${pg>=3.5?'APROBADO':'REPROBADO'}</span></div>
     </div>`;
   }
 

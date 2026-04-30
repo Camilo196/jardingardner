@@ -388,7 +388,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           <div class="cc-head">
             <div>
               <div class="cc-title">🚨 Estudiantes en Riesgo</div>
-              <div class="cc-sub">Promedio inferior a 3.0</div>
+              <div class="cc-sub">Promedio inferior a 3.5</div>
             </div>
           </div>
           <div class="top-list" id="topRiesgo">
@@ -507,7 +507,7 @@ function renderTodo() {
   const pg = notas.length ? (notas.reduce((s, n) => s + n, 0) / notas.length) : null;
   const kpiProm = document.getElementById('kpiPromedio');
   kpiProm.textContent = pg !== null ? pg.toFixed(2) : '—';
-  kpiProm.style.color = pg === null ? 'var(--amber)' : pg >= 4 ? 'var(--sage)' : pg >= 3 ? 'var(--amber)' : 'var(--rose)';
+  kpiProm.style.color = pg === null ? 'var(--amber)' : pg >= 4 ? 'var(--sage)' : pg >= 3.5 ? 'var(--amber)' : 'var(--rose)';
 
   // Asistencia
   const total = asists.length;
@@ -548,8 +548,8 @@ function renderChartNotas(cals) {
   
   document.getElementById('badgeNotas').textContent = `${asigNombres.length} asignaturas`;
 
-  const colors = promedios.map(p => p >= 4 ? '#2d9e5f' : p >= 3 ? '#d97706' : '#dc2626');
-  const bgColors = promedios.map(p => p >= 4 ? '#e6f7ef' : p >= 3 ? '#fef3cd' : '#fdeaea');
+  const colors = promedios.map(p => p >= 4 ? '#2d9e5f' : p >= 3.5 ? '#d97706' : '#dc2626');
+  const bgColors = promedios.map(p => p >= 4 ? '#e6f7ef' : p >= 3.5 ? '#fef3cd' : '#fdeaea');
 
   if (charts.notas) charts.notas.destroy();
   charts.notas = new Chart(document.getElementById('chartNotas').getContext('2d'), {
@@ -573,7 +573,7 @@ function renderChartNotas(cals) {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: ctx => ` Promedio: ${ctx.raw.toFixed(2)} ${ctx.raw >= 3 ? '✅' : '❌'}`
+            label: ctx => ` Promedio: ${ctx.raw.toFixed(2)} ${ctx.raw >= 3.5 ? '✅' : '❌'}`
           }
         }
       },

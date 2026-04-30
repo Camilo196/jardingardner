@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -904,7 +904,7 @@ function renderActiv(cals){
   if(!cals.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);font-style:italic">Sin actividades. ¡Agrega la primera!</td></tr>';return;}
   const sorted=[...cals].sort((a,b)=>((a.corte||0)-(b.corte||0))||new Date(a.fecha||0)-new Date(b.fecha||0));
   tb.innerHTML=sorted.map(c=>{ const n=Number(c.nota);const tipo=c.tipoActividad||'EXAMEN'; const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'-'; const per=c.periodo||'-';
-    return `<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 9px;border-radius:10px;font-weight:700" class="badge-${tipo}">${tipo.charAt(0)+tipo.slice(1).toLowerCase()}</span></td><td style="font-size:12px;color:var(--muted)">${per}</td><td><strong style="color:${n>=4?'var(--green)':n>=3?'var(--amber)':'var(--red)'}">${n.toFixed(1)}</strong></td><td style="font-size:12px;color:var(--muted)">${f}</td><td style="font-size:12px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.observaciones||'-'}</td><td style="white-space:nowrap"><button class="btn bo" style="padding:4px 8px;font-size:11px;margin-right:3px" onclick="editarAct('${c.id}')"><i class="fas fa-pen"></i></button><button class="btn bd" style="padding:4px 8px;font-size:11px" onclick="eliminarCal('${c.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
+    return `<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 9px;border-radius:10px;font-weight:700" class="badge-${tipo}">${tipo.charAt(0)+tipo.slice(1).toLowerCase()}</span></td><td style="font-size:12px;color:var(--muted)">${per}</td><td><strong style="color:${n>=4?'var(--green)':n>=3.5?'var(--amber)':'var(--red)'}">${n.toFixed(1)}</strong></td><td style="font-size:12px;color:var(--muted)">${f}</td><td style="font-size:12px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.observaciones||'-'}</td><td style="white-space:nowrap"><button class="btn bo" style="padding:4px 8px;font-size:11px;margin-right:3px" onclick="editarAct('${c.id}')"><i class="fas fa-pen"></i></button><button class="btn bd" style="padding:4px 8px;font-size:11px" onclick="eliminarCal('${c.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
   }).join('');
 }
 
@@ -918,12 +918,12 @@ function renderCortes(cals){
     const acts=cals.filter(c=>(c.periodo||'Sin período')===per);
     const avg=acts.length?acts.reduce((s,c)=>s+Number(c.nota),0)/acts.length:null;
     const perLabel=per.match(/^(\d{4})-(\d)$/)?`${{1:'1er',2:'2do',3:'3er',4:'4to'}[per.split('-')[1]]||'P'+per.split('-')[1]} Período ${per.split('-')[0]}`:per;
-    const tabla=`<table class="t" style="font-size:12px"><thead><tr><th>Actividad</th><th>Tipo</th><th>Nota</th><th>Fecha</th><th>Observaciones</th></tr></thead><tbody>${acts.map(a=>{const n=Number(a.nota);const f=a.fecha?new Date(a.fecha).toLocaleDateString('es-CO'):'-';return`<tr><td style="font-weight:700">${a.nombreActividad||'Actividad'}</td><td><span class="badge-${a.tipoActividad||'EXAMEN'}" style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">${(a.tipoActividad||'EXAMEN').charAt(0)+(a.tipoActividad||'EXAMEN').slice(1).toLowerCase()}</span></td><td><strong style="color:${n>=4?'var(--green)':n>=3?'var(--amber)':'var(--red)'}">${n.toFixed(1)}</strong></td><td style="font-size:11px;color:var(--muted)">${f}</td><td style="font-size:11px;color:var(--muted)">${a.observaciones||'-'}</td></tr>`;}).join('')}</tbody></table>`;
+    const tabla=`<table class="t" style="font-size:12px"><thead><tr><th>Actividad</th><th>Tipo</th><th>Nota</th><th>Fecha</th><th>Observaciones</th></tr></thead><tbody>${acts.map(a=>{const n=Number(a.nota);const f=a.fecha?new Date(a.fecha).toLocaleDateString('es-CO'):'-';return`<tr><td style="font-weight:700">${a.nombreActividad||'Actividad'}</td><td><span class="badge-${a.tipoActividad||'EXAMEN'}" style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">${(a.tipoActividad||'EXAMEN').charAt(0)+(a.tipoActividad||'EXAMEN').slice(1).toLowerCase()}</span></td><td><strong style="color:${n>=4?'var(--green)':n>=3.5?'var(--amber)':'var(--red)'}">${n.toFixed(1)}</strong></td><td style="font-size:11px;color:var(--muted)">${f}</td><td style="font-size:11px;color:var(--muted)">${a.observaciones||'-'}</td></tr>`;}).join('')}</tbody></table>`;
     html+=`<div class="corte-card"><div class="corte-head"><div><div class="corte-title"><i class="fas fa-calendar-alt"></i> ${perLabel}</div><div class="corte-peso">${acts.length} actividad(es)</div></div><div class="corte-avg">${avg!==null?avg.toFixed(2):'-'}</div></div>${tabla}</div>`;
   });
   // Promedio general de todas las calificaciones
   const todas=cals; const pg=todas.length?todas.reduce((s,c)=>s+Number(c.nota),0)/todas.length:null;
-  if(pg!==null){ const ap=pg>=3; html+=`<div class="final-row"><div style="font-weight:700;font-size:15px">Promedio general <span style="font-size:12px;opacity:.8;margin-left:6px">${ap?'APROBADO':'REPROBADO'}</span></div><div style="font-size:22px;font-weight:800">${pg.toFixed(2)}</div></div>`; }
+  if(pg!==null){ const ap=pg>=3.5; html+=`<div class="final-row"><div style="font-weight:700;font-size:15px">Promedio general <span style="font-size:12px;opacity:.8;margin-left:6px">${ap?'APROBADO':'REPROBADO'}</span></div><div style="font-size:22px;font-weight:800">${pg.toFixed(2)}</div></div>`; }
   cont.innerHTML=html;
 }
 
@@ -1165,13 +1165,13 @@ async function actualizarSelectCortes(){ const periodo=document.getElementById('
 
 
 // â”€â”€ helpers nivel â”€â”€
-function notaToNivel(n){ const v=parseFloat(n); if(v>=4.6)return'Superior'; if(v>=4.0)return'Alto'; if(v>=3.0)return'Basico'; if(v>=0)return'Bajo'; return''; }
+function notaToNivel(n){ const v=parseFloat(n); if(v>=4.6)return'Superior'; if(v>=4.0)return'Alto'; if(v>=3.5)return'Basico'; if(v>=0)return'Bajo'; return''; }
 
 function getNivelCfg(n){
   const v=parseFloat(n); if(isNaN(v)) return null;
   if(v>=4.6) return {label:'Superior',icon:'★',bg:'#dcfce7',fg:'#15803d',border:'#86efac'};
   if(v>=4.0) return {label:'Alto',    icon:'▲',bg:'#dbeafe',fg:'#1d4ed8',border:'#93c5fd'};
-  if(v>=3.0) return {label:'Básico',  icon:'■',bg:'#fef3c7',fg:'#92400e',border:'#fcd34d'};
+  if(v>=3.5) return {label:'Básico',  icon:'■',bg:'#fef3c7',fg:'#92400e',border:'#fcd34d'};
   if(v>=0)   return {label:'Bajo',    icon:'!',bg:'#fee2e2',fg:'#991b1b',border:'#fca5a5'};
   return null;
 }
@@ -1199,8 +1199,8 @@ function actualizarNivelUI(nota){
     if(!isNaN(v)&&cfg){
       if(cn===5) active=v>=4.6;
       else if(cn===4) active=v>=4.0&&v<4.6;
-      else if(cn===3) active=v>=3.0&&v<4.0;
-      else if(cn===2||cn===1) active=v>=0&&v<3.0;
+      else if(cn===3) active=v>=3.5&&v<4.0;
+      else if(cn===2||cn===1) active=v>=0&&v<3.5;
     }
     c.style.borderColor=active?cfg.border:'transparent';
     c.style.transform=active?'scale(1.06)':'scale(1)';

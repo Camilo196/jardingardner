@@ -567,9 +567,9 @@ class PDFService {
                 asignaturaId: cal.asignaturaId,
                 asignaturaNombre: cal.asignaturaNombre || cal.asignaturaId,
                 docenteNombre: cal.docenteNombre || 'Docente',
-                valoracion: cal.nota >= 4.5 ? 'Superior' :
+                valoracion: cal.nota >= 4.6 ? 'Superior' :
                     cal.nota >= 4.0 ? 'Alto' :
-                        cal.nota >= 3.0 ? 'Basico' : 'Bajo',
+                        cal.nota >= 3.5 ? 'Basico' : 'Bajo',
                 nota: cal.nota,
                 resumenNotas: cal.resumenNotas,
                 faltas: cal.faltas ?? 0,
