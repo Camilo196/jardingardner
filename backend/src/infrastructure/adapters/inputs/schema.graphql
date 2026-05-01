@@ -151,6 +151,20 @@ type Asignatura {
   curso: Curso
 }
 
+type MallaCurricular {
+  id: ID!
+  asignaturaId: ID!
+  profesorId: ID!
+  nombreArchivo: String!
+  mimeType: String!
+  contenidoBase64: String!
+  creadoPor: String
+  createdAt: String
+  updatedAt: String
+  asignatura: Asignatura
+  profesor: Profesor
+}
+
 type Asistencia {
   id: ID!
   estudianteId: String!
@@ -415,6 +429,11 @@ type Query {
   asignaturasPorProfesor(profesorId: ID!): [Asignatura]
   asignaturasPorCurso(cursoId: ID!): [Asignatura!]!
 
+  # Malla curricular
+  mallasCurriculares: [MallaCurricular!]!
+  mallasPorProfesor(profesorId: ID!): [MallaCurricular!]!
+  mallaPorAsignatura(asignaturaId: ID!): MallaCurricular
+
   # Asistencias
   asistencias: [Asistencia!]!
   asistencia(id: ID!): Asistencia
@@ -510,6 +529,10 @@ type Mutation {
   crearAsignaturaEnVariosCursos(input: AsignaturaMultiCursoInput!): AsignaturaMultiCursoResult!
   actualizarAsignatura(id: ID!, input: AsignaturaInput!): Asignatura!
   eliminarAsignatura(id: ID!): Boolean!
+
+  # Malla curricular
+  guardarMallaCurricular(asignaturaId: ID!, nombreArchivo: String!, mimeType: String!, contenidoBase64: String!): MallaCurricular!
+  eliminarMallaCurricular(asignaturaId: ID!): Boolean!
 
   # Administrador
   crearAdmin(email: String!, password: String!): AuthPayload

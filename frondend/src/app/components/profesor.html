@@ -330,6 +330,9 @@ table.t tbody tr:last-child td{border-bottom:none}
   <button class="sb-item" onclick="showSection('cronograma',this)">
     <span class="ico"><i class="fas fa-calendar-alt"></i></span><span>Cronograma</span>
   </button>
+  <button class="sb-item" onclick="showSection('malla',this)">
+    <span class="ico"><i class="fas fa-file-pdf"></i></span><span>Malla curricular</span>
+  </button>
   <button class="sb-item" onclick="abrirActividadCurso()">
     <span class="ico"><i class="fas fa-plus-circle"></i></span><span>Actividad por curso</span>
   </button>
@@ -434,6 +437,25 @@ table.t tbody tr:last-child td{border-bottom:none}
           <span class="leg-it"><span class="leg-dot ev-FESTIVO"></span>Festivo</span>
           <span class="leg-it"><span class="leg-dot ev-CULTURAL"></span>Cultural</span>
           <span class="leg-it"><span class="leg-dot ev-OTRO"></span>Otro</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="sec-malla" class="section">
+      <div class="pcard">
+        <div class="pcard-head">
+          <span class="pcard-title"><i class="fas fa-file-pdf"></i> Malla curricular</span>
+        </div>
+        <div style="padding:20px 22px;display:grid;gap:14px">
+          <div class="filtrow" style="padding:0">
+            <div class="fg"><label>Asignatura</label><select id="mallaAsigSel"></select></div>
+            <div class="fg"><label>PDF</label><input type="file" id="mallaFile" accept="application/pdf"></div>
+            <button class="btn bp" onclick="subirMallaCurricular()" style="height:40px;align-self:flex-end"><i class="fas fa-upload"></i> Subir malla</button>
+          </div>
+          <div id="mallaMsg" style="font-size:13px;color:var(--muted)"></div>
+          <div class="twrap">
+            <table class="t"><thead><tr><th>Asignatura</th><th>Curso</th><th>Archivo</th><th>Actualizada</th><th></th></tr></thead><tbody id="mallaTbody"></tbody></table>
+          </div>
         </div>
       </div>
     </div>
@@ -650,7 +672,8 @@ const API = window.LEARNSCAPE_API;
 const SECTION_LABELS = {
   asignaturas: ['Mis Asignaturas','Cursos y estudiantes a tu cargo'],
   asistencia:  ['Asistencia','Registro diario de clases'],
-  cronograma:  ['Cronograma','Calendario institucional']
+  cronograma:  ['Cronograma','Calendario institucional'],
+  malla:       ['Malla curricular','Sube y consulta tus PDF por asignatura']
 };
 
 function showSection(id, btn){
@@ -663,6 +686,7 @@ function showSection(id, btn){
   document.getElementById('topSub').textContent = lbl[1];
   if(id==='asistencia') llenarSelectAsig();
   if(id==='cronograma') iniciarCronograma();
+  if(id==='malla') cargarMallaProfesor();
 }
 
 function periodoActualAuto(){ const m=new Date().getMonth()+1; if(m<=3)return'1'; if(m<=6)return'2'; if(m<=9)return'3'; return'4'; }
@@ -1166,6 +1190,58 @@ function renderHistFechas(registros){
   cont.innerHTML=Object.entries(porF).map(([f,c])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border)"><strong style="color:var(--ink);min-width:130px;font-size:13px">${f}</strong><div style="display:flex;gap:14px;font-size:12px;font-weight:700"><span style="color:var(--green)"><i class="fas fa-check-circle"></i> ${c.PRESENTE}</span><span style="color:var(--red)"><i class="fas fa-times-circle"></i> ${c.AUSENTE}</span><span style="color:var(--amber)"><i class="fas fa-clock"></i> ${c.TARDE}</span><span style="color:var(--purple)"><i class="fas fa-file-alt"></i> ${c.EXCUSA}</span></div></div>`).join('');
 }
 function switchHistTab(id){ document.getElementById('htabBtn1').classList.toggle('on',id==='hresumen'); document.getElementById('htabBtn2').classList.toggle('on',id==='hfechas'); document.getElementById('hresumen').style.display=id==='hresumen'?'block':'none'; document.getElementById('hfechas').style.display=id==='hfechas'?'block':'none'; }
+
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(String(reader.result||'').split(',')[1]||'');
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function abrirPdfBase64(b64,nombre='documento.pdf'){
+  const bytes=new Uint8Array(atob(b64).split('').map(c=>c.charCodeAt(0)));
+  const blob=new Blob([bytes],{type:'application/pdf'});
+  const url=URL.createObjectURL(blob);
+  window.open(url,'_blank');
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+
+async function cargarMallaProfesor(){
+  const sel=document.getElementById('mallaAsigSel');
+  const tb=document.getElementById('mallaTbody');
+  if(!sel||!tb) return;
+  sel.innerHTML='<option value="">Seleccionar asignatura...</option>'+W.asignaturas.map(a=>`<option value="${a.id}">${a.nombre}${a.curso?' - '+a.curso.nombre:''}</option>`).join('');
+  tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:18px">Cargando...</td></tr>';
+  try{
+    const d=await gql(`query{mallasPorProfesor(profesorId:"${W.profId}"){id asignaturaId nombreArchivo contenidoBase64 updatedAt asignatura{id nombre curso{id nombre}}}}`);
+    const rows=d.mallasPorProfesor||[];
+    if(!rows.length){ tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:18px;color:var(--muted)">Aún no has subido mallas curriculares.</td></tr>'; return; }
+    tb.innerHTML=rows.map(m=>{
+      const f=m.updatedAt?new Date(m.updatedAt).toLocaleDateString('es-CO'):'-';
+      return `<tr><td style="font-weight:700">${m.asignatura?.nombre||'-'}</td><td>${m.asignatura?.curso?.nombre||'-'}</td><td>${m.nombreArchivo}</td><td>${f}</td><td><button class="btn bo" onclick="abrirPdfBase64('${m.contenidoBase64}','${m.nombreArchivo.replace(/'/g,"\\'")}')"><i class="fas fa-eye"></i> Abrir</button></td></tr>`;
+    }).join('');
+  }catch(e){ tb.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--red);padding:18px">${e.message}</td></tr>`; }
+}
+
+async function subirMallaCurricular(){
+  const asigId=document.getElementById('mallaAsigSel').value;
+  const file=document.getElementById('mallaFile').files?.[0];
+  const msg=document.getElementById('mallaMsg');
+  if(!asigId){ msg.textContent='Selecciona una asignatura'; msg.style.color='var(--red)'; return; }
+  if(!file){ msg.textContent='Selecciona un PDF'; msg.style.color='var(--red)'; return; }
+  if(file.type!=='application/pdf'){ msg.textContent='Solo se permite PDF'; msg.style.color='var(--red)'; return; }
+  if(file.size>7*1024*1024){ msg.textContent='El PDF no debe superar 7 MB'; msg.style.color='var(--red)'; return; }
+  try{
+    msg.textContent='Subiendo malla curricular...'; msg.style.color='var(--blue)';
+    const contenidoBase64=await fileToBase64(file);
+    await gql(`mutation($asig:ID!,$nom:String!,$mime:String!,$pdf:String!){guardarMallaCurricular(asignaturaId:$asig,nombreArchivo:$nom,mimeType:$mime,contenidoBase64:$pdf){id}}`,{asig:asigId,nom:file.name,mime:file.type,pdf:contenidoBase64});
+    document.getElementById('mallaFile').value='';
+    msg.textContent='Malla curricular guardada'; msg.style.color='var(--green)';
+    await cargarMallaProfesor();
+  }catch(e){ msg.textContent='Error: '+e.message; msg.style.color='var(--red)'; }
+}
 
 async function cargarConfigPeriodo(periodo){ const anio=new Date().getFullYear(); const key=`${anio}-${periodo}`; if(W.periodoConfigCache[key])return W.periodoConfigCache[key]; try{ const d=await gql(`query{periodoConfig(anio:${anio},numeroPeriodo:${parseInt(periodo)||1}){numCortes pesoPorCorte}}`); const cfg=d.periodoConfig??{numCortes:3,pesoPorCorte:33.3}; W.periodoConfigCache[key]=cfg; return cfg; }catch{return{numCortes:3,pesoPorCorte:33.3};} }
 async function actualizarSelectCortes(){ const periodo=document.getElementById('actPeriodo').value.trim()||W.periodo; const cfg=await cargarConfigPeriodo(periodo); const sel=document.getElementById('actCorte'); const prev=sel.value; sel.innerHTML=''; for(let c=1;c<=cfg.numCortes;c++){const o=document.createElement('option');o.value=c;o.textContent=`${c}° Corte - ${cfg.pesoPorCorte.toFixed(1)}%`;sel.appendChild(o);} if(prev&&parseInt(prev)<=cfg.numCortes)sel.value=prev; }

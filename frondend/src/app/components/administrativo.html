@@ -597,6 +597,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   <button class="sb-item" onclick="showSection('boletines',this);cargarDatosBoletines()">
     <span class="ico"><i class="fas fa-file-alt"></i></span><span>Boletines</span>
   </button>
+  <button class="sb-item" onclick="showSection('mallas',this);cargarMallasAdmin()">
+    <span class="ico"><i class="fas fa-file-pdf"></i></span><span>Mallas</span>
+  </button>
   <button class="sb-item" onclick="showSection('periodos',this);cargarPeriodos()">
     <span class="ico"><i class="fas fa-calendar-alt"></i></span><span>Períodos</span>
   </button>
@@ -1027,6 +1030,29 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          SECCIÓN: PERÃODOS
     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <div id="section-mallas" class="section">
+      <div class="section-header">
+        <div class="section-title-txt"><i class="fas fa-file-pdf"></i> Mallas curriculares</div>
+      </div>
+      <div style="display:grid;gap:14px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div>
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Buscar</label>
+            <input id="mallaAdminBuscar" oninput="renderMallasAdmin()" placeholder="Profesor, curso o asignatura..." style="padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;min-width:260px">
+          </div>
+          <button onclick="cargarMallasAdmin()" style="padding:9px 18px;background:#4f46e5;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer">
+            <i class="fas fa-sync"></i> Actualizar
+          </button>
+        </div>
+        <div id="mallaAdminMsg" style="font-size:14px;color:#64748b"></div>
+        <div style="overflow-x:auto;border:1px solid #e5e7eb;border-radius:8px;background:#fff">
+          <table style="width:100%;border-collapse:collapse;font-size:14px">
+            <thead><tr style="background:#f8fafc"><th style="padding:10px;text-align:left">Asignatura</th><th style="padding:10px;text-align:left">Curso</th><th style="padding:10px;text-align:left">Profesor</th><th style="padding:10px;text-align:left">Archivo</th><th style="padding:10px;text-align:left">Actualizada</th><th style="padding:10px;text-align:center">Accion</th></tr></thead>
+            <tbody id="mallaAdminTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
     <div id="section-periodos" class="section">
       <div class="section-header">
         <div class="section-title-txt"><i class="fas fa-calendar-alt"></i> Configuración de Períodos</div>
@@ -6376,6 +6402,61 @@ async function gqlAdmin(query, variables = {}) {
   return gqlAdm(query, variables);
 }
 
+let MALLAS_ADMIN = [];
+
+function abrirPdfBase64Admin(b64, nombre='malla-curricular.pdf') {
+  const bytes = new Uint8Array(atob(b64).split('').map(c => c.charCodeAt(0)));
+  const blob = new Blob([bytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+async function cargarMallasAdmin() {
+  const msg = document.getElementById('mallaAdminMsg');
+  const tb = document.getElementById('mallaAdminTbody');
+  if (!msg || !tb) return;
+  msg.textContent = 'Cargando mallas curriculares...';
+  tb.innerHTML = '<tr><td colspan="6" style="padding:18px;text-align:center;color:#64748b">Cargando...</td></tr>';
+  try {
+    const data = await gqlAdmin(`query{mallasCurriculares{id asignaturaId profesorId nombreArchivo contenidoBase64 updatedAt asignatura{id nombre curso{id nombre}} profesor{cedula nombre primerApellido}}}`);
+    MALLAS_ADMIN = data.mallasCurriculares || [];
+    msg.textContent = MALLAS_ADMIN.length ? `${MALLAS_ADMIN.length} malla(s) cargada(s)` : 'No hay mallas curriculares subidas.';
+    renderMallasAdmin();
+  } catch (e) {
+    msg.textContent = 'Error: ' + e.message;
+    tb.innerHTML = '<tr><td colspan="6" style="padding:18px;text-align:center;color:#dc2626">No se pudieron cargar las mallas.</td></tr>';
+  }
+}
+
+function renderMallasAdmin() {
+  const tb = document.getElementById('mallaAdminTbody');
+  if (!tb) return;
+  const q = (document.getElementById('mallaAdminBuscar')?.value || '').toLowerCase().trim();
+  const rows = MALLAS_ADMIN.filter(m => {
+    const prof = `${m.profesor?.nombre || ''} ${m.profesor?.primerApellido || ''} ${m.profesorId || ''}`;
+    const txt = `${m.asignatura?.nombre || ''} ${m.asignatura?.curso?.nombre || ''} ${prof} ${m.nombreArchivo || ''}`.toLowerCase();
+    return !q || txt.includes(q);
+  });
+  if (!rows.length) {
+    tb.innerHTML = '<tr><td colspan="6" style="padding:18px;text-align:center;color:#64748b">Sin resultados.</td></tr>';
+    return;
+  }
+  tb.innerHTML = rows.map(m => {
+    const prof = m.profesor ? `${m.profesor.nombre} ${m.profesor.primerApellido}` : (m.profesorId || '-');
+    const fecha = m.updatedAt ? new Date(m.updatedAt).toLocaleDateString('es-CO') : '-';
+    const nombre = String(m.nombreArchivo || 'malla.pdf').replace(/'/g, "\\'");
+    return `<tr style="border-top:1px solid #e5e7eb">
+      <td style="padding:10px;font-weight:700">${m.asignatura?.nombre || '-'}</td>
+      <td style="padding:10px">${m.asignatura?.curso?.nombre || '-'}</td>
+      <td style="padding:10px">${prof}</td>
+      <td style="padding:10px;color:#64748b">${m.nombreArchivo || '-'}</td>
+      <td style="padding:10px;color:#64748b">${fecha}</td>
+      <td style="padding:10px;text-align:center"><button onclick="abrirPdfBase64Admin('${m.contenidoBase64}','${nombre}')" style="padding:6px 14px;background:#4f46e5;color:#fff;border:none;border-radius:5px;font-size:13px;cursor:pointer"><i class="fas fa-eye"></i> Abrir PDF</button></td>
+    </tr>`;
+  }).join('');
+}
+
 async function cargarDatosBoletines() {
   try {
     const anio = anioAdmActual();
@@ -9008,6 +9089,7 @@ const SECTION_META = {
   asignaturas: {title:'Asignaturas',        sub:'Gestión de asignaturas'},
   matriculas:  {title:'Matrículas',         sub:'Gestión de matrículas'},
   boletines:   {title:'Boletines',          sub:'Generación y descarga de boletines'},
+  mallas:      {title:'Mallas Curriculares',sub:'PDF subidos por los profesores'},
   periodos:    {title:'Períodos Académicos',sub:'Configuración de períodos'},
   cronograma:  {title:'Cronograma',         sub:'Eventos y calendario académico'},
   horarios:    {title:'Horario de Clases',   sub:'Vista semanal por curso — detecta choques'},

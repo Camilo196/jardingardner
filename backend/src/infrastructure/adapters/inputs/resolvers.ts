@@ -11,6 +11,7 @@ import { PeriodoConfigModel } from '../outputs/models/PeriodoConfigModel.js';
 import { ComportamientoModel } from '../outputs/models/ComportamientoModel.js';
 import { AsistenciaModel } from '../outputs/models/AsistenciaModel.js';
 import { CronogramaModel } from '../outputs/models/CronogramaModel.js';
+import { MallaCurricularModel } from '../outputs/models/MallaCurricularModel.js';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { AuthService } from '../../../core/services/AuthService';
@@ -674,6 +675,26 @@ export const resolvers = {
 
         asignaturasPorCurso: async (_: any, { cursoId }: any, { repositories }: any) =>
             await repositories.asignaturaRepository.findByCursoId(cursoId),
+
+        // Malla curricular
+        mallasCurriculares: async (_: any, __: any, { user }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            return await MallaCurricularModel.find().sort({ updatedAt: -1 }).lean();
+        },
+
+        mallasPorProfesor: async (_: any, { profesorId }: any, { user }: any) => {
+            if (!user || (user.role !== 'ADMIN' && String(user.username) !== String(profesorId))) throw new Error('No autorizado');
+            return await MallaCurricularModel.find({ profesorId: String(profesorId) }).sort({ updatedAt: -1 }).lean();
+        },
+
+        mallaPorAsignatura: async (_: any, { asignaturaId }: any, { user, repositories }: any) => {
+            const malla = await MallaCurricularModel.findOne({ asignaturaId: String(asignaturaId) }).lean();
+            if (!malla) return null;
+            if (user?.role === 'ADMIN') return malla;
+            const asig = await repositories.asignaturaRepository.findById(asignaturaId).catch(() => null);
+            if (user?.role === 'PROFESOR' && String(asig?.profesorId) === String(user.username)) return malla;
+            throw new Error('No autorizado');
+        },
 
         // Asistencias
         asistencias: async (_: any, __: any, { repositories }: any) =>
@@ -1437,6 +1458,33 @@ export const resolvers = {
             return !!(await repositories.asignaturaRepository.delete(id));
         },
 
+        // -- Malla curricular --------------------------------
+        guardarMallaCurricular: async (_: any, { asignaturaId, nombreArchivo, mimeType, contenidoBase64 }: any, { user, repositories }: any) => {
+            if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado');
+            const asig = await repositories.asignaturaRepository.findById(asignaturaId);
+            if (!asig) throw new Error('Asignatura no encontrada');
+            if (user.role === 'PROFESOR' && String(asig.profesorId) !== String(user.username)) throw new Error('No autorizado para esta asignatura');
+            if (String(mimeType) !== 'application/pdf') throw new Error('Solo se permite subir archivos PDF');
+            const cleanBase64 = String(contenidoBase64 || '').replace(/^data:application\/pdf;base64,/, '');
+            if (!cleanBase64) throw new Error('El PDF es obligatorio');
+            if (cleanBase64.length > 10 * 1024 * 1024) throw new Error('El PDF supera el tamano permitido');
+            const doc = await MallaCurricularModel.findOneAndUpdate(
+                { asignaturaId: String(asignaturaId) },
+                { asignaturaId: String(asignaturaId), profesorId: String(asig.profesorId), nombreArchivo: String(nombreArchivo || 'malla-curricular.pdf'), mimeType: 'application/pdf', contenidoBase64: cleanBase64, creadoPor: String(user.username || '') },
+                { upsert: true, new: true, setDefaultsOnInsert: true },
+            ).lean();
+            return doc;
+        },
+
+        eliminarMallaCurricular: async (_: any, { asignaturaId }: any, { user, repositories }: any) => {
+            if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado');
+            const asig = await repositories.asignaturaRepository.findById(asignaturaId);
+            if (!asig) throw new Error('Asignatura no encontrada');
+            if (user.role === 'PROFESOR' && String(asig.profesorId) !== String(user.username)) throw new Error('No autorizado para esta asignatura');
+            const res = await MallaCurricularModel.deleteOne({ asignaturaId: String(asignaturaId) });
+            return res.deletedCount > 0;
+        },
+
         // ── Asistencias ───────────────────────────────────────
         registrarLista: async (_: any, { input }: any, { repositories }: any) => {
             const registros = input.estudiantes.map((est: any) => ({
@@ -1574,6 +1622,20 @@ export const resolvers = {
             if (!asignatura.cursoId) return null;
             return await repositories.cursoRepository.findById(asignatura.cursoId);
         },
+    },
+
+    MallaCurricular: {
+        id: (malla: any) => malla?.id ?? malla?._id?.toString() ?? '',
+        asignatura: async (malla: any, _: any, { repositories }: any) => {
+            if (!malla.asignaturaId) return null;
+            return await repositories.asignaturaRepository.findById(malla.asignaturaId);
+        },
+        profesor: async (malla: any, _: any, { repositories }: any) => {
+            if (!malla.profesorId) return null;
+            return await repositories.profesorRepository.findById(malla.profesorId);
+        },
+        createdAt: (malla: any) => malla?.createdAt ? new Date(malla.createdAt).toISOString() : null,
+        updatedAt: (malla: any) => malla?.updatedAt ? new Date(malla.updatedAt).toISOString() : null,
     },
 
     Estudiante: {
