@@ -129,6 +129,11 @@ function esCursoPreescolarNombre(nombre = ''): boolean {
     return ['parvulos', 'parvulo', 'pre jardin', 'prejardin', 'jardin', 'transicion'].some(k => n.includes(k));
 }
 
+function esCursoPrimariaNombre(nombre = ''): boolean {
+    const n = normalizarCursoNombre(nombre);
+    return ['primero', 'segundo', 'tercero', 'cuarto', 'quinto'].some(k => n.includes(k));
+}
+
 function indicadoresParaEstudiante(ind: any, estudianteId?: string | null) {
     const estId = estudianteId ? String(estudianteId) : '';
     const porEstudiante = Array.isArray(ind?.porEstudiante) ? ind.porEstudiante : [];
@@ -255,6 +260,7 @@ async function generarBoletinAcumuladoBase64(
     const mat = matriculas.find((m: any) => m.periodo === periodo) ?? matriculas[0];
     const curso = mat ? await repositories.cursoRepository.findById(mat.cursoId).catch(() => null) : null;
     const esPreescolar = esCursoPreescolarNombre(curso?.nombre ?? '');
+    const esPrimaria = esCursoPrimariaNombre(curso?.nombre ?? '');
 
     const todasLasCalificaciones = await repositories.calificacionRepository.findByEstudianteId(estIdBoletin).catch(() => []);
     const calsAcumuladasBase = (todasLasCalificaciones || []).filter((c: any) =>
@@ -402,7 +408,7 @@ async function generarBoletinAcumuladoBase64(
         if (dirProf) directorNombre = `${dirProf.nombre} ${dirProf.primerApellido}`;
     }
 
-    const puestoCurso = curso
+    const puestoCurso = curso && esPrimaria
         ? await calcularPuestoCurso(
             String(curso.id ?? curso._id),
             String(periodo),
@@ -453,10 +459,16 @@ async function verificarPeriodoAbierto(periodo: string): Promise<void> {
     if (!config) return; // sin configuración = abierto por defecto
     if (!config.abierto) {
         throw new Error(
-            `El periodo ${periodo} est� cerrado. Contacte al administrador para reactivarlo.`
+            `El periodo ${periodo} esta cerrado. Contacte al administrador para reactivarlo.`
         );
     }
-    if (config.fechaCierre && new Date() > config.fechaCierre) {
+    const ahora = new Date();
+    if (config.fechaApertura && ahora < config.fechaApertura) {
+        throw new Error(
+            `El periodo ${periodo} aun no esta habilitado para registrar notas.`
+        );
+    }
+    if (config.fechaCierre && ahora > config.fechaCierre) {
         await PeriodoConfigModel.updateOne({ anio, numeroPeriodo }, { abierto: false });
         throw new Error(
             `El periodo ${periodo} cerró el ${config.fechaCierre.toLocaleDateString('es-CO')}. Contacte al administrador.`
@@ -1224,6 +1236,7 @@ export const resolvers = {
 
         actualizarCalificacion: async (_: any, { id, input }: any, { user, repositories }: any) => {
             if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado: se requiere rol ADMIN o PROFESOR');
+            await verificarPeriodoAbierto(input.periodo);
             await validarCalificacionNoPreescolar(input.asignaturaId, repositories);
             return await repositories.calificacionRepository.update(id, input);
         },

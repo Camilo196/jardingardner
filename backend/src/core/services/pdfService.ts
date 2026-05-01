@@ -73,6 +73,11 @@ function esCursoPreescolar(nombreCurso: string): boolean {
   return CURSOS_PREESCOLAR.some((k) => c.includes(k));
 }
 
+function esCursoPrimaria(nombreCurso: string): boolean {
+  const c = normalizarTexto(nombreCurso);
+  return CURSOS_PRIMARIA.some((k) => c.includes(k));
+}
+
 function obtenerRutaBanner(): string | null {
   const candidatos = [
     resolve(process.cwd(), '../frondend/src/app/assets/institution/pdf_image_2.jpg'),
@@ -633,6 +638,7 @@ export class PDFService {
         .map((m) => notaComportamiento(m.comportamiento))
         .filter((n): n is number => n !== null);
       const promComp  = promedioSimple(notasComp);
+      const mostrarPuesto = esCursoPrimaria(data.curso.nombre);
 
       const labelProm =
         pNum === 1 ? 'Promedio general I periodo:' :
@@ -665,8 +671,11 @@ export class PDFService {
       y += rowH;
       filaResumen(labelProm, promMats !== null ? promMats.toFixed(2) : '-', y);
       y += rowH;
-      filaResumen('Puesto en el curso:', data.puestoCurso ? `${data.puestoCurso}` : '-', y);
-      y += rowH + 20;
+      if (mostrarPuesto) {
+        filaResumen('Puesto en el curso:', data.puestoCurso ? `${data.puestoCurso}` : '-', y);
+        y += rowH;
+      }
+      y += 20;
 
       // ── Firmas ─────────────────────────────────────────────────────────────
       if (y + 55 > doc.page.height - 60) {
