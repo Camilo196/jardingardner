@@ -755,7 +755,7 @@ function renderAsignaturas(){
           <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1a56db,#3b5bdb);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">${initials}</div><div><div class="est-name">${n}</div><div class="est-ced">${e.cedula}</div></div></div></td>
           <td style="font-size:12px;color:#64748b">${e.email||'-'}</td>
           <td><span class="pill ${m.estado==='ACTIVA'?'pill-ok':'pill-er'}">${m.estado||'ACTIVA'}</span></td>
-          <td><div class="est-actions"><button class="btn-det" onclick="verDetalles('${m.id}')"><i class="fas fa-user"></i> Perfil</button><button class="btn-notas" onclick="abrirCalificaciones('${m.id}')"><i class="fas fa-edit"></i> ${esCursoPreescolarNombre(a.curso?.nombre||'')?'Seguimiento':'Ver notas'}</button></div></td></tr>`;
+          <td><div class="est-actions"><button class="btn-det" onclick="verDetalles('${m.id}')"><i class="fas fa-user"></i> Perfil</button><button class="btn-notas" onclick="abrirCalificaciones('${m.id}','${a.id}')"><i class="fas fa-edit"></i> ${esCursoPreescolarNombre(a.curso?.nombre||'')?'Seguimiento':'Ver notas'}</button></div></td></tr>`;
       }).join('')||`<tr><td colspan="4" style="text-align:center;padding:20px;color:#94a3b8;font-style:italic">Sin estudiantes matriculados</td></tr>`;
 
       return `<div class="curso-item">
@@ -854,9 +854,18 @@ function verDetalles(matId){
   document.getElementById('mEst').classList.add('o');
 }
 
-async function abrirCalificaciones(matId){
+async function abrirCalificaciones(matId,asigId){
   let mat=null,asig=null;
-  for(const a of W.asignaturas){const m=(a.matriculas||[]).find(x=>x.id===matId);if(m){mat=m;asig=a;break;}}
+  if(asigId){
+    asig=W.asignaturas.find(a=>String(a.id)===String(asigId))||null;
+    mat=(asig?.matriculas||[]).find(x=>String(x.id)===String(matId))||null;
+  }
+  if(!mat){
+    for(const a of W.asignaturas){
+      const m=(a.matriculas||[]).find(x=>String(x.id)===String(matId));
+      if(m){mat=m;asig=a;break;}
+    }
+  }
   if(!mat?.estudiante||!asig)return;
   const est=mat.estudiante; W.estId=est.cedula; W.asigId=asig.id; W.asigActual=asig; W.periodo=mat.periodo||periodoLabel(); W.cursoNombre=asig.curso?.nombre||'';
   W.indEstudiantes=ordenarEstudiantesPorApellido((asig.matriculas||[]).filter(m=>m.estudiante && (m.estado||'ACTIVA')==='ACTIVA').map(m=>m.estudiante));
