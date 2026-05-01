@@ -550,7 +550,7 @@ table.t tbody tr:last-child td{border-bottom:none}
       <div style="display:flex;gap:20px;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap">
         <div style="flex:0 0 160px">
           <label style="display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px">Nota (1 - 5)</label>
-          <input type="number" id="compEstNota" min="0" max="5" step="0.1" placeholder="-"
+          <input type="number" id="compEstNota" min="1" max="5" step="0.1" placeholder="-"
             style="width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:10px;font-size:28px;font-weight:900;text-align:center;font-family:inherit;outline:none;transition:.2s"
             oninput="onCompEstNotaInput(this)">
         </div>
@@ -564,12 +564,11 @@ table.t tbody tr:last-child td{border-bottom:none}
       </div>
 
       <!-- Escala de referencia -->
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:18px">
-        <div onclick="setCompEstNota(5)" style="text-align:center;padding:10px 6px;border-radius:8px;background:#dcfce7;color:#15803d;cursor:pointer;border:2px solid transparent;transition:.2s" class="comp-ref-cell" data-n="5"><div style="font-size:18px;font-weight:900">5</div><div style="font-size:11px;font-weight:700">Superior</div></div>
-        <div onclick="setCompEstNota(4)" style="text-align:center;padding:10px 6px;border-radius:8px;background:#dbeafe;color:#1d4ed8;cursor:pointer;border:2px solid transparent;transition:.2s" class="comp-ref-cell" data-n="4"><div style="font-size:18px;font-weight:900">4</div><div style="font-size:11px;font-weight:700">Alto</div></div>
-        <div onclick="setCompEstNota(3)" style="text-align:center;padding:10px 6px;border-radius:8px;background:#fef3c7;color:#92400e;cursor:pointer;border:2px solid transparent;transition:.2s" class="comp-ref-cell" data-n="3"><div style="font-size:18px;font-weight:900">3</div><div style="font-size:11px;font-weight:700">Básico</div></div>
-        <div onclick="setCompEstNota(2)" style="text-align:center;padding:10px 6px;border-radius:8px;background:#fee2e2;color:#991b1b;cursor:pointer;border:2px solid transparent;transition:.2s" class="comp-ref-cell" data-n="2"><div style="font-size:18px;font-weight:900">2</div><div style="font-size:11px;font-weight:700">Bajo</div></div>
-        <div onclick="setCompEstNota(1)" style="text-align:center;padding:10px 6px;border-radius:8px;background:#fee2e2;color:#991b1b;cursor:pointer;border:2px solid transparent;transition:.2s" class="comp-ref-cell" data-n="1"><div style="font-size:18px;font-weight:900">1</div><div style="font-size:11px;font-weight:700">Bajo</div></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px">
+        <div onclick="setCompEstNota(4.6)" style="text-align:center;padding:10px 6px;border-radius:8px;background:#dcfce7;color:#15803d;cursor:pointer;border:2px solid transparent;transition:.2s" class="comp-ref-cell" data-n="4.6"><div style="font-size:16px;font-weight:900">4.6 - 5.0</div><div style="font-size:11px;font-weight:700">Superior</div></div>
+        <div onclick="setCompEstNota(4.0)" style="text-align:center;padding:10px 6px;border-radius:8px;background:#dbeafe;color:#1d4ed8;cursor:pointer;border:2px solid transparent;transition:.2s" class="comp-ref-cell" data-n="4"><div style="font-size:16px;font-weight:900">4.0 - 4.5</div><div style="font-size:11px;font-weight:700">Alto</div></div>
+        <div onclick="setCompEstNota(3.5)" style="text-align:center;padding:10px 6px;border-radius:8px;background:#fef3c7;color:#92400e;cursor:pointer;border:2px solid transparent;transition:.2s" class="comp-ref-cell" data-n="3.5"><div style="font-size:16px;font-weight:900">3.5 - 3.9</div><div style="font-size:11px;font-weight:700">B&aacute;sico</div></div>
+        <div onclick="setCompEstNota(3.4)" style="text-align:center;padding:10px 6px;border-radius:8px;background:#fee2e2;color:#991b1b;cursor:pointer;border:2px solid transparent;transition:.2s" class="comp-ref-cell" data-n="1"><div style="font-size:16px;font-weight:900">1.0 - 3.4</div><div style="font-size:11px;font-weight:700">Bajo</div></div>
       </div>
 
       <!-- DescripciÃ³n -->
@@ -1250,14 +1249,14 @@ async function actualizarSelectCortes(){ const periodo=document.getElementById('
 
 
 // â”€â”€ helpers nivel â”€â”€
-function notaToNivel(n){ const v=parseFloat(n); if(v>=4.6)return'Superior'; if(v>=4.0)return'Alto'; if(v>=3.5)return'Basico'; if(v>=0)return'Bajo'; return''; }
+function notaToNivel(n){ const v=parseFloat(n); if(v>=4.6)return'Superior'; if(v>=4.0)return'Alto'; if(v>=3.5)return'Basico'; if(v>=1)return'Bajo'; return''; }
 
 function getNivelCfg(n){
   const v=parseFloat(n); if(isNaN(v)) return null;
-  if(v>=4.6) return {label:'Superior',icon:'★',bg:'#dcfce7',fg:'#15803d',border:'#86efac'};
-  if(v>=4.0) return {label:'Alto',    icon:'▲',bg:'#dbeafe',fg:'#1d4ed8',border:'#93c5fd'};
-  if(v>=3.5) return {label:'Básico',  icon:'■',bg:'#fef3c7',fg:'#92400e',border:'#fcd34d'};
-  if(v>=0)   return {label:'Bajo',    icon:'!',bg:'#fee2e2',fg:'#991b1b',border:'#fca5a5'};
+  if(v>=4.6) return {label:'Superior',icon:'*',bg:'#dcfce7',fg:'#15803d',border:'#86efac'};
+  if(v>=4.0) return {label:'Alto',    icon:'^',bg:'#dbeafe',fg:'#1d4ed8',border:'#93c5fd'};
+  if(v>=3.5) return {label:'B\u00e1sico',  icon:'=',bg:'#fef3c7',fg:'#92400e',border:'#fcd34d'};
+  if(v>=1)   return {label:'Bajo',    icon:'!',bg:'#fee2e2',fg:'#991b1b',border:'#fca5a5'};
   return null;
 }
 
@@ -1282,10 +1281,10 @@ function actualizarNivelUI(nota){
     const cn=parseFloat(c.dataset.n);
     let active=false;
     if(!isNaN(v)&&cfg){
-      if(cn===5) active=v>=4.6;
+      if(cn===4.6) active=v>=4.6;
       else if(cn===4) active=v>=4.0&&v<4.6;
-      else if(cn===3) active=v>=3.5&&v<4.0;
-      else if(cn===2||cn===1) active=v>=0&&v<3.5;
+      else if(cn===3.5) active=v>=3.5&&v<4.0;
+      else if(cn===1) active=v>=1&&v<3.5;
     }
     c.style.borderColor=active?cfg.border:'transparent';
     c.style.transform=active?'scale(1.06)':'scale(1)';
@@ -1323,7 +1322,7 @@ async function cargarCompEstudiante(){
     const dc=await gql(`query{comportamientoEstudiante(estudianteId:"${W.estId}",asignaturaId:"${W.asigId}",periodo:"${periodo}"){nota nivel descripcion}}`);
     const comp=dc.comportamientoEstudiante;
     if(comp?.nivel){
-      const nota=comp.nota!=null?comp.nota:({Superior:5,Alto:4,Basico:3,Bajo:2}[comp.nivel]||1);
+      const nota=comp.nota!=null?comp.nota:({Superior:4.6,Alto:4.0,Basico:3.5,'B\u00e1sico':3.5,Bajo:3.4}[comp.nivel]||1);
       document.getElementById('compEstNota').value=nota; actualizarNivelUI(nota);
       document.getElementById('compEstDesc').value=comp.descripcion||'';
       estado.textContent=`Guardado - ${comp.nivel} (${nota})`; estado.style.background='var(--green-lt)'; estado.style.color='var(--green)';
@@ -1338,7 +1337,7 @@ async function guardarCompEstudiante(){
   const periodo=document.getElementById('compEstPeriodo').value;
   const nota=parseFloat(document.getElementById('compEstNota').value);
   const desc=document.getElementById('compEstDesc').value.trim();
-  if(isNaN(nota)||nota<0||nota>5){ toast('Ingresa una nota entre 0 y 5','er'); return; }
+  if(isNaN(nota)||nota<1||nota>5){ toast('Ingresa una nota entre 1 y 5','er'); return; }
   const nivel=notaToNivel(nota); const anio=anioActual();
   try{
     await gql(`mutation{guardarComportamiento(input:{estudianteId:"${W.estId}",asignaturaId:"${W.asigId}",periodo:"${periodo}",anio:${anio},nota:${nota},nivel:"${nivel}",descripcion:"${desc}"}){id}}`);
