@@ -1007,19 +1007,45 @@ function periodoNotaHabilitado(){
   return !!sel.value && (!opt || !opt.disabled);
 }
 
-function setPeriodoSelect(val){ const sel=document.getElementById('actPeriodo'); if(!sel)return; let found=false; for(const opt of sel.options){if(opt.value===val){opt.selected=true;found=true;break;}} if(!found&&val){const opt=document.createElement('option');opt.value=val;opt.textContent=val;opt.selected=true;sel.appendChild(opt);} }
+function setPeriodoSelect(val){ setPeriodoSelectById('actPeriodo',val); }
 function setPeriodoSelectById(id,val){
   const sel=document.getElementById(id); if(!sel)return;
-  let found=false;
-  for(const opt of sel.options){ if(opt.value===val){ opt.selected=true; found=true; break; } }
-  if(!found&&val){ const opt=document.createElement('option'); opt.value=val; opt.textContent=val; opt.selected=true; sel.appendChild(opt); }
+  let target=null;
+  for(const opt of sel.options){ if(opt.value===val && !opt.disabled){ target=opt; break; } }
+  if(!target) target=[...sel.options].find(opt=>!opt.disabled)||null;
+  if(target) target.selected=true;
+}
+function periodoSelectHabilitado(id){
+  const sel=document.getElementById(id); if(!sel) return false;
+  const opt=sel.options[sel.selectedIndex];
+  return !!sel.value && (!opt || !opt.disabled);
+}
+function llenarSelectPeriodosAbiertos(sel,preferido){
+  if(!sel) return '';
+  const ay=anioActual(); const labels={1:'1er Periodo',2:'2do Periodo',3:'3er Periodo'};
+  const base=(W.periodosCalificacion&&W.periodosCalificacion.length)
+    ? W.periodosCalificacion
+    : [1,2,3].map(n=>({numero:n,val:`${ay}-${n}`,label:labels[n],abierto:n===Number(String(periodoLabel()).split('-')[1]||1)}));
+  const elegido=preferido&&base.some(p=>p.val===preferido&&p.abierto)
+    ? preferido
+    : (base.find(p=>p.abierto)?.val || '');
+  sel.innerHTML='';
+  base.forEach(p=>{
+    const opt=document.createElement('option');
+    opt.value=p.val;
+    opt.textContent=`${p.label||labels[p.numero]||p.val} (${p.val})${p.abierto?'':' - cerrado'}`;
+    opt.disabled=!p.abierto;
+    if(p.val===elegido) opt.selected=true;
+    sel.appendChild(opt);
+  });
+  return elegido;
 }
 function selTipoCurso(chip){
   document.querySelectorAll('#mActCurso .tchip').forEach(c=>c.classList.remove('sel'));
   chip.classList.add('sel');
   document.getElementById('actCursoTipo').value=chip.dataset.t;
 }
-function abrirActividadCurso(){
+async function abrirActividadCurso(){
   const sel=document.getElementById('actCursoAsig');
   sel.innerHTML='<option value="">Seleccionar curso / asignatura...</option>';
   W.asignaturas.forEach(a=>{
@@ -1030,9 +1056,9 @@ function abrirActividadCurso(){
     opt.textContent=`${a.nombre}${a.curso?.nombre?' - '+a.curso.nombre:''} (${total} estudiantes)`;
     sel.appendChild(opt);
   });
+  await cargarPeriodosCalificacion(W.periodo||periodoLabel());
   const periodoSel=document.getElementById('actCursoPeriodo');
-  const basePeriodo=document.getElementById('actPeriodo');
-  if(periodoSel && basePeriodo) periodoSel.innerHTML=basePeriodo.innerHTML;
+  llenarSelectPeriodosAbiertos(periodoSel, W.periodo||periodoLabel());
   document.getElementById('actCursoNombre').value='';
   document.getElementById('actCursoObs').value='';
   document.getElementById('actCursoFecha').value=new Date().toISOString().split('T')[0];
@@ -1052,6 +1078,7 @@ async function guardarActividadCurso(){
   const fecha=document.getElementById('actCursoFecha').value;
   const fechaFin=document.getElementById('actCursoFechaFin').value;
   const obs=document.getElementById('actCursoObs').value.trim();
+  if(!periodoSelectHabilitado('actCursoPeriodo')){ toast('Ese periodo no esta habilitado para publicar actividades','er'); return; }
   if(!asigId||!nombre||!periodo||!fecha){ toast('Completa curso, nombre, periodo y fecha de inicio','er'); return; }
   if(fechaFin && fechaFin < fecha){ toast('La fecha fin no puede ser anterior a la fecha de inicio','er'); return; }
   const asig=W.asignaturas.find(a=>a.id===asigId);
@@ -1518,19 +1545,8 @@ function marcarTodosIndicadores(on){
 }
 
 function poblarIndPeriodoSel(preferido){
-  const sel=document.getElementById('indPeriodoSel'); if(!sel) return;
-  const ay=anioActual();
-  const actual=preferido||sel.value||W.periodo||`${ay}-1`;
-  sel.innerHTML='';
-  [1,2,3].forEach(n=>{
-    const val=`${ay}-${n}`;
-    const labels={1:'1er Período',2:'2do Período',3:'3er Período'};
-    const opt=document.createElement('option');
-    opt.value=val; opt.textContent=`${labels[n]} (${val})`;
-    if(val===actual) opt.selected=true;
-    sel.appendChild(opt);
-  });
-  if(!sel.value && sel.options.length){ sel.value=actual; }
+  const sel=document.getElementById('indPeriodoSel'); if(!sel) return '';
+  return llenarSelectPeriodosAbiertos(sel, preferido||sel.value||W.periodo||periodoLabel());
 }
 
 function getIndPeriodo(){ const sel=document.getElementById('indPeriodoSel'); return sel?sel.value:(W.periodo||periodoLabel()); }
@@ -1542,8 +1558,8 @@ async function onIndPeriodoCambio(){
 }
 
 async function cargarIndicadores(periodoForzado){
-  poblarIndPeriodoSel(periodoForzado);
-  const periodo=periodoForzado||getIndPeriodo();
+  await cargarPeriodosCalificacion(periodoForzado||W.periodo||periodoLabel());
+  const periodo=poblarIndPeriodoSel(periodoForzado)||getIndPeriodo();
   const render=()=>{ renderIndLista('saber'); renderIndLista('hacer'); renderIndLista('ser'); };
   try{
     const esPre=esCursoPreescolarNombre(W.cursoNombre);
@@ -1640,6 +1656,7 @@ function agregarInd(tipo){ agregarIndicador(tipo); }
 function eliminarInd(tipo,i){ IND[tipo].splice(i,1); renderIndLista(tipo); }
 
 async function guardarIndicadores(){
+  if(!periodoSelectHabilitado('indPeriodoSel')){ toast('Ese periodo no esta habilitado para indicadores','er'); return; }
   const periodo=getIndPeriodo();
   const saber=IND.saber; const hacer=IND.hacer; const ser=IND.ser;
   if(esCursoPreescolarNombre(W.cursoNombre)){

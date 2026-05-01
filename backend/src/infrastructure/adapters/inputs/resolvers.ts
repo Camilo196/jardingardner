@@ -984,6 +984,7 @@ export const resolvers = {
 
         // -- Indicadores ---------------------------------------
         guardarIndicadores: async (_: any, { asignaturaId, periodo, saber, hacer, ser, estudianteIds }: any, { user }: any) => {
+            await verificarPeriodoAbierto(periodo);
             const creadoPor = user?.username ?? 'sistema';
             const seleccionados = Array.isArray(estudianteIds)
                 ? [...new Set(estudianteIds.map((id: any) => String(id).trim()).filter(Boolean))]
@@ -1025,6 +1026,7 @@ export const resolvers = {
         },
 
         eliminarIndicadores: async (_: any, { asignaturaId, periodo }: any): Promise<boolean> => {
+            await verificarPeriodoAbierto(periodo);
             const result = await IndicadoresModel.deleteOne({ asignaturaId, periodo }).exec();
             return result.deletedCount > 0;
         },
@@ -1593,6 +1595,8 @@ export const resolvers = {
         // ── Cronograma ───────────────────────────────────────
         crearEventoCronograma: async (_: any, { input }: any, { user }: any) => {
             if (!['ADMIN', 'PROFESOR'].includes(user?.role)) throw new Error('Solo administradores o profesores');
+            const periodoMatch = String(input.descripcion || '').match(/Periodo:\s*(\d{4}-[123])/i);
+            if (periodoMatch) await verificarPeriodoAbierto(periodoMatch[1]);
             const doc = await CronogramaModel.create({ ...input, creadoPor: user.username });
             const obj = doc.toObject() as any;
             return {
