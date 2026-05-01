@@ -1013,6 +1013,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
                   <button onclick="generarBoletinAdmin()" style="padding:9px 20px;background:#4f46e5;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer">
                     <i class="fas fa-file-pdf"></i> Generar PDF
                   </button>
+                  <button onclick="imprimirBoletinesCursoAdmin()" style="padding:9px 20px;background:#0f766e;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer">
+                    <i class="fas fa-print"></i> Imprimir curso
+                  </button>
                 </div>
                 <div id="blMsg" style="font-size:14px;color:#374151;min-height:24px"></div>
                 <div id="blLista" style="margin-top:16px"></div>
@@ -6447,6 +6450,75 @@ async function descargarBoletinPDF(cedula, nombre, periodo) {
   }
 }
 
+function imprimirPDFBase64(b64, nombre='boletin') {
+  return new Promise((resolve, reject) => {
+    try {
+      const bytes = new Uint8Array(atob(b64).split('').map(c => c.charCodeAt(0)));
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const frame = document.createElement('iframe');
+      frame.style.position = 'fixed';
+      frame.style.right = '0';
+      frame.style.bottom = '0';
+      frame.style.width = '1px';
+      frame.style.height = '1px';
+      frame.style.border = '0';
+      frame.title = nombre;
+      let done = false;
+      const limpiar = () => {
+        if (done) return;
+        done = true;
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+          frame.remove();
+          resolve(true);
+        }, 500);
+      };
+      frame.onload = () => {
+        setTimeout(() => {
+          try {
+            frame.contentWindow?.focus();
+            frame.contentWindow?.print();
+            frame.contentWindow.onafterprint = limpiar;
+            setTimeout(limpiar, 2500);
+          } catch (e) {
+            limpiar();
+          }
+        }, 350);
+      };
+      frame.onerror = reject;
+      frame.src = url;
+      document.body.appendChild(frame);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+async function imprimirBoletinPDF(cedula, nombre, periodo) {
+  const msg = document.getElementById('blMsg');
+  try {
+    msg.textContent = `Generando boletin para imprimir de ${nombre}...`;
+    msg.style.color = '#0f766e';
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Tiempo de espera agotado. Intenta de nuevo.')), 30000)
+    );
+    const data = await Promise.race([
+      gqlAdmin(`mutation($eid:ID!,$per:String!){exportarBoletinCompleto(estudianteId:$eid,periodo:$per)}`,
+        { eid: cedula, per: periodo }),
+      timeoutPromise
+    ]);
+    const b64 = data.exportarBoletinCompleto;
+    if (!b64) throw new Error('Sin datos PDF');
+    await imprimirPDFBase64(b64, `Boletin_${nombre}_${periodo}`);
+    msg.textContent = `Boletin enviado a impresion: ${nombre}`;
+    msg.style.color = '#16a34a';
+  } catch(e) {
+    msg.textContent = `Error: ${e.message}`;
+    msg.style.color = '#dc2626';
+  }
+}
+
 async function generarBoletinAdmin() {
   const modo = document.getElementById('blModo').value;
   const periodo = document.getElementById('blPeriodo').value.trim();
@@ -6495,16 +6567,23 @@ async function generarBoletinAdmin() {
                     style="padding:6px 14px;background:#4f46e5;color:#fff;border:none;border-radius:5px;font-size:13px;cursor:pointer">
                     <i class="fas fa-file-pdf"></i> PDF
                   </button>
+                  <button onclick="imprimirBoletinPDF('${m.estudiante.cedula}','${m.estudiante.nombre} ${m.estudiante.primerApellido}','${periodo}')"
+                    style="padding:6px 14px;background:#0f766e;color:#fff;border:none;border-radius:5px;font-size:13px;cursor:pointer;margin-left:6px">
+                    <i class="fas fa-print"></i> Imprimir
+                  </button>
                 </td>
               </tr>`).join('')}
           </tbody>
         </table>
-        <div style="margin-top:14px">
+        <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
           <button onclick="descargarTodosCurso()" style="padding:9px 20px;background:#16a34a;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer">
             <i class="fas fa-download"></i> Descargar todos los boletines
           </button>
+          <button onclick="imprimirTodosCurso()" style="padding:9px 20px;background:#0f766e;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer">
+            <i class="fas fa-print"></i> Imprimir todos
+          </button>
         </div>`;
-      msg.textContent = `✅ ${mats.length} estudiantes encontrados. Selecciona PDF individual o descarga todos.`;
+      msg.textContent = `✅ ${mats.length} estudiantes encontrados. Selecciona PDF individual, imprime o descarga todos.`;
       msg.style.color = '#16a34a';
       lista._mats = mats;
       lista._periodo = periodo;
@@ -6527,6 +6606,46 @@ async function descargarTodosCurso() {
     await new Promise(r => setTimeout(r, 800));
   }
   msg.textContent = `✅ Todos los boletines descargados`; msg.style.color='#16a34a';
+}
+
+async function imprimirTodosCurso() {
+  const lista = document.getElementById('blLista');
+  const mats = lista._mats || [];
+  const periodo = lista._periodo || '';
+  const msg = document.getElementById('blMsg');
+  if (!mats.length) { msg.textContent='Primero genera la lista del curso'; msg.style.color='#d97706'; return; }
+  if (!confirm(`Se van a enviar ${mats.length} boletines a impresion. El navegador puede mostrar el dialogo de impresion para confirmar.`)) return;
+  msg.textContent = `Preparando impresion de ${mats.length} boletines...`; msg.style.color='#0f766e';
+  for (let i = 0; i < mats.length; i++) {
+    const e = mats[i].estudiante;
+    msg.textContent = `Imprimiendo ${i+1}/${mats.length}: ${e.nombre} ${e.primerApellido}`;
+    await imprimirBoletinPDF(e.cedula, `${e.nombre} ${e.primerApellido}`, periodo);
+    await new Promise(r => setTimeout(r, 900));
+  }
+  msg.textContent = 'Todos los boletines fueron enviados a impresion';
+  msg.style.color = '#16a34a';
+}
+
+async function imprimirBoletinesCursoAdmin() {
+  const modo = document.getElementById('blModo').value;
+  const msg = document.getElementById('blMsg');
+  const periodo = document.getElementById('blPeriodo').value.trim();
+  if (!periodo) {
+    msg.textContent = 'Selecciona un periodo para imprimir';
+    msg.style.color = '#dc2626';
+    return;
+  }
+  if (modo !== 'curso') {
+    document.getElementById('blModo').value = 'curso';
+    toggleBlModo();
+  }
+  if (!document.getElementById('blCurso').value) {
+    msg.textContent = 'Selecciona un curso para imprimir';
+    msg.style.color = '#dc2626';
+    return;
+  }
+  await generarBoletinAdmin();
+  await imprimirTodosCurso();
 }
 
 // Exportar todos los boletines de un curso
