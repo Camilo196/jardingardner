@@ -75,7 +75,7 @@ function esCursoPreescolar(nombreCurso: string): boolean {
 
 function esCursoPrimaria(nombreCurso: string): boolean {
   const c = normalizarTexto(nombreCurso);
-  return CURSOS_PRIMARIA.some((k) => c.includes(k));
+  return c.includes('primaria') || CURSOS_PRIMARIA.some((k) => c.includes(k)) || /\b(1|2|3|4|5)(ro|do|to)?\b/.test(c);
 }
 
 function obtenerRutaBanner(): string | null {
@@ -125,10 +125,17 @@ function promedioSimple(vals: number[]): number | null {
   return nums.reduce((a, b) => a + b, 0) / nums.length;
 }
 
+function valoracionDesdeNotaPDF(nota: number): string {
+  if (nota >= 4.6) return 'Superior';
+  if (nota >= 4.0) return 'Alto';
+  if (nota >= 3.5) return 'Básico';
+  return 'Bajo';
+}
+
 function notaComportamiento(comp?: { nota?: number; nivel: string }): number | null {
   if (typeof comp?.nota === 'number' && Number.isFinite(comp.nota)) return comp.nota;
   if (!comp?.nivel) return null;
-  const m: Record<string, number> = { Superior: 5, Alto: 4, Basico: 3, Bajo: 2 };
+  const m: Record<string, number> = { Superior: 4.6, Alto: 4.0, Basico: 3.5, Básico: 3.5, Bajo: 3.4 };
   return m[comp.nivel] ?? null;
 }
 
@@ -720,10 +727,7 @@ export class PDFService {
         asignaturaId:    cal.asignaturaId,
         asignaturaNombre: cal.asignaturaNombre || cal.asignaturaId,
         docenteNombre:   cal.docenteNombre || 'Docente',
-        valoracion:
-          cal.nota >= 4.6 ? 'Superior' :
-          cal.nota >= 4.0 ? 'Alto'     :
-          cal.nota >= 3.5 ? 'Basico'   : 'Bajo',
+        valoracion: valoracionDesdeNotaPDF(Number(cal.nota)),
         nota:        cal.nota,
         resumenNotas: cal.resumenNotas,
         faltas:      cal.faltas ?? 0,

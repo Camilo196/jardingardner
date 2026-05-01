@@ -131,7 +131,8 @@ function esCursoPreescolarNombre(nombre = ''): boolean {
 
 function esCursoPrimariaNombre(nombre = ''): boolean {
     const n = normalizarCursoNombre(nombre);
-    return ['primero', 'segundo', 'tercero', 'cuarto', 'quinto'].some(k => n.includes(k));
+    return n.includes('primaria') || ['primero', 'segundo', 'tercero', 'cuarto', 'quinto'].some(k => n.includes(k))
+        || /\b(1|2|3|4|5)(ro|do|to)?\b/.test(n);
 }
 
 function indicadoresParaEstudiante(ind: any, estudianteId?: string | null) {
@@ -177,11 +178,18 @@ async function calcularPuestoCurso(
     estudianteObjetivoId: string,
     asigIdsCurso: Set<string>,
 ): Promise<number | null> {
-    const matriculas = await MatriculaModel.find({
+    let matriculas = await MatriculaModel.find({
         cursoId,
         periodo,
         estado: { $in: ['ACTIVA', 'FINALIZADA'] },
     }).lean().catch(() => []);
+
+    if (!(matriculas as any[]).length) {
+        matriculas = await MatriculaModel.find({
+            cursoId,
+            estado: { $in: ['ACTIVA', 'FINALIZADA'] },
+        }).lean().catch(() => []);
+    }
 
     const estudiantesCurso = [...new Set((matriculas as any[]).map((m: any) => String(m.estudianteId)).filter(Boolean))];
     if (!estudiantesCurso.length || !asigIdsCurso.size) return null;
