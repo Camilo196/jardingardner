@@ -1384,6 +1384,8 @@ function actualizarIndicadoresUI(){
   if(btns) btns.style.display='flex';
   const serBox=document.getElementById('ind-ser')?.parentElement;
   if(serBox) serBox.style.display='block';
+  const contEst=document.getElementById('ind-estudiantes');
+  if(contEst) contEst.style.gridTemplateColumns=esPre?'repeat(auto-fit,minmax(300px,1fr))':'repeat(auto-fit,minmax(220px,1fr))';
   ['saber','hacer','ser'].forEach(tipo=>{
     const btn=document.getElementById('ind-'+tipo)?.parentElement?.querySelector('button');
     if(btn) btn.style.display=esPre?'none':'';
@@ -1404,12 +1406,12 @@ function renderIndEstudiantes(){
       const val=(W.indObservaciones&&W.indObservaciones[ced])||'';
       const checked=W.indSeleccionados.has(ced)?'checked':'';
       const disabled=checked?'':'disabled';
-      return `<div style="display:grid;grid-template-columns:minmax(180px,.8fr) minmax(220px,1.2fr);gap:10px;align-items:start;padding:10px;border:1px solid var(--border);border-radius:8px;background:#fff">
+      return `<div style="display:flex;flex-direction:column;gap:10px;align-items:stretch;padding:12px;border:1px solid var(--border);border-radius:8px;background:#fff;min-width:0">
         <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer">
-          <input type="checkbox" value="${ced}" ${checked} onchange="toggleIndEstudiante('${ced}',this.checked)" style="width:16px;height:16px;margin-top:2px">
-          <span><strong style="display:block;color:var(--ink)">${nombre}</strong><small style="color:var(--muted)">${ced}</small></span>
+          <input type="checkbox" value="${ced}" ${checked} onchange="toggleIndEstudiante('${ced}',this.checked)" style="width:16px;height:16px;margin-top:2px;flex:0 0 auto">
+          <span style="min-width:0"><strong style="display:block;color:var(--ink);line-height:1.25;overflow-wrap:anywhere">${nombre}</strong><small style="color:var(--muted)">${ced}</small></span>
         </label>
-        <textarea id="indObs-${ced}" rows="3" ${disabled} placeholder="Observación individual para este estudiante..." oninput="setIndObs('${ced}',this.value)" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;resize:vertical;min-height:72px">${val.replace(/</g,'&lt;')}</textarea>
+        <textarea id="indObs-${ced}" rows="3" ${disabled} placeholder="Observación individual para este estudiante..." oninput="setIndObs('${ced}',this.value)" style="box-sizing:border-box;width:100%;max-width:100%;padding:9px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;line-height:1.35;resize:vertical;min-height:78px;overflow:auto">${val.replace(/</g,'&lt;')}</textarea>
       </div>`;
     }).join('');
     return;
