@@ -1331,12 +1331,12 @@ function metaIndicadores(){
       title:'Seguimiento pedagógico de preescolar',
       sub:'Estas secciones se reflejan en la carta informativa del período.',
       saber:'RESUMEN DEL AVANCE',
-      hacer:'OBJETIVO Y ACTIVIDADES',
-      ser:'OBSERVACIONES',
+      hacer:'OBJETIVO',
+      ser:'ACTIVIDADES',
       placeholders:{
         saber:'Ej: Los niños han avanzado en la expresión de palabras, sonidos y gestos para comunicarse.',
-        hacer:'Ej: Primero escribe el objetivo. Después agrega actividades como leer, cantar, jugar o crear.',
-        ser:'Ej: Requiere acompañamiento para fortalecer turnos, atención, convivencia o logros observados.'
+        hacer:'Ej: Desarrollar habilidades de comunicacion y lenguaje.',
+        ser:'Ej: Leer libros con imagenes; cantar canciones; jugar con palabras y sonidos.'
       }
     };
   }
@@ -1379,11 +1379,15 @@ function actualizarIndicadoresUI(){
   setTxt('indLabel-ser',meta.ser);
   const esPre=esCursoPreescolarNombre(W.cursoNombre);
   const labelEst=document.querySelector('#ind-estudiantes')?.parentElement?.querySelector('strong');
-  if(labelEst) labelEst.innerHTML=esPre?'<i class="fas fa-users"></i> Observaciones por estudiante':'<i class="fas fa-users"></i> Estudiantes que reciben estos indicadores';
+  if(labelEst) labelEst.innerHTML=esPre?'<i class="fas fa-users"></i> Estudiantes y observaciones por materia':'<i class="fas fa-users"></i> Estudiantes que reciben estos indicadores';
   const btns=document.querySelector('#ind-estudiantes')?.parentElement?.querySelector('div[style*="display:flex;gap:8px"]');
-  if(btns) btns.style.display=esPre?'none':'flex';
+  if(btns) btns.style.display='flex';
   const serBox=document.getElementById('ind-ser')?.parentElement;
-  if(serBox) serBox.style.display=esPre?'none':'block';
+  if(serBox) serBox.style.display='block';
+  ['saber','hacer','ser'].forEach(tipo=>{
+    const btn=document.getElementById('ind-'+tipo)?.parentElement?.querySelector('button');
+    if(btn) btn.style.display=esPre?'none':'';
+  });
 }
 
 function renderIndEstudiantes(){
@@ -1398,10 +1402,14 @@ function renderIndEstudiantes(){
       const ced=String(e.cedula);
       const nombre=`${e.nombre} ${e.primerApellido} ${e.segundoApellido||''}`.trim();
       const val=(W.indObservaciones&&W.indObservaciones[ced])||'';
-      return `<div style="display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid var(--border);border-radius:8px;background:#fff">
-        <strong style="font-size:13px;color:var(--ink)">${nombre}</strong>
-        <small style="color:var(--muted);font-size:11px">${ced}</small>
-        <textarea rows="3" placeholder="Observación para el boletín..." oninput="setIndObs('${ced}',this.value)" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;resize:vertical">${val.replace(/</g,'&lt;')}</textarea>
+      const checked=W.indSeleccionados.has(ced)?'checked':'';
+      const disabled=checked?'':'disabled';
+      return `<div style="display:grid;grid-template-columns:minmax(180px,.8fr) minmax(220px,1.2fr);gap:10px;align-items:start;padding:10px;border:1px solid var(--border);border-radius:8px;background:#fff">
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" value="${ced}" ${checked} onchange="toggleIndEstudiante('${ced}',this.checked)" style="width:16px;height:16px;margin-top:2px">
+          <span><strong style="display:block;color:var(--ink)">${nombre}</strong><small style="color:var(--muted)">${ced}</small></span>
+        </label>
+        <textarea id="indObs-${ced}" rows="3" ${disabled} placeholder="Observación individual para este estudiante..." oninput="setIndObs('${ced}',this.value)" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;resize:vertical;min-height:72px">${val.replace(/</g,'&lt;')}</textarea>
       </div>`;
     }).join('');
     return;
@@ -1419,6 +1427,8 @@ function renderIndEstudiantes(){
 function toggleIndEstudiante(cedula,on){
   if(on) W.indSeleccionados.add(String(cedula));
   else W.indSeleccionados.delete(String(cedula));
+  const obs=document.getElementById('indObs-'+String(cedula));
+  if(obs) obs.disabled=!on;
 }
 
 function setIndObs(cedula,valor){
@@ -1466,15 +1476,26 @@ async function cargarIndicadores(periodoForzado){
     IND.hacer=ind?.hacer?[...ind.hacer]:[];
     IND.ser=esPre?[]:(ind?.ser?[...ind.ser]:[]);
     if(esPre){
-      W.indSeleccionados=new Set((W.indEstudiantes||[]).map(e=>String(e.cedula)));
+      W.indSeleccionados=new Set();
       W.indObservaciones={};
-      await Promise.all((W.indEstudiantes||[]).map(async e=>{
+      let comunCargado=false;
+      for(const e of (W.indEstudiantes||[])){
         try{
           const ced=String(e.cedula);
-          const r=await gql(`query{indicadoresPorAsignatura(asignaturaId:"${W.asigId}",periodo:"${periodo}",estudianteId:"${ced}"){ser}}`);
-          W.indObservaciones[ced]=(r.indicadoresPorAsignatura?.ser||[]).join('\n');
+          const r=await gql(`query{indicadoresPorAsignatura(asignaturaId:"${W.asigId}",periodo:"${periodo}",estudianteId:"${ced}"){saber hacer ser}}`);
+          const item=r.indicadoresPorAsignatura;
+          if(item && ((item.saber||[]).length || (item.hacer||[]).length || (item.ser||[]).length)){
+            W.indSeleccionados.add(ced);
+            if(!comunCargado && ((item.saber||[]).length || (item.hacer||[]).length)){
+              IND.saber=item.saber?[...item.saber]:[];
+              IND.hacer=item.hacer?[...item.hacer]:[];
+              comunCargado=true;
+            }
+          }
+          W.indObservaciones[ced]=(item?.ser||[]).join('\n');
         }catch{}
-      }));
+      }
+      if(!W.indSeleccionados.size) W.indSeleccionados=new Set((W.indEstudiantes||[]).map(e=>String(e.cedula)));
     }else{
       W.indSeleccionados=new Set((ind?.estudianteIds?.length?ind.estudianteIds:[W.estId]).map(String));
     }
@@ -1492,7 +1513,40 @@ async function cargarIndicadores(periodoForzado){
 
 function renderIndLista(tipo){
   const lista=IND[tipo]; const ul=document.getElementById('ind-'+tipo); if(!ul) return;
+  if(esCursoPreescolarNombre(W.cursoNombre)){
+    if(tipo==='saber'){
+      const val=(IND.saber||[]).join('\n');
+      ul.innerHTML=`<textarea rows="4" placeholder="Resumen del avance que va en la franja azul del boletín..." oninput="setPreResumen(this.value)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical">${val.replace(/</g,'&lt;')}</textarea>`;
+      return;
+    }
+    if(tipo==='hacer'){
+      const val=(IND.hacer&&IND.hacer[0])||'';
+      ul.innerHTML=`<textarea rows="3" placeholder="Objetivo de la materia para este período..." oninput="setPreObjetivo(this.value)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical">${val.replace(/</g,'&lt;')}</textarea>`;
+      return;
+    }
+    if(tipo==='ser'){
+      const val=(IND.hacer||[]).slice(1).join('\n');
+      ul.innerHTML=`<textarea rows="4" placeholder="Una actividad por línea..." oninput="setPreActividades(this.value)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical">${val.replace(/</g,'&lt;')}</textarea>`;
+      return;
+    }
+  }
   ul.innerHTML=lista.length?lista.map((t,i)=>`<li style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="flex:1">${t}</span><button onclick="eliminarInd('${tipo}',${i})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:14px;line-height:1;padding:2px 4px;border-radius:4px;flex-shrink:0">&times;</button></li>`).join(''):`<li style="color:var(--muted);font-style:italic;padding:10px 0;font-size:13px">Sin indicadores agregados.</li>`;
+}
+
+function setPreResumen(valor){
+  IND.saber=String(valor||'').split('\n').map(x=>x.trim()).filter(Boolean);
+}
+
+function setPreObjetivo(valor){
+  const actividades=(IND.hacer||[]).slice(1);
+  const objetivo=String(valor||'').trim();
+  IND.hacer=objetivo?[objetivo,...actividades]:actividades;
+}
+
+function setPreActividades(valor){
+  const objetivo=(IND.hacer&&IND.hacer[0])||'';
+  const actividades=String(valor||'').split('\n').map(x=>x.trim()).filter(Boolean);
+  IND.hacer=objetivo?[objetivo,...actividades]:actividades;
 }
 
 function agregarIndicador(tipo){
@@ -1512,15 +1566,16 @@ async function guardarIndicadores(){
   const periodo=getIndPeriodo();
   const saber=IND.saber; const hacer=IND.hacer; const ser=IND.ser;
   if(esCursoPreescolarNombre(W.cursoNombre)){
+    const estudianteIds=[...W.indSeleccionados];
+    if(!estudianteIds.length){ toast('Selecciona al menos un estudiante','er'); return; }
     try{
-      await gql(`mutation{guardarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}",saber:${JSON.stringify(saber)},hacer:${JSON.stringify(hacer)},ser:[],estudianteIds:[]){id}}`);
-      for(const e of (W.indEstudiantes||[])){
-        const ced=String(e.cedula);
+      await gql(`mutation{eliminarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}")}`);
+      for(const ced of estudianteIds){
         const obs=(W.indObservaciones[ced]||'').split('\n').map(x=>x.trim()).filter(Boolean);
-        await gql(`mutation{guardarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}",saber:[],hacer:[],ser:${JSON.stringify(obs)},estudianteIds:["${ced}"]){id}}`);
+        await gql(`mutation{guardarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}",saber:${JSON.stringify(saber)},hacer:${JSON.stringify(hacer)},ser:${JSON.stringify(obs)},estudianteIds:["${ced}"]){id}}`);
       }
       const el=document.getElementById('indEstado');
-      if(el){ const total=saber.length+hacer.length; el.textContent=`Guardado para preescolar - ${periodo} (${total} textos y observaciones)`; el.style.background='var(--green-lt)'; el.style.color='var(--green)'; }
+      if(el){ const total=saber.length+hacer.length; el.textContent=`Guardado para ${estudianteIds.length} estudiante(s) - ${periodo} (${total} textos y observaciones)`; el.style.background='var(--green-lt)'; el.style.color='var(--green)'; }
       toast('Seguimiento de preescolar guardado');
     }catch(err){ toast('Error: '+err.message,'er'); }
     return;
