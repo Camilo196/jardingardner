@@ -357,7 +357,7 @@ export async function notificarNuevaCalificacion(params: {
       <div style="margin-top:16px;text-align:center;">
         <div style="display:inline-block;background:${bgNota};color:${colorNota};border-radius:12px;padding:12px 32px;">
           <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Tu nota</div>
-          <div style="font-size:36px;font-weight:800;line-height:1;">${nota.toFixed(1)}</div>
+          <div style="font-size:36px;font-weight:800;line-height:1;">${nota.toFixed(2)}</div>
           <div style="font-size:12px;margin-top:4px;">${nota >= 3.0 ? 'âœ” Aprobado' : 'âœ˜ Por mejorar'}</div>
         </div>
       </div>
@@ -373,7 +373,7 @@ export async function notificarNuevaCalificacion(params: {
   try {
     await enviarEmail({
       to: email,
-      subject: `Nueva nota registrada â€” ${asignaturaNombre} (${nota.toFixed(1)}/5.0)`,
+      subject: `Nueva nota registrada â€” ${asignaturaNombre} (${nota.toFixed(2)}/5.0)`,
       html: plantillaBase(contenido),
     });
     return true;

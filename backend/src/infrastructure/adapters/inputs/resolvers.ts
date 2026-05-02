@@ -109,6 +109,11 @@ function promedioNumeros(numeros: number[]): number | null {
     return numeros.reduce((s, n) => s + Number(n), 0) / numeros.length;
 }
 
+function redondearNota(nota: any): number {
+    const n = Number(nota);
+    return Number.isFinite(n) ? Math.round((n + Number.EPSILON) * 100) / 100 : n;
+}
+
 function valoracionDesdeNota(nota: number | null): string {
     if (nota === null) return 'Sin nota';
     if (nota >= 4.6) return 'Superior';
@@ -1198,6 +1203,7 @@ export const resolvers = {
 
         // ── Calificaciones ────────────────────────────────────
         crearCalificacion: async (_: any, { input }: any, { user, repositories }: any) => {
+            input = { ...input, nota: redondearNota(input.nota) };
             if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado: se requiere rol ADMIN o PROFESOR');
             if (!input.estudianteId) throw new Error('El estudianteId es requerido');
             if (!input.asignaturaId) throw new Error('El asignaturaId es requerido');
@@ -1245,6 +1251,7 @@ export const resolvers = {
         },
 
         actualizarCalificacion: async (_: any, { id, input }: any, { user, repositories }: any) => {
+            input = { ...input, nota: redondearNota(input.nota) };
             if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado: se requiere rol ADMIN o PROFESOR');
             await verificarPeriodoAbierto(input.periodo);
             await validarCalificacionNoPreescolar(input.asignaturaId, repositories);
