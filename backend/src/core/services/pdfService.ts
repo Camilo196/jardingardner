@@ -95,6 +95,64 @@ function nombreCompleto(e: BoletinData['estudiante']): string {
   return `${e.nombre} ${e.primerApellido} ${e.segundoApellido || ''}`.trim();
 }
 
+function limpiarTextoBoletin(valor: unknown): string {
+  return String(valor ?? '')
+    .normalize('NFKC')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, ' ')
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, ' ')
+    .split('\n')
+    .map((linea) =>
+      linea
+        .replace(/^[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ¿¡]+(?=[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ¿¡])/u, '')
+        .replace(/[ \t]+/g, ' ')
+        .trim(),
+    )
+    .filter(Boolean)
+    .join('\n');
+}
+
+function limpiarListaBoletin(items: string[] | undefined): string[] {
+  return (items || []).map(limpiarTextoBoletin).filter(Boolean);
+}
+
+function limpiarDataBoletin(data: BoletinData): BoletinData {
+  return {
+    ...data,
+    estudiante: {
+      nombre: limpiarTextoBoletin(data.estudiante.nombre),
+      primerApellido: limpiarTextoBoletin(data.estudiante.primerApellido),
+      segundoApellido: limpiarTextoBoletin(data.estudiante.segundoApellido),
+      cedula: limpiarTextoBoletin(data.estudiante.cedula),
+    },
+    curso: { nombre: limpiarTextoBoletin(data.curso.nombre) },
+    director: limpiarTextoBoletin(data.director),
+    periodo: limpiarTextoBoletin(data.periodo),
+    anio: limpiarTextoBoletin(data.anio),
+    observacionGeneral: limpiarTextoBoletin(data.observacionGeneral),
+    calificaciones: data.calificaciones.map((cal) => ({
+      ...cal,
+      asignaturaId: limpiarTextoBoletin(cal.asignaturaId),
+      asignaturaNombre: limpiarTextoBoletin(cal.asignaturaNombre),
+      docenteNombre: limpiarTextoBoletin(cal.docenteNombre),
+      valoracion: limpiarTextoBoletin(cal.valoracion),
+      resumenNotas: limpiarTextoBoletin(cal.resumenNotas),
+      observacion: limpiarTextoBoletin(cal.observacion),
+      indicadores: {
+        saber: limpiarListaBoletin(cal.indicadores?.saber),
+        hacer: limpiarListaBoletin(cal.indicadores?.hacer),
+        ser: limpiarListaBoletin(cal.indicadores?.ser),
+      },
+      comportamiento: cal.comportamiento
+        ? {
+            nota: cal.comportamiento.nota,
+            nivel: limpiarTextoBoletin(cal.comportamiento.nivel),
+            descripcion: limpiarTextoBoletin(cal.comportamiento.descripcion),
+          }
+        : undefined,
+    })),
+  };
+}
+
 function textoPeriodo(data: BoletinData): string {
   return `Periodo ${data.periodo} - ${data.anio}`;
 }
@@ -144,7 +202,8 @@ function labelPeriodo(n: number): string {
 }
 
 function itemsArr(items: string[] | undefined, fallback: string): string[] {
-  return items && items.length ? items : [fallback];
+  const limpios = limpiarListaBoletin(items);
+  return limpios.length ? limpios : [fallback];
 }
 
 // ─── Clase principal ──────────────────────────────────────────────────────────
@@ -337,8 +396,8 @@ export class PDFService {
         const hacer = itemsArr(mat.indicadores?.hacer, 'Sin seguimiento registrado.');
         const ser   = itemsArr(mat.indicadores?.ser,   'Sin seguimiento registrado.');
 
-        // Resumen de desempeño (primer ítem de saber con viñeta ✓)
-        const resumenTexto = saber.map((s) => `\u2713 ${s}`).join('\n');
+        // Resumen de desempeño con viñeta simple compatible con PDFKit.
+        const resumenTexto = saber.map((s) => `- ${s}`).join('\n');
 
         // Objetivo: primer ítem de hacer
         const objetivo = hacer[0] || 'Fortalecer el desarrollo integral del estudiante.';
@@ -699,10 +758,11 @@ export class PDFService {
   // API PÚBLICA
   // ════════════════════════════════════════════════════════════════════════════
   async generateBoletinGardner(data: BoletinData): Promise<Buffer> {
-    if (esCursoPreescolar(data.curso.nombre)) {
-      return this.renderCartaPreescolar(data);
+    const dataLimpia = limpiarDataBoletin(data);
+    if (esCursoPreescolar(dataLimpia.curso.nombre)) {
+      return this.renderCartaPreescolar(dataLimpia);
     }
-    return this.renderInformeEvaluativo(data);
+    return this.renderInformeEvaluativo(dataLimpia);
   }
 
   async generateBoletinPDF(
