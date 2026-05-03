@@ -111,8 +111,18 @@ function limpiarTextoBoletin(valor: unknown): string {
     .join('\n');
 }
 
+function separarIndicadoresBoletin(valor: unknown): string[] {
+  const limpio = limpiarTextoBoletin(valor);
+  if (!limpio) return [];
+  return limpio
+    .replace(/([.!?])\s+(?=[A-Z0-9\u00C0-\u00D6\u00D8-\u00DE¿¡])/gu, '$1\n')
+    .split('\n')
+    .map((linea) => limpiarTextoBoletin(linea))
+    .filter(Boolean);
+}
+
 function limpiarListaBoletin(items: string[] | undefined): string[] {
-  return (items || []).map(limpiarTextoBoletin).filter(Boolean);
+  return (items || []).flatMap(separarIndicadoresBoletin).filter(Boolean);
 }
 
 function limpiarDataBoletin(data: BoletinData): BoletinData {

@@ -1566,9 +1566,9 @@ async function cargarIndicadores(periodoForzado){
     const esPre=esCursoPreescolarNombre(W.cursoNombre);
     const d=await gql(`query{indicadoresPorAsignatura(asignaturaId:"${W.asigId}",periodo:"${periodo}"${esPre?'':`,estudianteId:"${W.estId}"`}){saber hacer ser estudianteIds}}`);
     const ind=d.indicadoresPorAsignatura;
-    IND.saber=ind?.saber?[...ind.saber]:[];
-    IND.hacer=ind?.hacer?[...ind.hacer]:[];
-    IND.ser=esPre?[]:(ind?.ser?[...ind.ser]:[]);
+    IND.saber=normalizarListaIndicadores(ind?.saber);
+    IND.hacer=normalizarListaIndicadores(ind?.hacer);
+    IND.ser=esPre?[]:normalizarListaIndicadores(ind?.ser);
     if(esPre){
       W.indSeleccionados=new Set();
       W.indObservaciones={};
@@ -1581,12 +1581,12 @@ async function cargarIndicadores(periodoForzado){
           if(item && ((item.saber||[]).length || (item.hacer||[]).length || (item.ser||[]).length)){
             W.indSeleccionados.add(ced);
             if(!comunCargado && ((item.saber||[]).length || (item.hacer||[]).length)){
-              IND.saber=item.saber?[...item.saber]:[];
-              IND.hacer=item.hacer?[...item.hacer]:[];
+              IND.saber=normalizarListaIndicadores(item.saber);
+              IND.hacer=normalizarListaIndicadores(item.hacer);
               comunCargado=true;
             }
           }
-          W.indObservaciones[ced]=(item?.ser||[]).join('\n');
+          W.indObservaciones[ced]=normalizarListaIndicadores(item?.ser).join('\n');
         }catch{}
       }
       if(!W.indSeleccionados.size) W.indSeleccionados=new Set((W.indEstudiantes||[]).map(e=>String(e.cedula)));
@@ -1639,8 +1639,20 @@ function setPreObjetivo(valor){
 
 function setPreActividades(valor){
   const objetivo=(IND.hacer&&IND.hacer[0])||'';
-  const actividades=String(valor||'').split('\n').map(x=>x.trim()).filter(Boolean);
+  const actividades=separarIndicadoresTexto(valor);
   IND.hacer=objetivo?[objetivo,...actividades]:actividades;
+}
+
+function separarIndicadoresTexto(valor){
+  return String(valor||'')
+    .replace(/([.!?])\s+(?=[A-Z0-9\u00C0-\u00D6\u00D8-\u00DE¿¡])/gu,'$1\n')
+    .split('\n')
+    .map(x=>x.trim())
+    .filter(Boolean);
+}
+
+function normalizarListaIndicadores(items){
+  return (items||[]).flatMap(separarIndicadoresTexto);
 }
 
 function agregarIndicador(tipo){
@@ -1648,7 +1660,7 @@ function agregarIndicador(tipo){
   const sugerencia=(meta.placeholders&&meta.placeholders[tipo])||'Escribe el indicador';
   const val=window.prompt(`Agregar texto para ${tipo.toUpperCase()}:`, '');
   if(!val || !val.trim()) return;
-  IND[tipo].push(val.trim());
+  IND[tipo].push(...separarIndicadoresTexto(val));
   renderIndLista(tipo);
 }
 
@@ -1659,7 +1671,7 @@ function eliminarInd(tipo,i){ IND[tipo].splice(i,1); renderIndLista(tipo); }
 async function guardarIndicadores(){
   if(!periodoSelectHabilitado('indPeriodoSel')){ toast('Ese periodo no esta habilitado para indicadores','er'); return; }
   const periodo=getIndPeriodo();
-  const saber=IND.saber; const hacer=IND.hacer; const ser=IND.ser;
+  const saber=normalizarListaIndicadores(IND.saber); const hacer=normalizarListaIndicadores(IND.hacer); const ser=normalizarListaIndicadores(IND.ser);
   if(esCursoPreescolarNombre(W.cursoNombre)){
     const estudianteIds=[...W.indSeleccionados];
     if(!estudianteIds.length){ toast('Selecciona al menos un estudiante','er'); return; }
