@@ -12,6 +12,7 @@ import { ComportamientoModel } from '../outputs/models/ComportamientoModel.js';
 import { AsistenciaModel } from '../outputs/models/AsistenciaModel.js';
 import { CronogramaModel } from '../outputs/models/CronogramaModel.js';
 import { MallaCurricularModel } from '../outputs/models/MallaCurricularModel.js';
+import { AsignaturaModel } from '../outputs/models/AsignaturaModel.js';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { AuthService } from '../../../core/services/AuthService';
@@ -671,12 +672,21 @@ export const resolvers = {
         },
 
         matriculasPorAsignatura: async (_: any, { asignaturaId }: any) => {
-            const docs = await MatriculaModel.find({ asignaturas: asignaturaId }).exec();
-            return docs
+            const docsPorAsignatura = await MatriculaModel.find({ asignaturas: asignaturaId }).exec();
+            const asignatura = await AsignaturaModel.findById(asignaturaId).lean().catch(() => null);
+            const docsPorCurso = asignatura?.cursoId
+                ? await MatriculaModel.find({
+                    cursoId: String(asignatura.cursoId),
+                    estado: { $in: ['ACTIVA', 'FINALIZADA'] },
+                }).exec()
+                : [];
+            const docsMap = new Map<string, any>();
+            [...docsPorCurso, ...docsPorAsignatura].forEach((d: any) => docsMap.set(d._id.toString(), d));
+            return [...docsMap.values()]
                 .filter(d => d.estudianteId)
                 .map(d => new Matricula(
                     d._id.toString(),
-                    d.estudianteId,
+                    String(d.estudianteId).trim(),
                     d.cursoId,
                     (d.asignaturas || []).map((a: any) => a.toString()),
                     d.estado,
@@ -1717,12 +1727,15 @@ export const resolvers = {
             return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
         },
         estudiante: async (matricula: any, _: any, { repositories }: any) => {
-            if (!matricula?.estudianteId) {
+            const estudianteId = String(matricula?.estudianteId ?? '').trim();
+            if (!estudianteId) {
                 return { id: 'n/a', cedula: 'n/a', nombre: 'Sin datos', primerApellido: '', segundoApellido: '', email: '' };
             }
-            const est = await repositories.estudianteRepository.findById(matricula.estudianteId);
+            const est =
+                await repositories.estudianteRepository.findByCedula(estudianteId).catch(() => null) ??
+                await repositories.estudianteRepository.findById(estudianteId).catch(() => null);
             return est ?? {
-                id: matricula.estudianteId, cedula: matricula.estudianteId,
+                id: estudianteId, cedula: estudianteId,
                 nombre: 'No encontrado', primerApellido: '', segundoApellido: '', email: '',
             };
         },
