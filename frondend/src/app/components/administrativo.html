@@ -1014,7 +1014,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
                     </select>
                   </div>
                   <button onclick="generarBoletinAdmin()" style="padding:9px 20px;background:#4f46e5;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer">
-                    <i class="fas fa-file-pdf"></i> Generar PDF
+                    <i class="fas fa-eye"></i> Abrir PDF
                   </button>
                   <button onclick="imprimirBoletinesCursoAdmin()" style="padding:9px 20px;background:#0f766e;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer">
                     <i class="fas fa-print"></i> Imprimir curso
@@ -6531,6 +6531,38 @@ async function descargarBoletinPDF(cedula, nombre, periodo) {
   }
 }
 
+async function abrirBoletinPDF(cedula, nombre, periodo) {
+  const msg = document.getElementById('blMsg');
+  const pdfWindow = window.open('', '_blank');
+  try {
+    if (!pdfWindow) throw new Error('El navegador bloqueo la ventana emergente. Permite pop-ups para abrir el PDF.');
+    pdfWindow.document.write('<p style="font-family:Arial,sans-serif;padding:20px">Generando boletin...</p>');
+    msg.textContent = `Generando boletin de ${nombre}...`;
+    msg.style.color = '#4f46e5';
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Tiempo de espera agotado. Intenta de nuevo.')), 30000)
+    );
+    const data = await Promise.race([
+      gqlAdmin(`mutation($eid:ID!,$per:String!){exportarBoletinCompleto(estudianteId:$eid,periodo:$per)}`,
+        { eid: cedula, per: periodo }),
+      timeoutPromise
+    ]);
+    const b64 = data.exportarBoletinCompleto;
+    if (!b64) throw new Error('Sin datos PDF');
+    const bytes = new Uint8Array(atob(b64).split('').map(c => c.charCodeAt(0)));
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    pdfWindow.location.href = url;
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    msg.textContent = `Boletin abierto: ${nombre}`;
+    msg.style.color = '#16a34a';
+  } catch(e) {
+    if (pdfWindow && !pdfWindow.closed) pdfWindow.close();
+    msg.textContent = `Error: ${e.message}`;
+    msg.style.color = '#dc2626';
+  }
+}
+
 function imprimirPDFBase64(b64, nombre='boletin') {
   return new Promise((resolve, reject) => {
     try {
@@ -6613,7 +6645,7 @@ async function generarBoletinAdmin() {
     const nombre = document.getElementById('blEstudiante').selectedOptions[0]?.text || cedula;
     if (!cedula) { msg.textContent = '⚠️ Selecciona un estudiante'; msg.style.color='#dc2626'; return; }
     lista.innerHTML = '';
-    await descargarBoletinPDF(cedula, nombre, periodo);
+    await abrirBoletinPDF(cedula, nombre, periodo);
 
   } else {
     const cursoId = document.getElementById('blCurso').value;
@@ -6644,9 +6676,9 @@ async function generarBoletinAdmin() {
                 <td style="padding:10px;font-weight:600">${m.estudiante.nombre} ${m.estudiante.primerApellido}</td>
                 <td style="padding:10px;color:#6b7280">${m.estudiante.cedula}</td>
                 <td style="padding:10px;text-align:center">
-                  <button onclick="descargarBoletinPDF('${m.estudiante.cedula}','${m.estudiante.nombre} ${m.estudiante.primerApellido}','${periodo}')"
+                  <button onclick="abrirBoletinPDF('${m.estudiante.cedula}','${m.estudiante.nombre} ${m.estudiante.primerApellido}','${periodo}')"
                     style="padding:6px 14px;background:#4f46e5;color:#fff;border:none;border-radius:5px;font-size:13px;cursor:pointer">
-                    <i class="fas fa-file-pdf"></i> PDF
+                    <i class="fas fa-eye"></i> Abrir PDF
                   </button>
                   <button onclick="imprimirBoletinPDF('${m.estudiante.cedula}','${m.estudiante.nombre} ${m.estudiante.primerApellido}','${periodo}')"
                     style="padding:6px 14px;background:#0f766e;color:#fff;border:none;border-radius:5px;font-size:13px;cursor:pointer;margin-left:6px">
