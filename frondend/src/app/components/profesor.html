@@ -468,7 +468,10 @@ table.t tbody tr:last-child td{border-bottom:none}
   <div class="mbox lg">
     <div class="mh">
       <div><h3 id="calTit">Calificaciones</h3><p id="calSub"></p></div>
-      <button class="mcls" onclick="cerrarMCal()">&times;</button>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <button class="btn bo" id="btnPreviewBoletinProf" onclick="abrirVistaPreviaBoletinProfesor()" style="height:32px;padding:6px 10px"><i class="fas fa-eye"></i> Ver boletin</button>
+        <button class="mcls" onclick="cerrarMCal()">&times;</button>
+      </div>
     </div>
     <div class="mtabs">
       <button class="mtbtn on" id="ctbtn1" onclick="switchCalTab('cAct')"><i class="fas fa-list"></i> Por Actividad</button>
@@ -714,6 +717,43 @@ async function gql(q,v={}){
 }
 function salir(){ sessionStorage.removeItem('token'); window.location.href='principal.html'; }
 function toast(msg,t='ok',d=3500){ const el=document.getElementById('toast'); el.textContent=msg; el.className=`toast on ${t}`; setTimeout(()=>el.className='toast',d); }
+
+function periodoVistaBoletinProfesor(){
+  const indSel=document.getElementById('indPeriodoSel');
+  const compSel=document.getElementById('compEstPeriodo');
+  if(W.calTab==='cIndicadores' && indSel?.value) return indSel.value;
+  if(W.calTab==='cComportamiento' && compSel?.value) return compSel.value;
+  return W.periodosCalificacion.find(p=>p.abierto)?.val || W.periodo || periodoLabel();
+}
+
+async function abrirVistaPreviaBoletinProfesor(){
+  const periodo=periodoVistaBoletinProfesor();
+  if(!W.estId){ toast('Selecciona un estudiante primero','er'); return; }
+  if(!periodo){ toast('No hay periodo seleccionado','er'); return; }
+  const win=window.open('', '_blank');
+  try{
+    if(!win) throw new Error('El navegador bloqueo la ventana emergente. Permite pop-ups para ver el PDF.');
+    win.document.write('<p style="font-family:Arial,sans-serif;padding:20px">Generando vista previa del boletin...</p>');
+    toast('Generando vista previa del boletin...');
+    const timeoutPromise=new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tiempo de espera agotado. Intenta de nuevo.')),30000));
+    const data=await Promise.race([
+      gql(`mutation($eid:ID!,$per:String!,$obs:String!){exportarBoletinCompleto(estudianteId:$eid,periodo:$per,observacionGeneral:$obs)}`,
+        {eid:W.estId,per:periodo,obs:''}),
+      timeoutPromise
+    ]);
+    const b64=data.exportarBoletinCompleto;
+    if(!b64) throw new Error('No se pudo generar el PDF');
+    const bytes=new Uint8Array(atob(b64).split('').map(c=>c.charCodeAt(0)));
+    const blob=new Blob([bytes],{type:'application/pdf'});
+    const url=URL.createObjectURL(blob);
+    win.location.href=url;
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+    toast('Vista previa abierta');
+  }catch(err){
+    if(win && !win.closed) win.close();
+    toast('Error: '+err.message,'er',5000);
+  }
+}
 
 async function init(){
   const t=tk(); if(!t){ window.location.href='principal.html'; return; }
