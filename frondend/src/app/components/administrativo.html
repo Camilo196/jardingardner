@@ -9475,7 +9475,7 @@ async function iniciarDashboard(){
     const [dc,da,dm,de,dasig] = await Promise.all([
       gqlDash('query{calificaciones{id asignaturaId estudianteId nota periodo corte observaciones}}'),
       gqlDash('query{asistencias{id estudianteId asignaturaId estado periodo}}'),
-      gqlDash('query{matriculas{id estudiante{id cedula} curso{id nombre} asignaturas{id nombre} periodo}}').catch(()=>({matriculas:[]})),
+      gqlDash('query{matriculas{id estudiante{id cedula nombre primerApellido} curso{id nombre} asignaturas{id nombre} periodo}}').catch(()=>({matriculas:[]})),
       gqlDash('query{estudiantes{id cedula nombre primerApellido}}'),
       gqlDash('query{asignaturas{id nombre cursoId}}')
     ]);
@@ -9622,17 +9622,31 @@ function renderChartAsistencia(asists){
 }
 
 function renderTopEstudiantes(cals){
-  const estNotas={};
-  DASH.matriculas.forEach(m=>{
-    const eid=String(m?.estudiante?.cedula || m?.estudiante?.id || '');
-    if(!eid) return;
-    if(!estNotas[eid])estNotas[eid]=[];
-    (m.asignaturas||[]).forEach(a=>{cals.filter(c=>String(c.asignaturaId)===String(a.id)).forEach(c=>estNotas[eid].push(Number(c.nota)));});
+  const estMap = {};
+  DASH.estudiantes.forEach(e=>{
+    const key = String(e?.cedula || e?.id || '').trim();
+    if (key) estMap[key] = e;
   });
+  DASH.matriculas.forEach(m=>{
+    const estudiante = m?.estudiante;
+    const key = String(estudiante?.cedula || estudiante?.id || '').trim();
+    if (!key || estMap[key]) return;
+    estMap[key] = estudiante;
+  });
+
+  const estNotas = {};
+  cals.forEach(c=>{
+    const key = String(c?.estudianteId || '').trim();
+    const nota = Number(c?.nota);
+    if (!key || Number.isNaN(nota)) return;
+    if (!estNotas[key]) estNotas[key] = [];
+    estNotas[key].push(nota);
+  });
+
   const ranking=Object.entries(estNotas)
     .map(([id,ns])=>{
-      const est=DASH.estudiantes.find(e=>e.id===id||e.cedula===id);
-      const nombre=est?`${est.nombre} ${est.primerApellido}`:id;
+      const est = estMap[id];
+      const nombre = est ? `${est.nombre || ''} ${est.primerApellido || ''}`.trim() : id;
       const prom=ns.length?ns.reduce((s,n)=>s+n,0)/ns.length:null;
       return{nombre,prom};
     })
