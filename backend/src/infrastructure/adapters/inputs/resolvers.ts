@@ -282,6 +282,15 @@ async function generarBoletinAcumuladoBase64(
     const calsAcumuladasBase = (todasLasCalificaciones || []).filter((c: any) =>
         c.nombreActividad !== '__boletin__' && mismoAnioYPrevios(periodo, c.periodo),
     );
+    const observacionesBoletin = (todasLasCalificaciones || []).filter((c: any) =>
+        c.nombreActividad === '__boletin__' && String(c.periodo) === String(periodo),
+    );
+    const observacionBoletinPorAsignatura: Record<string, string> = {};
+    for (const cal of observacionesBoletin) {
+        const asignaturaId = String(cal.asignaturaId);
+        const observacion = String(cal.observaciones ?? '').trim();
+        if (asignaturaId && observacion) observacionBoletinPorAsignatura[asignaturaId] = observacion;
+    }
 
     const asignaturasCurso = curso
         ? await repositories.asignaturaRepository.findByCursoId(String(curso.id ?? curso._id)).catch(() => [])
@@ -408,7 +417,7 @@ async function generarBoletinAcumuladoBase64(
             resumenNotas,
             faltas: faltasCount,
             faltasJustificadas,
-            observacion: '',
+            observacion: observacionBoletinPorAsignatura[asignaturaId] ?? '',
             indicadores: {
                 saber: ind?.saber ?? [],
                 hacer: ind?.hacer ?? [],

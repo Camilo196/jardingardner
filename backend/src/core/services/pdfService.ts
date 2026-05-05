@@ -521,7 +521,7 @@ export class PDFService {
         y = 30;
       }
       y += 6;
-      this.dibujarFirmas(doc, ml, cw, y, ['Docente titular', 'Coordinacion', 'Acudiente']);
+      this.dibujarFirmas(doc, ml, cw, y, ['Directora', 'Coordinadora', 'Docente']);
       this.dibujarPie(doc, data, footerLabel);
     });
   }
@@ -574,11 +574,9 @@ export class PDFService {
         const hacerH  = bulletH(hacer);
         const serH    = bulletH(ser);
 
-        // Observacion opcional
-        const hasObs = !!mat.observacion;
-        const obsH   = hasObs
-          ? Math.max(26, doc.heightOfString(mat.observacion!, { width: sW - 80 }) + 12)
-          : 0;
+        // Observacion del boletin por materia
+        const obsText = String(mat.observacion || '').trim() || 'Sin observaciones registradas.';
+        const obsH = Math.max(26, doc.heightOfString(obsText, { width: sW - 80 }) + 12);
 
         // Altura bloque completo:
         // fila1H(20) + fila2H(18) + encabezado indicadores(20) + saber + hacer + ser + obs + margen
@@ -693,14 +691,12 @@ export class PDFService {
         dibujarFila('SER',   ser,   C.verde,     C.blanco, serH);
 
         // ── Observación (opcional) ────────────────────────────────────────────
-        if (hasObs) {
-          doc.rect(sX, iY, sW, obsH).fill(C.blanco).stroke(C.azulOscuro);
-          doc.fillColor(C.tintaSuave).font('Helvetica-Bold').fontSize(8)
-             .text('Observacion:', sX + 10, iY + 8);
-          doc.fillColor(C.tinta).font('Helvetica').fontSize(8)
-             .text(mat.observacion!, sX + 88, iY + 7, { width: sW - 98 });
-          iY += obsH;
-        }
+        doc.rect(sX, iY, sW, obsH).fill(C.blanco).stroke(C.azulOscuro);
+        doc.fillColor(C.tintaSuave).font('Helvetica-Bold').fontSize(8)
+           .text('Observacion:', sX + 10, iY + 8);
+        doc.fillColor(C.tinta).font('Helvetica').fontSize(8)
+           .text(obsText, sX + 88, iY + 7, { width: sW - 98 });
+        iY += obsH;
 
         // Borde exterior bloque
         doc.lineWidth(1.6);
@@ -761,7 +757,7 @@ export class PDFService {
         doc.addPage();
         y = 30;
       }
-      this.dibujarFirmas(doc, ml, cw, y, ['Docente(a)', 'Coordinacion', 'Acudiente']);
+      this.dibujarFirmas(doc, ml, cw, y, ['Directora', 'Coordinadora', 'Docente']);
       this.dibujarPie(doc, data, footerLabel);
     });
   }
