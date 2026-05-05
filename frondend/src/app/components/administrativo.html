@@ -2481,12 +2481,6 @@ function seleccionarProfesor(profesor) {
         }
       }
 
-      function editarAsignatura(asignaturaId) {
-        openModal("modalAsignatura");
-        // Simulamos cargar datos del curso
-        document.getElementById("codigoAsignatura").value = asignaturaId;
-      }
-
       // Función para eliminar asignatura
       function eliminarCurso(asignaturaId) {
         if (
@@ -4348,7 +4342,7 @@ document.head.appendChild(cursosStyle);
                 </div>
               </div>
               <div class="asig-c-actions">
-                <button class="asig-btn-edit" onclick="editarAsignatura('${a.id}')"><i class="fas fa-pen"></i> Editar</button>
+                <button class="asig-btn-edit" onclick="editarAsignatura('${a.id}')"><i class="fas fa-pen"></i> Editar curso</button>
                 <button class="asig-btn-del" onclick="eliminarAsignatura('${a.id}')"><i class="fas fa-trash"></i> Eliminar</button>
               </div>
             </div>`;
@@ -4360,7 +4354,7 @@ document.head.appendChild(cursosStyle);
                 <div><div class="asig-m-nombre">${g.nombre}</div><div class="asig-m-sub">${total} curso${total!==1?'s':''} asignado${total!==1?'s':''}</div></div>
               </div>
               <div class="asig-m-right">
-                <button class="asig-btn-edit" type="button" onclick="event.stopPropagation(); abrirEditarGrupoAsignatura(decodeURIComponent('${nombreGrupoArg}'))"><i class="fas fa-pen"></i> Editar</button>
+                <button class="asig-btn-edit" type="button" onclick="event.stopPropagation(); abrirEditarGrupoAsignatura(decodeURIComponent('${nombreGrupoArg}'))"><i class="fas fa-plus"></i> Agregar curso</button>
                 <span class="asig-m-pill">${total} curso${total!==1?'s':''}</span>
                 <span class="asig-m-tog" id="togg${gid}">▼</span>
               </div>
@@ -4549,6 +4543,7 @@ function openModalAsignatura() {
   document.getElementById('panelUnCurso').style.display = '';
   document.getElementById('panelVariosCursos').style.display = 'none';
   document.getElementById('guardarAsignatura').onclick = crearAsignatura;
+  document.getElementById('guardarAsignatura').textContent = 'Guardar Asignatura';
 
   document.getElementById('buscarProfesorAsignatura').value = '';
   document.getElementById('profesorAsignatura').value = '';
@@ -4588,12 +4583,13 @@ function openModalAsignatura() {
 function abrirEditarGrupoAsignatura(nombre) {
   document.getElementById('formAsignatura').reset();
   document.getElementById('idAsignatura').value = '';
-  document.getElementById('modalAsignaturaTitulo').textContent = 'Editar asignatura';
+  document.getElementById('modalAsignaturaTitulo').textContent = 'Agregar curso a asignatura';
   document.getElementById('modoAsignaturaGroup').style.display = 'none';
   document.getElementById('panelUnCurso').style.display = 'none';
   document.getElementById('panelVariosCursos').style.display = '';
   document.getElementById('modoVarios').checked = true;
   document.getElementById('guardarAsignatura').onclick = crearAsignatura;
+  document.getElementById('guardarAsignatura').textContent = 'Agregar curso(s)';
   document.getElementById('buscarProfesorAsignatura').value = '';
   document.getElementById('profesorAsignatura').value = '';
   document.getElementById('listaProfesoresAsignatura').innerHTML = '';
@@ -4718,6 +4714,8 @@ function editarAsignatura(ref) {
 
   // Llenar el formulario con los datos actuales
   document.getElementById("idAsignatura").value = asi.id;
+  document.getElementById('modalAsignaturaTitulo').textContent = 'Editar curso de la asignatura';
+  document.getElementById("guardarAsignatura").textContent = "Guardar cambios";
   poblarSelectorAsignatura(asi.nombre || "");
   // Al editar, ocultamos el selector de modo (siempre un curso)
   document.getElementById('modoAsignaturaGroup').style.display = 'none';
@@ -4785,7 +4783,7 @@ function editarAsignatura(ref) {
     } catch(e) {
       alert('Error al actualizar: ' + e.message);
     } finally {
-      btn.disabled = false; btn.textContent = "Guardar Asignatura";
+      btn.disabled = false; btn.textContent = "Guardar cambios";
     }
   };
 
