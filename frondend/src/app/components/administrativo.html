@@ -4511,9 +4511,11 @@ function seleccionarProfesorAsignatura(profesor) {
 
 function toggleModoAsignatura() {
   const modo = document.querySelector('input[name="modoAsignatura"]:checked')?.value;
+  const nombreActual = obtenerNombreAsignaturaSeleccionada();
+  const nombreBase = document.getElementById('modalAsignatura')?.dataset?.nombreBase || '';
   document.getElementById('panelUnCurso').style.display      = modo === 'uno'    ? '' : 'none';
   document.getElementById('panelVariosCursos').style.display = modo === 'varios' ? '' : 'none';
-  poblarSelectorAsignatura();
+  poblarSelectorAsignatura(nombreActual || nombreBase);
 }
 
 function construirListaCursosMulti() {
@@ -4533,15 +4535,18 @@ function toggleHorarioCurso(cursoId) {
   const chk  = document.getElementById(`chkCurso_${cursoId}`);
   const fila = chk?.closest('div');
   if (!fila) return;
+  const nombreActual = obtenerNombreAsignaturaSeleccionada();
+  const nombreBase = document.getElementById('modalAsignatura')?.dataset?.nombreBase || '';
   if (chk.checked) {
     fila.style.borderColor = '#1a56db'; fila.style.background = '#f0f7ff';
   } else {
     fila.style.borderColor = '#e5e7eb'; fila.style.background = '#fff';
   }
-  poblarSelectorAsignatura();
+  poblarSelectorAsignatura(nombreActual || nombreBase);
 }
 
 function openModalAsignatura() {
+  document.getElementById('modalAsignatura').dataset.nombreBase = '';
   document.getElementById('formAsignatura').reset();
   document.getElementById('idAsignatura').value = '';
   document.getElementById('modalAsignaturaTitulo').textContent = 'Registrar Asignatura';
@@ -4587,6 +4592,7 @@ function openModalAsignatura() {
 }
 
 function abrirEditarGrupoAsignatura(nombre) {
+  document.getElementById('modalAsignatura').dataset.nombreBase = String(nombre || '').trim();
   document.getElementById('formAsignatura').reset();
   document.getElementById('idAsignatura').value = '';
   document.getElementById('modalAsignaturaTitulo').textContent = 'Agregar curso a asignatura';
