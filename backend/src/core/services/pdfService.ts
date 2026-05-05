@@ -437,20 +437,16 @@ export class PDFService {
           ...(mat.observacion ? [`- ${mat.observacion}`] : []),
         ];
         if (!obsLines.length) obsLines.push('- Sin observaciones adicionales.');
-        const objetivoLabel = '-Objetivo:';
-        const objetivoLabelW = 54;
-        const objetivoTextoW = Math.max(120, innerW - objetivoLabelW - 2);
-        const objetivoH = Math.max(12,
-          doc.heightOfString(objetivo, { width: objetivoTextoW, lineGap: 1 }));
         // Calcular alturas
         const resumenH = Math.max(36,
           doc.heightOfString(resumenTexto, { width: innerW, lineGap: 1 }) + 18);
 
         // Objetivo + Actividades en una sola sección blanca
-        const actividadesH = Math.max(12,
-          doc.heightOfString(actividadesTexto, { width: innerW, lineGap: 1 }));
+        const objActTexto =
+          `-Objetivo: ${objetivo}\n\nActividades:\n` +
+          actividadesTexto;
         const objActH = Math.max(56,
-          10 + objetivoH + 8 + 12 + 4 + actividadesH + 10);
+          doc.heightOfString(objActTexto, { width: innerW, lineGap: 1 }) + 18);
 
         // Observaciones: label fijo + texto (fondo blanco liso)
         const obsText = obsLines.join('\n');
@@ -497,22 +493,8 @@ export class PDFService {
         // ── Objetivo + Actividades — sección blanca unificada (fiel imagen) ──────
         doc.rect(sX, bY, sW, objActH).fill(C.blanco).stroke(C.azulOscuro);
         let tyOA = bY + 7;
-        // "-Objetivo:" bold + texto normal ajustado dentro del ancho disponible.
-        doc.fillColor(C.tinta).font('Helvetica-Bold').fontSize(9)
-           .text(objetivoLabel, sX + padX, tyOA, { width: objetivoLabelW });
-        doc.font('Helvetica').fontSize(9)
-           .text(objetivo, sX + padX + objetivoLabelW + 2, tyOA, {
-             width: objetivoTextoW,
-             lineGap: 1,
-           });
-        tyOA += objetivoH + 8;
-        // "Actividades:" bold
-        doc.fillColor(C.tinta).font('Helvetica-Bold').fontSize(9)
-           .text('Actividades:', sX + padX, tyOA);
-        tyOA += 14;
-        // ítems con "- " normal
-        doc.font('Helvetica').fontSize(9)
-           .text(actividadesTexto, sX + padX, tyOA, { width: innerW, lineGap: 1 });
+        doc.fillColor(C.tinta).font('Helvetica').fontSize(9)
+           .text(objActTexto, sX + padX, tyOA, { width: innerW, lineGap: 1 });
         bY += objActH;
 
         // ── Observaciones — borde gris fino, solo label bold (fiel imagen) ───────
