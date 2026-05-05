@@ -1004,7 +1004,7 @@ function renderCortes(cals){
 }
 
 function periodoAbiertoParaNota(cfg){
-  if(!cfg) return true;
+  if(!cfg) return false;
   if(cfg.abierto===false) return false;
   const ahora=new Date();
   if(cfg.fechaApertura && ahora < new Date(cfg.fechaApertura)) return false;

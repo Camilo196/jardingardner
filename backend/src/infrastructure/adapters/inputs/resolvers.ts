@@ -488,7 +488,9 @@ async function validarComportamientoNoPreescolar(asignaturaId: string, repositor
 async function verificarPeriodoAbierto(periodo: string): Promise<void> {
     const { anio, numeroPeriodo } = parsePeriodo(periodo);
     const config = await PeriodoConfigModel.findOne({ anio, numeroPeriodo });
-    if (!config) return; // sin configuración = abierto por defecto
+    if (!config) {
+        throw new Error(`El periodo ${periodo} no esta configurado. Contacte al administrador.`);
+    }
     if (!config.abierto) {
         throw new Error(
             `El periodo ${periodo} esta cerrado. Contacte al administrador para reactivarlo.`
@@ -1609,6 +1611,7 @@ export const resolvers = {
             if (!user) throw new Error('No autenticado');
             const profesor = await repositories.profesorRepository.findByCedula(user.username).catch(() => null);
             if (!profesor) throw new Error('Solo profesores pueden registrar comportamiento');
+            await verificarPeriodoAbierto(input.periodo);
             await validarComportamientoNoPreescolar(input.asignaturaId, repositories);
 
             // Calcular nivel automáticamente desde la nota si se proporciona
