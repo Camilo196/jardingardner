@@ -3590,6 +3590,11 @@ function poblarSelectorAsignatura(nombreSeleccionado = "") {
 
   const { tipo } = materiasDisponiblesSegunSeleccion();
   const selected = String(nombreSeleccionado || "").trim();
+  const normalizarMateria = (valor = "") => String(valor || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
   const options = [];
 
   const pushOptions = (label, list) => {
@@ -3609,15 +3614,16 @@ function poblarSelectorAsignatura(nombreSeleccionado = "") {
 
   select.innerHTML = `<option value="">Seleccione una asignatura</option>${options.join("")}<option value="__OTRA__">Otra...</option>`;
 
-  const existeEnLista = [...MATERIAS_PREESCOLAR, ...MATERIAS_PRIMARIA].includes(selected);
-  if (selected && !existeEnLista) {
+  const materiasDisponibles = [...MATERIAS_PREESCOLAR, ...MATERIAS_PRIMARIA];
+  const materiaCoincidente = materiasDisponibles.find(nombre => normalizarMateria(nombre) === normalizarMateria(selected)) || "";
+  if (selected && !materiaCoincidente) {
     select.value = "__OTRA__";
     if (inputOtra) {
       inputOtra.style.display = "";
       inputOtra.value = selected;
     }
   } else {
-    if (selected) select.value = selected;
+    if (materiaCoincidente) select.value = materiaCoincidente;
     if (inputOtra) {
       inputOtra.style.display = "none";
       if (!selected) inputOtra.value = "";
