@@ -1787,9 +1787,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     const periodos = [`${anio}-1`, `${anio}-2`, `${anio}-3`];
 
     const base = await gql(`
-      query($cursoId: ID!) {
+      query($cursoId: ID!, $anio: Int!) {
         curso(id: $cursoId) { id nombre }
         asignaturasPorCurso(cursoId: $cursoId) { id nombre }
+        periodosConfig(anio: $anio) { numeroPeriodo abierto }
         calificacionesPorCurso(cursoId: $cursoId) {
           estudianteId nota periodo nombreActividad
         }
@@ -1799,7 +1800,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           estudiante { id cedula nombre primerApellido segundoApellido }
         }
       }
-    `, { cursoId });
+    `, { cursoId, anio });
 
     const curso = base.curso;
     const asignaturas = base.asignaturasPorCurso || [];
@@ -1845,7 +1846,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     (base.calificacionesPorCurso || [])
       .filter(c => periodos.includes(c.periodo) && c.nombreActividad !== '__boletin__')
       .forEach(c => {
-        const item = porEstudiante[c.estudianteId];
+        const item = porEstudiante[String(c.estudianteId || '').trim()];
         if (!item) return;
         item.notas[c.periodo].push(Number(c.nota));
       });
@@ -1853,7 +1854,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     comportamientosPorPeriodo.forEach(respuestas => {
       respuestas.forEach(({ periodo, data }) => {
         ((data && data.comportamientosPorAsignatura) || []).forEach(comp => {
-          const item = porEstudiante[comp.estudianteId];
+          const item = porEstudiante[String(comp.estudianteId || '').trim()];
           if (!item) return;
           const nota = Number.isFinite(Number(comp.nota))
             ? Number(comp.nota)
@@ -1863,8 +1864,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       });
     });
 
-    headersExport = ['Cedula', 'Estudiante', '1er Periodo', '2do Periodo', '3er Periodo', 'Promedio general', 'Comportamiento general'];
-    datosExport = Object.values(porEstudiante)
+    let periodoReferenciaNumero = (base.periodosConfig || [])
+      .filter(p => p && p.abierto)
+      .map(p => Number(p.numeroPeriodo))
+      .filter(n => n >= 1 && n <= 3)
+      .sort((a, b) => b - a)[0] || 0;
+
+    const datosBase = Object.values(porEstudiante)
       .filter((item, idx, arr) => arr.indexOf(item) === idx)
       .map(item => {
         const p1 = promedioNotas(item.notas[periodos[0]] || []);
@@ -1883,12 +1889,44 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           '3er Periodo': nota2(p3),
           'Promedio general': nota2(promedioGeneral),
           'Comportamiento general': compGeneral === null ? '' : `${nota2(compGeneral)} - ${comportamientoDesdeNota(compGeneral)}`,
+          __puestoP1: promedioNotas([p1].filter(n => n !== null)),
+          __puestoP2: promedioNotas([p1, p2].filter(n => n !== null)),
+          __puestoP3: promedioNotas([p1, p2, p3].filter(n => n !== null)),
         };
-      })
+      });
+
+    if (!periodoReferenciaNumero) {
+      if (datosBase.some(item => item.__puestoP3 !== null)) periodoReferenciaNumero = 3;
+      else if (datosBase.some(item => item.__puestoP2 !== null)) periodoReferenciaNumero = 2;
+      else periodoReferenciaNumero = 1;
+    }
+
+    const campoPuesto = periodoReferenciaNumero === 3 ? '__puestoP3' : (periodoReferenciaNumero === 2 ? '__puestoP2' : '__puestoP1');
+    const puestoMap = {};
+    [...datosBase]
+      .filter(item => typeof item[campoPuesto] === 'number' && !isNaN(item[campoPuesto]))
+      .sort((a, b) => b[campoPuesto] - a[campoPuesto] || String(a.Estudiante).localeCompare(String(b.Estudiante), 'es', { sensitivity: 'base' }))
+      .forEach((item, index) => {
+        puestoMap[item.Cedula] = index + 1;
+      });
+
+    headersExport = ['Cedula', 'Estudiante', '1er Periodo', '2do Periodo', '3er Periodo', 'Promedio general', 'Comportamiento general', 'Puesto'];
+    datosExport = datosBase
+      .map(item => ({
+        'Cedula': item.Cedula,
+        'Estudiante': item.Estudiante,
+        '1er Periodo': item['1er Periodo'],
+        '2do Periodo': item['2do Periodo'],
+        '3er Periodo': item['3er Periodo'],
+        'Promedio general': item['Promedio general'],
+        'Comportamiento general': item['Comportamiento general'],
+        'Puesto': puestoMap[item.Cedula] || '',
+      }))
       .sort((a, b) => String(a.Estudiante).localeCompare(String(b.Estudiante), 'es', { sensitivity: 'base' }));
 
+    const etiquetaPeriodo = periodoReferenciaNumero === 1 ? '1er período' : (periodoReferenciaNumero === 2 ? '2do período' : '3er período');
     document.getElementById('previewTitle').textContent = `Definitivas - ${curso?.nombre || ''} (${anio})`;
-    document.getElementById('previewMeta').textContent = `${datosExport.length} estudiantes`;
+    document.getElementById('previewMeta').textContent = `${datosExport.length} estudiantes · puesto calculado con ${etiquetaPeriodo}`;
     renderTabla(headersExport, datosExport, 'Promedio general');
   }
 
@@ -9506,9 +9544,12 @@ function actualizarDashboard(){
   const filtro = document.getElementById('dashPeriodo')?.value||'';
   const cals   = filtro ? DASH.calificaciones.filter(c=>c.periodo===filtro) : DASH.calificaciones;
   const asists = filtro ? DASH.asistencias.filter(a=>a.periodo===filtro) : DASH.asistencias;
+  const asignaturasVigentes = new Set((DASH.asignaturas || []).map(a => String(a?.id || '').trim()).filter(Boolean));
+  const calsValidas = cals.filter(c => asignaturasVigentes.has(String(c?.asignaturaId || '').trim()));
+  const asistsValidas = asists.filter(a => asignaturasVigentes.has(String(a?.asignaturaId || '').trim()));
 
   // Promedio
-  const notas = cals.map(c=>Number(c.nota)).filter(n=>!isNaN(n));
+  const notas = calsValidas.map(c=>Number(c.nota)).filter(n=>!isNaN(n));
   const pg = notas.length ? notas.reduce((s,n)=>s+n,0)/notas.length : null;
   const pEl = document.getElementById('kpiPromedio');
   if(pEl){
@@ -9519,7 +9560,7 @@ function actualizarDashboard(){
   if(phEl) phEl.textContent = pg!==null?(pg>=3.5?'✅ Aprobatorio':'⚠ Bajo mínimo'):'sin datos';
 
   // Asistencia
-  const total=asists.length, pres=asists.filter(a=>['PRESENTE','EXCUSA'].includes(a.estado)).length;
+  const total=asistsValidas.length, pres=asistsValidas.filter(a=>['PRESENTE','EXCUSA'].includes(a.estado)).length;
   const pct = total>0?((pres/total)*100).toFixed(1):null;
   const aEl = document.getElementById('kpiAsistencia');
   if(aEl){
@@ -9529,10 +9570,10 @@ function actualizarDashboard(){
   const ahEl = document.getElementById('kpiAsistHint');
   if(ahEl) ahEl.textContent = total>0?`${total} registros`:'sin datos';
 
-  renderAlertas(cals, asists);
-  renderChartNotas(cals);
-  renderChartAsistencia(asists);
-  renderTopEstudiantes(cals);
+  renderAlertas(calsValidas, asistsValidas);
+  renderChartNotas(calsValidas);
+  renderChartAsistencia(asistsValidas);
+  renderTopEstudiantes(calsValidas);
 }
 
 function renderAlertas(cals, asists){

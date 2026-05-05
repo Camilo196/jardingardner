@@ -9,7 +9,13 @@ export class CalificacionRepositoryImpl implements CalificacionRepository {
     try {
       const asignaturas = await AsignaturaModel.find({ cursoId }).exec();
       if (!asignaturas || asignaturas.length === 0) return [];
-      const asignaturaIds = asignaturas.map(a => a._id);
+      const asignaturaIds = Array.from(new Set(
+        asignaturas.flatMap(a => {
+          const objectId = a._id;
+          const stringId = a._id?.toString?.();
+          return [objectId, stringId].filter(Boolean) as any[];
+        })
+      ));
       const calificacionesDoc = await CalificacionModel.find({
         asignaturaId: { $in: asignaturaIds }
       }).exec();
