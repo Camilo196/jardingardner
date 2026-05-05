@@ -499,6 +499,10 @@ table.t tbody tr:last-child td{border-bottom:none}
         <span style="font-size:13px;font-weight:700;color:var(--ink)"><i class="fas fa-calendar-alt"></i> Período del boletín:</span>
         <select id="indPeriodoSel" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;cursor:pointer;outline:none" onchange="onIndPeriodoCambio()"></select>
       </div>
+      <div id="indIntroWrap" style="display:none;margin-bottom:16px;border:1px solid var(--border);border-radius:8px;padding:12px 14px;background:#fff7ed">
+        <div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:6px"><i class="fas fa-comment-alt"></i> Texto inicial de la carta</div>
+        <textarea id="indIntroText" rows="4" placeholder="Escribe el saludo o introduccion que debe salir al inicio del boletin de preescolar..." oninput="setPreIntro(this.value)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical"></textarea>
+      </div>
       <div style="margin-bottom:16px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
         <div style="background:var(--surface);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
           <strong style="font-size:13px;color:var(--ink)"><i class="fas fa-users"></i> Estudiantes que reciben estos indicadores</strong>
@@ -1450,7 +1454,7 @@ async function guardarNuevaPass(){
 
 
 // â”€â”€ Indicadores SABER / HACER / SER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const IND = { saber:[], hacer:[], ser:[] };
+const IND = { intro:'', saber:[], hacer:[], ser:[] };
 const CURSOS_PREESCOLAR = ['parvulos','parvulo','pre jardin','prejardin','jardin','transicion'];
 const CURSOS_PRIMARIA = ['primero','segundo','tercero','cuarto','quinto'];
 
@@ -1527,6 +1531,8 @@ function actualizarIndicadoresUI(){
   if(btns) btns.style.display='flex';
   const serBox=document.getElementById('ind-ser')?.parentElement;
   if(serBox) serBox.style.display='block';
+  const introWrap=document.getElementById('indIntroWrap');
+  if(introWrap) introWrap.style.display=esPre?'block':'none';
   const contEst=document.getElementById('ind-estudiantes');
   if(contEst) contEst.style.gridTemplateColumns=esPre?'repeat(auto-fit,minmax(300px,1fr))':'repeat(auto-fit,minmax(220px,1fr))';
   ['saber','hacer','ser'].forEach(tipo=>{
@@ -1604,8 +1610,9 @@ async function cargarIndicadores(periodoForzado){
   const render=()=>{ renderIndLista('saber'); renderIndLista('hacer'); renderIndLista('ser'); };
   try{
     const esPre=esCursoPreescolarNombre(W.cursoNombre);
-    const d=await gql(`query{indicadoresPorAsignatura(asignaturaId:"${W.asigId}",periodo:"${periodo}"${esPre?'':`,estudianteId:"${W.estId}"`}){saber hacer ser estudianteIds}}`);
+    const d=await gql(`query{indicadoresPorAsignatura(asignaturaId:"${W.asigId}",periodo:"${periodo}"${esPre?'':`,estudianteId:"${W.estId}"`}){intro saber hacer ser estudianteIds}}`);
     const ind=d.indicadoresPorAsignatura;
+    IND.intro=String(ind?.intro||'');
     IND.saber=normalizarListaIndicadores(ind?.saber);
     IND.hacer=normalizarListaIndicadores(ind?.hacer);
     IND.ser=esPre?[]:normalizarListaIndicadores(ind?.ser);
@@ -1616,11 +1623,12 @@ async function cargarIndicadores(periodoForzado){
       for(const e of (W.indEstudiantes||[])){
         try{
           const ced=String(e.cedula);
-          const r=await gql(`query{indicadoresPorAsignatura(asignaturaId:"${W.asigId}",periodo:"${periodo}",estudianteId:"${ced}"){saber hacer ser}}`);
+          const r=await gql(`query{indicadoresPorAsignatura(asignaturaId:"${W.asigId}",periodo:"${periodo}",estudianteId:"${ced}"){intro saber hacer ser}}`);
           const item=r.indicadoresPorAsignatura;
           if(item && ((item.saber||[]).length || (item.hacer||[]).length || (item.ser||[]).length)){
             W.indSeleccionados.add(ced);
             if(!comunCargado && ((item.saber||[]).length || (item.hacer||[]).length)){
+              IND.intro=String(item.intro||IND.intro||'');
               IND.saber=normalizarListaIndicadores(item.saber);
               IND.hacer=normalizarListaIndicadores(item.hacer);
               comunCargado=true;
@@ -1636,11 +1644,13 @@ async function cargarIndicadores(periodoForzado){
     const el=document.getElementById('indEstado');
     if(el){ const total=IND.saber.length+IND.hacer.length+IND.ser.length; el.textContent=total?`${total} indicadores para ${periodo}`:`Sin indicadores para ${periodo}`; el.style.background=total?'var(--green-lt)':'var(--surface)'; el.style.color=total?'var(--green)':'var(--muted)'; }
   }catch{
-    IND.saber=[];IND.hacer=[];IND.ser=[];
+    IND.intro='';IND.saber=[];IND.hacer=[];IND.ser=[];
     W.indSeleccionados=new Set(W.estId?[String(W.estId)]:[]);
     W.indObservaciones={};
     const el=document.getElementById('indEstado'); if(el){ el.textContent='Sin indicadores'; el.style.background='var(--surface)'; el.style.color='var(--muted)'; }
   }
+  const introText=document.getElementById('indIntroText');
+  if(introText) introText.value=IND.intro||'';
   renderIndEstudiantes();
   render();
 }
@@ -1669,6 +1679,10 @@ function renderIndLista(tipo){
 
 function setPreResumen(valor){
   IND.saber=String(valor||'').split('\n').map(x=>x.trim()).filter(Boolean);
+}
+
+function setPreIntro(valor){
+  IND.intro=String(valor||'');
 }
 
 function setPreObjetivo(valor){
@@ -1711,6 +1725,7 @@ function eliminarInd(tipo,i){ IND[tipo].splice(i,1); renderIndLista(tipo); }
 async function guardarIndicadores(){
   if(!periodoSelectHabilitado('indPeriodoSel')){ toast('Ese periodo no esta habilitado para indicadores','er'); return; }
   const periodo=getIndPeriodo();
+  const intro=String(IND.intro||'').trim();
   const saber=normalizarListaIndicadores(IND.saber); const hacer=normalizarListaIndicadores(IND.hacer); const ser=normalizarListaIndicadores(IND.ser);
   if(esCursoPreescolarNombre(W.cursoNombre)){
     const estudianteIds=[...W.indSeleccionados];
@@ -1719,7 +1734,7 @@ async function guardarIndicadores(){
       await gql(`mutation{eliminarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}")}`);
       for(const ced of estudianteIds){
         const obs=(W.indObservaciones[ced]||'').split('\n').map(x=>x.trim()).filter(Boolean);
-        await gql(`mutation{guardarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}",saber:${JSON.stringify(saber)},hacer:${JSON.stringify(hacer)},ser:${JSON.stringify(obs)},estudianteIds:["${ced}"]){id}}`);
+        await gql(`mutation{guardarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}",saber:${JSON.stringify(saber)},hacer:${JSON.stringify(hacer)},ser:${JSON.stringify(obs)},intro:${JSON.stringify(intro)},estudianteIds:["${ced}"]){id}}`);
       }
       const el=document.getElementById('indEstado');
       if(el){ const total=saber.length+hacer.length; el.textContent=`Guardado para ${estudianteIds.length} estudiante(s) - ${periodo} (${total} textos y observaciones)`; el.style.background='var(--green-lt)'; el.style.color='var(--green)'; }
@@ -1730,7 +1745,7 @@ async function guardarIndicadores(){
   const estudianteIds=[...W.indSeleccionados];
   if(!estudianteIds.length){ toast('Selecciona al menos un estudiante','er'); return; }
   try{
-    await gql(`mutation{guardarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}",saber:${JSON.stringify(saber)},hacer:${JSON.stringify(hacer)},ser:${JSON.stringify(ser)},estudianteIds:${JSON.stringify(estudianteIds)}){id}}`);
+    await gql(`mutation{guardarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}",saber:${JSON.stringify(saber)},hacer:${JSON.stringify(hacer)},ser:${JSON.stringify(ser)},intro:${JSON.stringify(intro)},estudianteIds:${JSON.stringify(estudianteIds)}){id}}`);
     IND.saber=saber;IND.hacer=hacer;IND.ser=ser;
     const el=document.getElementById('indEstado');
     if(el){ const total=saber.length+hacer.length+ser.length; el.textContent=`Guardado para ${estudianteIds.length} estudiante(s) - ${periodo} (${total} indicadores)`; el.style.background='var(--green-lt)'; el.style.color='var(--green)'; }

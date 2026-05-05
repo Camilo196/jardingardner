@@ -385,11 +385,12 @@ export class PDFService {
              .text(saludo, sX, y);
           y += 20;
 
-          const intro =
-            `Reciban un cordial saludo. Durante este ${textoPeriodo(data).toLowerCase()} hemos acompanado a ` +
-            `${nombreCompleto(data.estudiante)} en un proceso lleno de descubrimientos, juegos y aprendizajes significativos. ` +
-            `A continuacion, queremos compartir algunos de los avances observados, teniendo en cuenta las diferentes ` +
-            `formas en que los ninos aprenden:`;
+          const intro = data.observacionGeneral?.trim()
+            ? data.observacionGeneral
+            : `Reciban un cordial saludo. Durante este ${textoPeriodo(data).toLowerCase()} hemos acompanado a ` +
+              `${nombreCompleto(data.estudiante)} en un proceso lleno de descubrimientos, juegos y aprendizajes significativos. ` +
+              `A continuacion, queremos compartir algunos de los avances observados, teniendo en cuenta las diferentes ` +
+              `formas en que los ninos aprenden:`;
 
           doc.fillColor(C.tinta).font('Helvetica').fontSize(9)
              .text(intro, sX, y, { width: sW, align: 'justify' });

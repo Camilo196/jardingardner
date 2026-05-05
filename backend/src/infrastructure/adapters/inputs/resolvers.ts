@@ -154,6 +154,7 @@ function indicadoresParaEstudiante(ind: any, estudianteId?: string | null) {
             saber: Array.isArray(especifico.saber) && especifico.saber.length ? especifico.saber : base.saber,
             hacer: Array.isArray(especifico.hacer) && especifico.hacer.length ? especifico.hacer : base.hacer,
             ser: Array.isArray(especifico.ser) ? especifico.ser : base.ser,
+            intro: typeof especifico.intro === 'string' && especifico.intro.trim() ? especifico.intro : base.intro,
         }
         : (estId && porEstudiante.length ? {} : base);
     const estudianteIds = especifico
@@ -173,6 +174,7 @@ function indicadoresParaEstudiante(ind: any, estudianteId?: string | null) {
         saber: Array.isArray(fuente.saber) ? fuente.saber : [],
         hacer: Array.isArray(fuente.hacer) ? fuente.hacer : [],
         ser: Array.isArray(fuente.ser) ? fuente.ser : [],
+        intro: typeof fuente.intro === 'string' ? fuente.intro : '',
         estudianteIds,
         creadoPor: ind?.creadoPor,
     };
@@ -411,10 +413,17 @@ async function generarBoletinAcumuladoBase64(
                 saber: ind?.saber ?? [],
                 hacer: ind?.hacer ?? [],
                 ser:   ind?.ser   ?? [],
+                intro: ind?.intro ?? '',
             },
             comportamiento: comp ? { nota: comp.nota, nivel: comp.nivel, descripcion: comp.descripcion } : undefined,
         };
     });
+
+    const introPreescolar = esPreescolar && !String(observacionGeneral || '').trim()
+        ? Object.values(indByAsig)
+            .map((ind: any) => String(indicadoresParaEstudiante(ind, estIdStr)?.intro || '').trim())
+            .find((texto: string) => Boolean(texto)) ?? ''
+        : String(observacionGeneral || '').trim();
 
     let directorNombre = 'Coordinación Académica';
     if (curso?.profesorId) {
@@ -443,7 +452,7 @@ async function generarBoletinAcumuladoBase64(
         periodo,
         anio: new Date().getFullYear().toString(),
         calificaciones: calificacionesBoletin,
-        observacionGeneral,
+        observacionGeneral: introPreescolar || observacionGeneral,
         puestoCurso,
     });
     return Buffer.from(buf).toString('base64');
@@ -998,7 +1007,7 @@ export const resolvers = {
         },
 
         // -- Indicadores ---------------------------------------
-        guardarIndicadores: async (_: any, { asignaturaId, periodo, saber, hacer, ser, estudianteIds }: any, { user }: any) => {
+        guardarIndicadores: async (_: any, { asignaturaId, periodo, saber, hacer, ser, intro, estudianteIds }: any, { user }: any) => {
             await verificarPeriodoAbierto(periodo);
             const creadoPor = user?.username ?? 'sistema';
             const seleccionados = Array.isArray(estudianteIds)
@@ -1014,7 +1023,7 @@ export const resolvers = {
                 const actuales = Array.isArray((doc as any).porEstudiante) ? (doc as any).porEstudiante : [];
                 for (const estudianteId of seleccionados) {
                     const idx = actuales.findIndex((item: any) => String(item.estudianteId) === estudianteId);
-                    const item = { estudianteId, saber, hacer, ser };
+                    const item = { estudianteId, saber, hacer, ser, intro: String(intro || '').trim() };
                     if (idx >= 0) actuales[idx] = item;
                     else actuales.push(item);
                 }
@@ -1023,6 +1032,7 @@ export const resolvers = {
                 doc.saber = saber;
                 doc.hacer = hacer;
                 doc.ser = ser;
+                (doc as any).intro = String(intro || '').trim();
             }
 
             doc.creadoPor = creadoPor;
@@ -1035,6 +1045,7 @@ export const resolvers = {
                 saber: saber || [],
                 hacer: hacer || [],
                 ser: ser || [],
+                intro: String(intro || '').trim(),
                 estudianteIds: seleccionados,
                 creadoPor: doc.creadoPor,
             };
