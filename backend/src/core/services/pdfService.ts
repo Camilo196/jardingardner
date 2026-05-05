@@ -78,6 +78,16 @@ function esCursoPrimaria(nombreCurso: string): boolean {
   return c.includes('primaria') || CURSOS_PRIMARIA.some((k) => c.includes(k)) || /\b(1|2|3|4|5)(ro|do|to)?\b/.test(c);
 }
 
+function obtenerTamanoPdf(): 'A4' | 'LETTER' | 'LEGAL' {
+  const valor = normalizarTexto(
+    process.env.BOLETIN_PAPER_SIZE || process.env.PDF_PAPER_SIZE || 'A4',
+  );
+
+  if (['carta', 'letter'].includes(valor)) return 'LETTER';
+  if (['oficio', 'legal'].includes(valor)) return 'LEGAL';
+  return 'A4';
+}
+
 function obtenerRutaBanner(): string | null {
   const candidatos = [
     resolve(process.cwd(), '../frondend/src/app/assets/institution/pdf_image_2.jpg'),
@@ -223,7 +233,7 @@ export class PDFService {
   // ── Crear buffer ────────────────────────────────────────────────────────────
   private crearBuffer(
     render: (doc: PDFKit.PDFDocument) => void,
-    options: PDFKit.PDFDocumentOptions = { margin: 0, size: 'A4' },
+    options: PDFKit.PDFDocumentOptions = { margin: 0, size: obtenerTamanoPdf() },
   ): Promise<Buffer> {
     return new Promise((res, rej) => {
       try {
@@ -361,6 +371,8 @@ export class PDFService {
       const cw  = pw - ml - mr;
       const sX  = ml;          // section X
       const sW  = cw;          // section width
+      const padX = 8;
+      const innerW = sW - (padX * 2);
       const pNum = numeroPeriodo(data.periodo);
       const footerLabel = 'Carta Informativa Preescolar';
 
@@ -417,6 +429,7 @@ export class PDFService {
         const actividadesItems = hacer.length > 1
           ? hacer.slice(1)
           : ['Acompanamiento pedagogico en aula.'];
+        const actividadesTexto = actividadesItems.map((a) => `- ${a}`).join('\n');
 
         // Observaciones: en preescolar solo van indicadores/observaciones pedagógicas.
         const obsLines = [
@@ -424,21 +437,25 @@ export class PDFService {
           ...(mat.observacion ? [`- ${mat.observacion}`] : []),
         ];
         if (!obsLines.length) obsLines.push('- Sin observaciones adicionales.');
+        const objetivoLabel = '-Objetivo:';
+        const objetivoLabelW = 54;
+        const objetivoTextoW = Math.max(120, innerW - objetivoLabelW - 2);
+        const objetivoH = Math.max(12,
+          doc.heightOfString(objetivo, { width: objetivoTextoW, lineGap: 1 }));
         // Calcular alturas
         const resumenH = Math.max(36,
-          doc.heightOfString(resumenTexto, { width: sW - 20 }) + 18);
+          doc.heightOfString(resumenTexto, { width: innerW, lineGap: 1 }) + 18);
 
         // Objetivo + Actividades en una sola sección blanca
-        const objActTexto =
-          `-Objetivo: ${objetivo}\n\nActividades:\n` +
-          actividadesItems.map((a) => `- ${a}`).join('\n');
+        const actividadesH = Math.max(12,
+          doc.heightOfString(actividadesTexto, { width: innerW, lineGap: 1 }));
         const objActH = Math.max(56,
-          doc.heightOfString(objActTexto, { width: sW - 20 }) + 18);
+          10 + objetivoH + 8 + 12 + 4 + actividadesH + 10);
 
         // Observaciones: label fijo + texto (fondo blanco liso)
         const obsText = obsLines.join('\n');
         const observacionesH = Math.max(30,
-          doc.heightOfString(obsText, { width: sW - 20 }) + 18);
+          doc.heightOfString(obsText, { width: innerW, lineGap: 1 }) + 22);
 
         const bloqueTotalH = 24 + resumenH + objActH + observacionesH + 6;
 
@@ -473,37 +490,39 @@ export class PDFService {
         // ── Resumen de desempeño — fondo azul brillante, texto blanco negrita (fiel imagen) ─
         doc.rect(sX, bY, sW, resumenH).fill('#1d6fce').stroke(C.azulOscuro);
         // Texto con ✓ en blanco negrita, lineHeight más apretado como en la imagen
-        doc.fillColor(C.blanco).font('Helvetica-Bold').fontSize(9)
-           .text(resumenTexto, sX + 8, bY + 8, { width: sW - 16, lineGap: 1 });
+        doc.fillColor(C.blanco).font('Helvetica-Bold').fontSize(8.7)
+           .text(resumenTexto, sX + padX, bY + 8, { width: innerW, lineGap: 1 });
         bY += resumenH;
 
         // ── Objetivo + Actividades — sección blanca unificada (fiel imagen) ──────
         doc.rect(sX, bY, sW, objActH).fill(C.blanco).stroke(C.azulOscuro);
         let tyOA = bY + 7;
-        // "-Objetivo:" bold inline + texto normal
+        // "-Objetivo:" bold + texto normal ajustado dentro del ancho disponible.
         doc.fillColor(C.tinta).font('Helvetica-Bold').fontSize(9)
-           .text('-Objetivo: ', sX + 8, tyOA, { continued: true });
+           .text(objetivoLabel, sX + padX, tyOA, { width: objetivoLabelW });
         doc.font('Helvetica').fontSize(9)
-           .text(objetivo, { width: sW - 80 });
-        tyOA += doc.heightOfString(`-Objetivo: ${objetivo}`, { width: sW - 16 }) + 4;
+           .text(objetivo, sX + padX + objetivoLabelW + 2, tyOA, {
+             width: objetivoTextoW,
+             lineGap: 1,
+           });
+        tyOA += objetivoH + 8;
         // "Actividades:" bold
         doc.fillColor(C.tinta).font('Helvetica-Bold').fontSize(9)
-           .text('Actividades:', sX + 8, tyOA);
+           .text('Actividades:', sX + padX, tyOA);
         tyOA += 14;
         // ítems con "- " normal
         doc.font('Helvetica').fontSize(9)
-           .text(actividadesItems.map((a) => `- ${a}`).join('\n'),
-             sX + 8, tyOA, { width: sW - 16 });
+           .text(actividadesTexto, sX + padX, tyOA, { width: innerW, lineGap: 1 });
         bY += objActH;
 
         // ── Observaciones — borde gris fino, solo label bold (fiel imagen) ───────
         doc.rect(sX, bY, sW, observacionesH).fill(C.blanco).stroke(C.gris);
         doc.fillColor(C.tinta).font('Helvetica-Bold').fontSize(9)
-           .text('Observaciones:', sX + 8, bY + 7);
+           .text('Observaciones:', sX + padX, bY + 7);
         // Texto de observaciones si existe
         if (obsText.replace(/- \n?/g, '').trim()) {
           doc.font('Helvetica').fontSize(8.5)
-             .text(obsText, sX + 8, bY + 20, { width: sW - 16 });
+             .text(obsText, sX + padX, bY + 20, { width: innerW, lineGap: 1 });
         }
 
         // Borde exterior del bloque completo
