@@ -1922,7 +1922,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         'Comportamiento general': item['Comportamiento general'],
         'Puesto': puestoMap[item.Cedula] || '',
       }))
-      .sort((a, b) => String(a.Estudiante).localeCompare(String(b.Estudiante), 'es', { sensitivity: 'base' }));
+      .sort((a, b) => {
+        const puestoA = Number(a.Puesto) || Number.MAX_SAFE_INTEGER;
+        const puestoB = Number(b.Puesto) || Number.MAX_SAFE_INTEGER;
+        return puestoA - puestoB ||
+          String(a.Estudiante).localeCompare(String(b.Estudiante), 'es', { sensitivity: 'base' });
+      });
 
     const etiquetaPeriodo = periodoReferenciaNumero === 1 ? '1er período' : (periodoReferenciaNumero === 2 ? '2do período' : '3er período');
     document.getElementById('previewTitle').textContent = `Definitivas - ${curso?.nombre || ''} (${anio})`;
