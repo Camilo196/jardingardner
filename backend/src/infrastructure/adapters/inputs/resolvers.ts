@@ -7,6 +7,7 @@ import { UserModel } from '../outputs/models/UserModel.js';
 import { MatriculaModel } from '../outputs/models/MatriculaModel.js';
 import { CalificacionModel } from '../outputs/models/CalificacionModel.js';
 import { IndicadoresModel } from '../outputs/models/Indicadoresmodel.js';
+import { TextoDirectorBoletinModel } from '../outputs/models/TextoDirectorBoletinModel.js';
 import { PeriodoConfigModel } from '../outputs/models/PeriodoConfigModel.js';
 import { ComportamientoModel } from '../outputs/models/ComportamientoModel.js';
 import { AsistenciaModel } from '../outputs/models/AsistenciaModel.js';
@@ -428,11 +429,18 @@ async function generarBoletinAcumuladoBase64(
         };
     });
 
-    const introPreescolar = esPreescolar && !String(observacionGeneral || '').trim()
-        ? Object.values(indByAsig)
+    const textoDirectorBoletin = curso
+        ? await obtenerTextoDirectorBoletin(String(curso.id ?? curso._id), String(estIdBoletin), String(periodo))
+        : null;
+    const observacionManual = String(observacionGeneral || '').trim();
+    const introDirector = String(textoDirectorBoletin?.introPreescolar || '').trim();
+    const objetivoDirector = String(textoDirectorBoletin?.objetivoGeneralPrimaria || '').trim();
+    const introPreescolar = esPreescolar
+        ? (observacionManual || introDirector || Object.values(indByAsig)
             .map((ind: any) => String(indicadoresParaEstudiante(ind, estIdStr)?.intro || '').trim())
-            .find((texto: string) => Boolean(texto)) ?? ''
-        : String(observacionGeneral || '').trim();
+            .find((texto: string) => Boolean(texto)) || '')
+        : observacionManual;
+    const observacionBoletinGeneral = esPreescolar ? introPreescolar : (observacionManual || objetivoDirector);
 
     let directorNombre = 'Coordinaci�n Acad�mica';
     if (curso?.profesorId) {
@@ -461,7 +469,7 @@ async function generarBoletinAcumuladoBase64(
         periodo,
         anio: new Date().getFullYear().toString(),
         calificaciones: calificacionesBoletin,
-        observacionGeneral: introPreescolar || observacionGeneral,
+        observacionGeneral: observacionBoletinGeneral,
         puestoCurso,
     });
     return Buffer.from(buf).toString('base64');
@@ -511,6 +519,45 @@ async function verificarPeriodoAbierto(periodo: string): Promise<void> {
 }
 
 // ─── Resolvers ────────────────────────────────────────────────────────────────
+
+async function obtenerCursoDirector(cursoId: string, repositories: any): Promise<any | null> {
+    if (!cursoId) return null;
+    return await repositories.cursoRepository.findById(String(cursoId)).catch(() => null);
+}
+
+async function obtenerTextoDirectorBoletin(cursoId: string, estudianteId: string, periodo: string): Promise<any | null> {
+    if (!cursoId || !estudianteId || !periodo) return null;
+    return await TextoDirectorBoletinModel.findOne({
+        cursoId: String(cursoId),
+        estudianteId: String(estudianteId),
+        periodo: String(periodo),
+    }).lean().catch(() => null);
+}
+
+async function validarDirectorGrupo(cursoId: string, user: any, repositories: any): Promise<any> {
+    if (!user) throw new Error('No autenticado');
+    const curso = await obtenerCursoDirector(cursoId, repositories);
+    if (!curso) throw new Error('Curso no encontrado');
+    if (user.role === 'ADMIN') return curso;
+    if (user.role !== 'PROFESOR') throw new Error('No autorizado');
+    if (String(curso.profesorId || '').trim() !== String(user.username || '').trim()) {
+        throw new Error('Solo el director de grupo puede guardar este texto del boletin');
+    }
+    return curso;
+}
+
+function mapearTextoDirectorBoletin(doc: any): any {
+    if (!doc) return null;
+    return {
+        id: String(doc._id ?? doc.id ?? ''),
+        cursoId: String(doc.cursoId ?? ''),
+        estudianteId: String(doc.estudianteId ?? ''),
+        periodo: String(doc.periodo ?? ''),
+        profesorId: String(doc.profesorId ?? ''),
+        introPreescolar: String(doc.introPreescolar ?? ''),
+        objetivoGeneralPrimaria: String(doc.objetivoGeneralPrimaria ?? ''),
+    };
+}
 
 export const resolvers = {
 
@@ -584,6 +631,11 @@ export const resolvers = {
             if (!ids.length) return [];
             const docs = await IndicadoresModel.find({ asignaturaId: { $in: ids }, periodo }).lean();
             return docs.map((doc: any) => indicadoresParaEstudiante(doc));
+        },
+        textoDirectorBoletin: async (_: any, { cursoId, estudianteId, periodo }: any, { user, repositories }: any) => {
+            await validarDirectorGrupo(String(cursoId), user, repositories);
+            const doc = await obtenerTextoDirectorBoletin(String(cursoId), String(estudianteId), String(periodo));
+            return mapearTextoDirectorBoletin(doc);
         },
         // Configuración de periodos
         periodoConfig: async (_: any, { anio, numeroPeriodo }: any) => {
@@ -1018,6 +1070,24 @@ export const resolvers = {
         },
 
         // -- Indicadores ---------------------------------------
+        guardarTextoDirectorBoletin: async (_: any, { input }: any, { user, repositories }: any) => {
+            await verificarPeriodoAbierto(String(input.periodo));
+            const curso = await validarDirectorGrupo(String(input.cursoId), user, repositories);
+            const payload = {
+                cursoId: String(input.cursoId),
+                estudianteId: String(input.estudianteId),
+                periodo: String(input.periodo),
+                profesorId: String(curso.profesorId ?? user.username ?? ''),
+                introPreescolar: String(input.introPreescolar ?? '').trim(),
+                objetivoGeneralPrimaria: String(input.objetivoGeneralPrimaria ?? '').trim(),
+            };
+            const doc = await TextoDirectorBoletinModel.findOneAndUpdate(
+                { cursoId: payload.cursoId, estudianteId: payload.estudianteId, periodo: payload.periodo },
+                payload,
+                { upsert: true, new: true, setDefaultsOnInsert: true },
+            ).lean();
+            return mapearTextoDirectorBoletin(doc);
+        },
         guardarIndicadores: async (_: any, { asignaturaId, periodo, saber, hacer, ser, intro, estudianteIds }: any, { user }: any) => {
             await verificarPeriodoAbierto(periodo);
             const creadoPor = user?.username ?? 'sistema';

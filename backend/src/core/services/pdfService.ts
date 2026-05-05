@@ -749,6 +749,30 @@ export class PDFService {
         filaResumen('Puesto en el curso:', data.puestoCurso ? `${data.puestoCurso}` : '-', y);
         y += rowH;
       }
+
+      const objetivoGeneral = String(data.observacionGeneral || '').trim();
+      if (objetivoGeneral) {
+        const tituloH = 22;
+        const textoW = sW - 24;
+        const textoH = Math.max(34, doc.heightOfString(objetivoGeneral, { width: textoW }) + 16);
+        const bloqueH = tituloH + textoH;
+        if (y + bloqueH + 20 > doc.page.height - 60) {
+          this.dibujarPie(doc, data, footerLabel);
+          doc.addPage();
+          y = paginaBase();
+        }
+
+        doc.lineWidth(1.1);
+        doc.rect(sX, y, sW, tituloH).fill(C.azulOscuro).stroke(C.azulOscuro);
+        doc.fillColor(C.blanco).font('Helvetica-Bold').fontSize(9)
+          .text('OBJETIVO GENERAL DEL DIRECTOR DE GRADO', sX + 8, y + 7, { width: sW - 16, align: 'center' });
+        y += tituloH;
+
+        doc.rect(sX, y, sW, textoH).fill(C.blanco).stroke(C.azulOscuro);
+        doc.fillColor(C.tinta).font('Helvetica').fontSize(8.4)
+          .text(objetivoGeneral, sX + 12, y + 8, { width: textoW, align: 'justify' });
+        y += textoH;
+      }
       y += 20;
 
       // ── Firmas ─────────────────────────────────────────────────────────────
