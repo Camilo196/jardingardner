@@ -1873,13 +1873,21 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     const datosBase = Object.values(porEstudiante)
       .filter((item, idx, arr) => arr.indexOf(item) === idx)
       .map(item => {
-        const p1 = promedioNotas(item.notas[periodos[0]] || []);
-        const p2 = promedioNotas(item.notas[periodos[1]] || []);
-        const p3 = promedioNotas(item.notas[periodos[2]] || []);
+        const rawP1 = promedioNotas(item.notas[periodos[0]] || []);
+        const rawP2 = promedioNotas(item.notas[periodos[1]] || []);
+        const rawP3 = promedioNotas(item.notas[periodos[2]] || []);
+        const rawComp1 = promedioNotas(item.comportamiento[periodos[0]] || []);
+        const rawComp2 = promedioNotas(item.comportamiento[periodos[1]] || []);
+        const rawComp3 = promedioNotas(item.comportamiento[periodos[2]] || []);
+
+        const p1 = rawP1;
+        const p2 = periodoReferenciaNumero >= 2 ? rawP2 : null;
+        const p3 = periodoReferenciaNumero >= 3 ? rawP3 : null;
+        const comp1 = rawComp1;
+        const comp2 = periodoReferenciaNumero >= 2 ? rawComp2 : null;
+        const comp3 = periodoReferenciaNumero >= 3 ? rawComp3 : null;
+
         const promedioGeneral = promedioNotas([p1, p2, p3].filter(n => n !== null));
-        const comp1 = promedioNotas(item.comportamiento[periodos[0]] || []);
-        const comp2 = promedioNotas(item.comportamiento[periodos[1]] || []);
-        const comp3 = promedioNotas(item.comportamiento[periodos[2]] || []);
         const compGeneral = promedioNotas([comp1, comp2, comp3].filter(n => n !== null));
         return {
           'Cedula': item.cedula,
