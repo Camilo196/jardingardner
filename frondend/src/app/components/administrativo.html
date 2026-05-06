@@ -1792,7 +1792,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         asignaturasPorCurso(cursoId: $cursoId) { id nombre }
         periodosConfig(anio: $anio) { numeroPeriodo abierto }
         calificacionesPorCurso(cursoId: $cursoId) {
-          estudianteId nota periodo nombreActividad
+          estudianteId asignaturaId nota periodo nombreActividad
         }
         matriculas {
           estado
@@ -1848,7 +1848,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       .forEach(c => {
         const item = porEstudiante[String(c.estudianteId || '').trim()];
         if (!item) return;
-        item.notas[c.periodo].push(Number(c.nota));
+        const asignaturaId = String(c.asignaturaId || '').trim();
+        if (!asignaturaId) return;
+        item.notasPorAsignatura ||= {};
+        item.notasPorAsignatura[asignaturaId] ||= { [periodos[0]]: [], [periodos[1]]: [], [periodos[2]]: [] };
+        item.notasPorAsignatura[asignaturaId][c.periodo].push(Number(c.nota));
       });
 
     comportamientosPorPeriodo.forEach(respuestas => {
@@ -1873,22 +1877,34 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     const datosBase = Object.values(porEstudiante)
       .filter((item, idx, arr) => arr.indexOf(item) === idx)
       .map(item => {
-        const rawP1 = promedioNotas(item.notas[periodos[0]] || []);
-        const rawP2 = promedioNotas(item.notas[periodos[1]] || []);
-        const rawP3 = promedioNotas(item.notas[periodos[2]] || []);
+        const materias = Object.values(item.notasPorAsignatura || {});
+        const acumuladoMateria = materias.map(notasMateria => {
+          const p1Materia = promedioNotas(notasMateria[periodos[0]] || []);
+          const p2Materia = promedioNotas(notasMateria[periodos[1]] || []);
+          const p3Materia = promedioNotas(notasMateria[periodos[2]] || []);
+          return {
+            p1: p1Materia,
+            p2: promedioNotas([p1Materia, p2Materia].filter(n => n !== null)),
+            p3: promedioNotas([p1Materia, p2Materia, p3Materia].filter(n => n !== null)),
+          };
+        });
+
+        const rawP1 = promedioNotas(acumuladoMateria.map(m => m.p1).filter(n => n !== null));
+        const rawP2Acumulado = promedioNotas(acumuladoMateria.map(m => m.p2).filter(n => n !== null));
+        const rawP3Acumulado = promedioNotas(acumuladoMateria.map(m => m.p3).filter(n => n !== null));
         const rawComp1 = promedioNotas(item.comportamiento[periodos[0]] || []);
         const rawComp2 = promedioNotas(item.comportamiento[periodos[1]] || []);
         const rawComp3 = promedioNotas(item.comportamiento[periodos[2]] || []);
 
         const p1 = rawP1;
-        const p2 = periodoReferenciaNumero >= 2 ? rawP2 : null;
-        const p3 = periodoReferenciaNumero >= 3 ? rawP3 : null;
-        const comp1 = rawComp1;
-        const comp2 = periodoReferenciaNumero >= 2 ? rawComp2 : null;
-        const comp3 = periodoReferenciaNumero >= 3 ? rawComp3 : null;
-
-        const promedioGeneral = promedioNotas([p1, p2, p3].filter(n => n !== null));
-        const compGeneral = promedioNotas([comp1, comp2, comp3].filter(n => n !== null));
+        const p2 = periodoReferenciaNumero >= 2 ? rawP2Acumulado : null;
+        const p3 = periodoReferenciaNumero >= 3 ? rawP3Acumulado : null;
+        const compGeneral = periodoReferenciaNumero >= 3
+          ? rawComp3
+          : (periodoReferenciaNumero === 2 ? rawComp2 : rawComp1);
+        const promedioGeneral = periodoReferenciaNumero >= 3
+          ? rawP3Acumulado
+          : (periodoReferenciaNumero === 2 ? rawP2Acumulado : rawP1);
         return {
           'Cedula': item.cedula,
           'Estudiante': item.nombre,
@@ -1897,9 +1913,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           '3er Periodo': nota2(p3),
           'Promedio general': nota2(promedioGeneral),
           'Comportamiento general': compGeneral === null ? '' : `${nota2(compGeneral)} - ${comportamientoDesdeNota(compGeneral)}`,
-          __puestoP1: promedioNotas([p1].filter(n => n !== null)),
-          __puestoP2: promedioNotas([p1, p2].filter(n => n !== null)),
-          __puestoP3: promedioNotas([p1, p2, p3].filter(n => n !== null)),
+          __puestoP1: rawP1,
+          __puestoP2: rawP2Acumulado,
+          __puestoP3: rawP3Acumulado,
         };
       });
 
@@ -1911,11 +1927,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
     const campoPuesto = periodoReferenciaNumero === 3 ? '__puestoP3' : (periodoReferenciaNumero === 2 ? '__puestoP2' : '__puestoP1');
     const puestoMap = {};
+    let puestoActual = 1;
+    let notaAnterior = null;
     [...datosBase]
       .filter(item => typeof item[campoPuesto] === 'number' && !isNaN(item[campoPuesto]))
       .sort((a, b) => b[campoPuesto] - a[campoPuesto] || String(a.Estudiante).localeCompare(String(b.Estudiante), 'es', { sensitivity: 'base' }))
       .forEach((item, index) => {
-        puestoMap[item.Cedula] = index + 1;
+        if (notaAnterior !== null && Math.abs(item[campoPuesto] - notaAnterior) > 0.0001) {
+          puestoActual = index + 1;
+        }
+        puestoMap[item.Cedula] = puestoActual;
+        notaAnterior = item[campoPuesto];
       });
 
     headersExport = ['Cedula', 'Estudiante', '1er Periodo', '2do Periodo', '3er Periodo', 'Promedio general', 'Comportamiento general', 'Puesto'];
