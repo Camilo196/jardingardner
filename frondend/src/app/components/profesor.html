@@ -790,7 +790,7 @@ function renderAsignaturas(){
 
   // Estadisticas globales
   let totalEst=0; const cursosU=new Set();
-  W.asignaturas.forEach(a=>{ totalEst+=(a.matriculas||[]).length; if(a.curso?.id)cursosU.add(a.curso.id); });
+  W.asignaturas.forEach(a=>{ totalEst+=(a.matriculas||[]).filter(m=>m.estudiante && matriculaVisibleProfesor(m)).length; if(a.curso?.id)cursosU.add(a.curso.id); });
   document.getElementById('stCursos').textContent=cursosU.size;
   document.getElementById('stAsigs').textContent=W.asignaturas.length;
   document.getElementById('stEst').textContent=totalEst;
@@ -807,15 +807,15 @@ function renderAsignaturas(){
   c.innerHTML = Object.values(grupos).map(g=>{
     const ico = g.nombre.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
     const totalCursos = g.asignaturas.length;
-    const totalEstG = g.asignaturas.reduce((s,a)=>s+(a.matriculas||[]).length,0);
+    const totalEstG = g.asignaturas.reduce((s,a)=>s+(a.matriculas||[]).filter(m=>m.estudiante && matriculaVisibleProfesor(m)).length,0);
     const gid = 'mg'+gi++;
 
     const cursosHTML = g.asignaturas.map((a,ci)=>{
       const cid='cc'+a.id;
-      const totalC=(a.matriculas||[]).length;
+      const totalC=(a.matriculas||[]).filter(m=>m.estudiante && matriculaVisibleProfesor(m)).length;
       const periodo=a.matriculas?.[0]?.periodo||'-';
       const periodoLabel2=periodo.match(/^(\d{4})-(\d)$/)?`${{'1':'1er','2':'2do','3':'3er','4':'4to'}[periodo.split('-')[1]]||'P'+periodo.split('-')[1]} Período ${periodo.split('-')[0]}`:periodo;
-      const filas=ordenarMatriculasPorApellido(a.matriculas||[]).filter(m=>m.estudiante).map((m,mi)=>{
+      const filas=ordenarMatriculasPorApellido(a.matriculas||[]).filter(m=>m.estudiante && matriculaVisibleProfesor(m)).map((m,mi)=>{
         const e=m.estudiante; const n=`${e.nombre} ${e.primerApellido} ${e.segundoApellido||''}`.trim();
         const initials=(n.split(' ').slice(0,2).map(w=>w[0]).join('')).toUpperCase();
         return `<tr data-n="${n.toLowerCase()}" data-c="${e.cedula}">
@@ -909,6 +909,10 @@ function ordenarMatriculasPorApellido(lista){
     return an.localeCompare(bn,'es',{sensitivity:'base'});
   });
 }
+function matriculaVisibleProfesor(m){
+  const estado=String(m?.estado||'ACTIVA').trim().toUpperCase();
+  return estado==='ACTIVA' || estado==='FINALIZADA';
+}
 function filtrar(tid,q){ const t=document.getElementById(tid);if(!t)return;const f=q.toLowerCase(); t.querySelectorAll('tbody tr').forEach(r=>{r.style.display=(r.dataset.n||'').includes(f)||(r.dataset.c||'').includes(f)?'':'none';}); }
 
 function verDetalles(matId){
@@ -935,7 +939,7 @@ async function abrirCalificaciones(matId,asigId){
   }
   if(!mat?.estudiante||!asig)return;
   const est=mat.estudiante; W.estId=est.cedula; W.asigId=asig.id; W.asigActual=asig; W.periodo=mat.periodo||periodoLabel(); W.cursoNombre=asig.curso?.nombre||'';
-  W.indEstudiantes=ordenarEstudiantesPorApellido((asig.matriculas||[]).filter(m=>m.estudiante && (m.estado||'ACTIVA')==='ACTIVA').map(m=>m.estudiante));
+  W.indEstudiantes=ordenarEstudiantesPorApellido((asig.matriculas||[]).filter(m=>m.estudiante && matriculaVisibleProfesor(m)).map(m=>m.estudiante));
   const n=`${est.nombre} ${est.primerApellido} ${est.segundoApellido||''}`.trim();
   document.getElementById('calTit').textContent=n; document.getElementById('calSub').textContent=asig.nombre;
   const esPre=esCursoPreescolarNombre(W.cursoNombre);
@@ -1094,7 +1098,7 @@ async function abrirActividadCurso(){
   sel.innerHTML='<option value="">Seleccionar curso / asignatura...</option>';
   W.asignaturas.forEach(a=>{
     if(esCursoPreescolarNombre(a.curso?.nombre||'')) return;
-    const total=(a.matriculas||[]).filter(m=>m.estudiante && (m.estado||'ACTIVA')==='ACTIVA').length;
+    const total=(a.matriculas||[]).filter(m=>m.estudiante && matriculaVisibleProfesor(m)).length;
     const opt=document.createElement('option');
     opt.value=a.id;
     opt.textContent=`${a.nombre}${a.curso?.nombre?' - '+a.curso.nombre:''} (${total} estudiantes)`;
@@ -1207,7 +1211,7 @@ async function cargarLista(){
   W.asEst=[];W.asEstados={};W.asObs={};
   try{
     const dm=await gql(`query{matriculasPorAsignatura(asignaturaId:"${asigId}"){id estado estudiante{cedula nombre primerApellido segundoApellido}}}`);
-    const mats=(dm.matriculasPorAsignatura||[]).filter(m=>m.estado==='ACTIVA'&&m.estudiante); W.asEst=ordenarEstudiantesPorApellido(mats.map(m=>m.estudiante));
+  const mats=(dm.matriculasPorAsignatura||[]).filter(m=>matriculaVisibleProfesor(m)&&m.estudiante); W.asEst=ordenarEstudiantesPorApellido(mats.map(m=>m.estudiante));
     if(!W.asEst.length){toast('No hay estudiantes activos en esta asignatura','er');return;}
     try{ const da=await gql(`query{asistenciasPorFecha(asignaturaId:"${asigId}",fecha:"${fecha}"){estudianteId estado observaciones}}`); const ex={};(da.asistenciasPorFecha||[]).forEach(r=>{ex[r.estudianteId]=r;}); W.asEst.forEach(e=>{const r=ex[e.cedula];W.asEstados[e.cedula]=r?r.estado:'P';W.asObs[e.cedula]=r?r.observaciones||'':'';}); }catch{ W.asEst.forEach(e=>{W.asEstados[e.cedula]='P';W.asObs[e.cedula]='';});  }
     renderLista(fecha); await cargarHistorial(asigId,periodo);
