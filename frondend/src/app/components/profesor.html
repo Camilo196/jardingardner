@@ -778,7 +778,7 @@ async function cargarAsignaturas(){
   const c=document.getElementById('asigContainer');
   c.innerHTML='<div class="spin-w"><div class="spin"></div></div>';
   try{
-    const da=await gql(`query{ asignaturasPorProfesor(profesorId:"${W.profId}"){ id nombre horario profesorId cursoId curso{id nombre} } }`);
+    const da=await gql(`query{ asignaturasPorProfesor(profesorId:"${W.profId}"){ id nombre horario profesorId cursoId curso{id nombre profesorId} } }`);
     W.asignaturas=(da.asignaturasPorProfesor||[]).filter(a=>String(a.profesorId).trim()===String(W.profId).trim());
     for(const a of W.asignaturas){ try{ const dm=await gql(`query{ matriculasPorAsignatura(asignaturaId:"${a.id}"){ id estado periodo fechaMatricula estudiante{cedula nombre primerApellido segundoApellido email} } }`); a.matriculas=dm.matriculasPorAsignatura||[]; }catch{ a.matriculas=[]; } }
     renderAsignaturas();
@@ -1286,25 +1286,79 @@ function abrirPdfBase64(b64,nombre='documento.pdf'){
 
 let MALLAS_PROF = [];
 
+function normalizarMallaTexto(v){
+  return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+}
+
+function parseMallaSeleccion(value){
+  const raw=String(value||'');
+  if(!raw) return null;
+  const [tipo,id,clave]=raw.split('|');
+  if(tipo==='MATERIA') return {tipo,asignaturaId:id||'',clave:clave||''};
+  if(tipo==='CURSO_GENERAL') return {tipo,cursoId:id||''};
+  return null;
+}
+
+function construirOpcionesMallaProfesor(){
+  const materias=new Map();
+  (W.asignaturas||[]).forEach(a=>{
+    const clave=normalizarMallaTexto(a?.nombre);
+    if(!clave) return;
+    if(!materias.has(clave)) materias.set(clave,{clave,nombre:a.nombre||'',asignaturaId:a.id,cursos:[]});
+    const item=materias.get(clave);
+    if(a?.curso?.nombre) item.cursos.push(a.curso.nombre);
+  });
+  const cursosDirector=new Map();
+  (W.asignaturas||[]).forEach(a=>{
+    const curso=a?.curso;
+    if(!curso?.id) return;
+    if(String(curso.profesorId||'').trim()!==String(W.profId||'').trim()) return;
+    if(!cursosDirector.has(String(curso.id))) cursosDirector.set(String(curso.id),{cursoId:String(curso.id),nombre:curso.nombre||'Curso'});
+  });
+  return [
+    ...Array.from(materias.values()).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'})).map(m=>({
+      value:`MATERIA|${m.asignaturaId}|${m.clave}`,
+      label:`${m.nombre} - ${[...new Set(m.cursos)].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'})).join(', ')||'Varios cursos'}`
+    })),
+    ...Array.from(cursosDirector.values()).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'})).map(c=>({
+      value:`CURSO_GENERAL|${c.cursoId}`,
+      label:`General del curso - ${c.nombre}`
+    }))
+  ];
+}
+
 function badgeEstadoMalla(existe){
   return existe
     ? '<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--green-lt);color:var(--green);font-size:11px;font-weight:800"><i class="fas fa-check-circle"></i> Ya subida</span>'
     : '<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--surface);color:var(--muted);font-size:11px;font-weight:800"><i class="fas fa-clock"></i> Sin malla</span>';
 }
 
+function buscarMallaSeleccionada(seleccion){
+  if(!seleccion) return null;
+  if(seleccion.tipo==='CURSO_GENERAL'){
+    return (MALLAS_PROF||[]).find(m=>String(m.tipo||'')==='CURSO_GENERAL' && String(m.cursoId||'')===String(seleccion.cursoId||''))||null;
+  }
+  return (MALLAS_PROF||[]).find(m=>{
+    if(String(m.tipo||'MATERIA')==='CURSO_GENERAL') return false;
+    const base=m.nombreReferencia||m.asignatura?.nombre||'';
+    return normalizarMallaTexto(base)===String(seleccion.clave||'');
+  })||null;
+}
+
 function actualizarEstadoMallaSeleccionada(){
   const sel=document.getElementById('mallaAsigSel');
   const estado=document.getElementById('mallaEstadoSel');
   if(!sel||!estado) return;
-  const asigId=String(sel.value||'');
-  if(!asigId){
-    estado.textContent='Selecciona una asignatura para ver si ya tiene malla curricular.';
+  const seleccion=parseMallaSeleccion(sel.value);
+  if(!seleccion){
+    estado.textContent='Selecciona una materia o un curso para ver si ya tiene malla curricular.';
     return;
   }
-  const item=(MALLAS_PROF||[]).find(m=>String(m.asignaturaId)===asigId);
+  const item=buscarMallaSeleccionada(seleccion);
+  const descripcion=seleccion.tipo==='CURSO_GENERAL'?'la malla general de este curso':'esta materia';
   estado.innerHTML=item
-    ? `${badgeEstadoMalla(true)} <span style="margin-left:8px;color:var(--muted)">Se reemplazará el archivo actual si subes otro PDF.</span>`
-    : `${badgeEstadoMalla(false)} <span style="margin-left:8px;color:var(--muted)">Todavía no hay PDF cargado para esta asignatura.</span>`;
+    ? `${badgeEstadoMalla(true)} <span style="margin-left:8px;color:var(--muted)">Se reemplazar???? el archivo actual si subes otro PDF para ${descripcion}.</span>`
+    : `${badgeEstadoMalla(false)} <span style="margin-left:8px;color:var(--muted)">Todav????a no hay PDF cargado para ${descripcion}.</span>`;
 }
 
 function abrirMallaProfesor(id){
@@ -1313,13 +1367,13 @@ function abrirMallaProfesor(id){
   abrirPdfBase64(item.contenidoBase64, item.nombreArchivo||'malla-curricular.pdf');
 }
 
-async function eliminarMallaProfesor(asignaturaId){
-  if(!asignaturaId) return;
-  if(!confirm('¿Eliminar esta malla curricular?')) return;
+async function eliminarMallaProfesor(mallaId){
+  if(!mallaId) return;
+  if(!confirm('????Eliminar esta malla curricular?')) return;
   const msg=document.getElementById('mallaMsg');
   try{
     if(msg){ msg.textContent='Eliminando malla curricular...'; msg.style.color='var(--amber)'; }
-    await gql(`mutation($asig:ID!){eliminarMallaCurricular(asignaturaId:$asig)}`,{asig:asignaturaId});
+    await gql(`mutation($mallaId:ID!){eliminarMallaCurricular(mallaId:$mallaId)}`,{mallaId});
     if(msg){ msg.textContent='Malla curricular eliminada'; msg.style.color='var(--green)'; }
     await cargarMallaProfesor();
   }catch(e){
@@ -1333,34 +1387,36 @@ async function cargarMallaProfesor(){
   const msg=document.getElementById('mallaMsg');
   if(!sel||!tb) return;
   const seleccionActual=sel.value;
-  const asignaturasOrdenadas=[...(W.asignaturas||[])].sort((a,b)=>{
-    const an=`${a?.curso?.nombre||''} ${a?.nombre||''}`;
-    const bn=`${b?.curso?.nombre||''} ${b?.nombre||''}`;
-    return an.localeCompare(bn,'es',{sensitivity:'base'});
-  });
-  sel.innerHTML='<option value="">Seleccionar asignatura...</option>'+asignaturasOrdenadas.map(a=>`<option value="${a.id}">${a.nombre}${a.curso?' - '+a.curso.nombre:''}</option>`).join('');
+  const opciones=construirOpcionesMallaProfesor();
+  sel.innerHTML='<option value="">Seleccionar materia o curso...</option>'+opciones.map(o=>`<option value="${o.value}">${o.label}</option>`).join('');
   if(seleccionActual && [...sel.options].some(o=>o.value===seleccionActual)) sel.value=seleccionActual;
   sel.onchange=actualizarEstadoMallaSeleccionada;
   tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:18px">Cargando...</td></tr>';
   try{
-    const d=await gql(`query{mallasPorProfesor(profesorId:"${W.profId}"){id asignaturaId nombreArchivo contenidoBase64 updatedAt asignatura{id nombre curso{id nombre}}}}`);
+    const d=await gql(`query{mallasPorProfesor(profesorId:"${W.profId}"){id asignaturaId cursoId tipo nombreReferencia cursoResumen nombreArchivo contenidoBase64 updatedAt asignatura{id nombre curso{id nombre}} curso{id nombre}}}`);
     const rows=(d.mallasPorProfesor||[]).sort((a,b)=>new Date(b.updatedAt||0)-new Date(a.updatedAt||0));
     MALLAS_PROF=rows;
-    if(msg) msg.textContent=rows.length?`${rows.length} malla(s) cargada(s)`:'Aún no has subido mallas curriculares.';
+    if(msg) msg.textContent=rows.length?`${rows.length} malla(s) cargada(s)`:'A????n no has subido mallas curriculares.';
     actualizarEstadoMallaSeleccionada();
-    if(!rows.length){ tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:18px;color:var(--muted)">Aún no has subido mallas curriculares.</td></tr>'; return; }
+    if(!rows.length){ tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:18px;color:var(--muted)">A????n no has subido mallas curriculares.</td></tr>'; return; }
     tb.innerHTML=rows.map(m=>{
       const f=m.updatedAt?new Date(m.updatedAt).toLocaleDateString('es-CO'):'-';
+      const nombre=m.tipo==='CURSO_GENERAL'
+        ? `General del curso - ${m.curso?.nombre||m.nombreReferencia||'-'}`
+        : (m.nombreReferencia||m.asignatura?.nombre||'-');
+      const cursoTxt=m.tipo==='CURSO_GENERAL'
+        ? (m.curso?.nombre||m.nombreReferencia||'-')
+        : (m.cursoResumen||m.asignatura?.curso?.nombre||'Varios cursos');
       return `<tr>
-        <td style="font-weight:700">${m.asignatura?.nombre||'-'}</td>
-        <td>${m.asignatura?.curso?.nombre||'-'}</td>
+        <td style="font-weight:700">${nombre}</td>
+        <td>${cursoTxt}</td>
         <td>${badgeEstadoMalla(true)}</td>
         <td style="color:var(--muted)">${m.nombreArchivo}</td>
         <td>${f}</td>
         <td>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn bo" onclick="abrirMallaProfesor('${m.id}')"><i class="fas fa-eye"></i> Abrir</button>
-            <button class="btn bd" onclick="eliminarMallaProfesor('${m.asignaturaId}')"><i class="fas fa-trash"></i> Eliminar</button>
+            <button class="btn bd" onclick="eliminarMallaProfesor('${m.id}')"><i class="fas fa-trash"></i> Eliminar</button>
           </div>
         </td>
       </tr>`;
@@ -1369,17 +1425,24 @@ async function cargarMallaProfesor(){
 }
 
 async function subirMallaCurricular(){
-  const asigId=document.getElementById('mallaAsigSel').value;
+  const seleccion=parseMallaSeleccion(document.getElementById('mallaAsigSel').value);
   const file=document.getElementById('mallaFile').files?.[0];
   const msg=document.getElementById('mallaMsg');
-  if(!asigId){ msg.textContent='Selecciona una asignatura'; msg.style.color='var(--red)'; return; }
+  if(!seleccion){ msg.textContent='Selecciona una materia o curso'; msg.style.color='var(--red)'; return; }
   if(!file){ msg.textContent='Selecciona un PDF'; msg.style.color='var(--red)'; return; }
   if(file.type!=='application/pdf'){ msg.textContent='Solo se permite PDF'; msg.style.color='var(--red)'; return; }
   if(file.size>7*1024*1024){ msg.textContent='El PDF no debe superar 7 MB'; msg.style.color='var(--red)'; return; }
   try{
     msg.textContent='Subiendo malla curricular...'; msg.style.color='var(--blue)';
     const contenidoBase64=await fileToBase64(file);
-    await gql(`mutation($asig:ID!,$nom:String!,$mime:String!,$pdf:String!){guardarMallaCurricular(asignaturaId:$asig,nombreArchivo:$nom,mimeType:$mime,contenidoBase64:$pdf){id}}`,{asig:asigId,nom:file.name,mime:file.type,pdf:contenidoBase64});
+    await gql(`mutation($asig:ID,$cursoId:ID,$tipo:String,$nom:String!,$mime:String!,$pdf:String!){guardarMallaCurricular(asignaturaId:$asig,cursoId:$cursoId,tipo:$tipo,nombreArchivo:$nom,mimeType:$mime,contenidoBase64:$pdf){id}}`,{
+      asig:seleccion.asignaturaId||null,
+      cursoId:seleccion.cursoId||null,
+      tipo:seleccion.tipo,
+      nom:file.name,
+      mime:file.type,
+      pdf:contenidoBase64
+    });
     document.getElementById('mallaFile').value='';
     msg.textContent='Malla curricular guardada'; msg.style.color='var(--green)';
     await cargarMallaProfesor();

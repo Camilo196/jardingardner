@@ -6786,7 +6786,7 @@ async function cargarMallasAdmin() {
   msg.textContent = 'Cargando mallas curriculares...';
   tb.innerHTML = '<tr><td colspan="6" style="padding:18px;text-align:center;color:#64748b">Cargando...</td></tr>';
   try {
-    const data = await gqlAdmin(`query{mallasCurriculares{id asignaturaId profesorId nombreArchivo contenidoBase64 updatedAt asignatura{id nombre curso{id nombre}} profesor{cedula nombre primerApellido}}}`);
+    const data = await gqlAdmin(`query{mallasCurriculares{id asignaturaId cursoId tipo nombreReferencia cursoResumen profesorId nombreArchivo contenidoBase64 updatedAt asignatura{id nombre curso{id nombre}} curso{id nombre} profesor{cedula nombre primerApellido}}}`);
     MALLAS_ADMIN = data.mallasCurriculares || [];
     msg.textContent = MALLAS_ADMIN.length ? `${MALLAS_ADMIN.length} malla(s) cargada(s)` : 'No hay mallas curriculares subidas.';
     renderMallasAdmin();
@@ -6803,7 +6803,13 @@ function renderMallasAdmin() {
   const q = (document.getElementById('mallaAdminBuscar')?.value || '').toLowerCase().trim();
   const rows = [...MALLAS_ADMIN].filter(m => {
     const prof = `${m.profesor?.nombre || ''} ${m.profesor?.primerApellido || ''} ${m.profesorId || ''}`;
-    const txt = `${m.asignatura?.nombre || ''} ${m.asignatura?.curso?.nombre || ''} ${prof} ${m.nombreArchivo || ''}`.toLowerCase();
+    const nombre = m.tipo === 'CURSO_GENERAL'
+      ? `General del curso ${m.curso?.nombre || m.nombreReferencia || ''}`
+      : (m.nombreReferencia || m.asignatura?.nombre || '');
+    const curso = m.tipo === 'CURSO_GENERAL'
+      ? (m.curso?.nombre || m.nombreReferencia || '')
+      : (m.cursoResumen || m.asignatura?.curso?.nombre || '');
+    const txt = `${nombre} ${curso} ${prof} ${m.nombreArchivo || ''}`.toLowerCase();
     return !q || txt.includes(q);
   }).sort((a,b)=>new Date(b.updatedAt||0)-new Date(a.updatedAt||0));
   if(msg && MALLAS_ADMIN.length){
@@ -6816,9 +6822,15 @@ function renderMallasAdmin() {
   tb.innerHTML = rows.map(m => {
     const prof = m.profesor ? `${m.profesor.nombre} ${m.profesor.primerApellido}` : (m.profesorId || '-');
     const fecha = m.updatedAt ? new Date(m.updatedAt).toLocaleDateString('es-CO') : '-';
+    const nombre = m.tipo === 'CURSO_GENERAL'
+      ? `General del curso - ${m.curso?.nombre || m.nombreReferencia || '-'}`
+      : (m.nombreReferencia || m.asignatura?.nombre || '-');
+    const curso = m.tipo === 'CURSO_GENERAL'
+      ? (m.curso?.nombre || m.nombreReferencia || '-')
+      : (m.cursoResumen || m.asignatura?.curso?.nombre || 'Varios cursos');
     return `<tr style="border-top:1px solid #e5e7eb">
-      <td style="padding:10px;font-weight:700">${m.asignatura?.nombre || '-'}</td>
-      <td style="padding:10px">${m.asignatura?.curso?.nombre || '-'}</td>
+      <td style="padding:10px;font-weight:700">${nombre}</td>
+      <td style="padding:10px">${curso}</td>
       <td style="padding:10px">${prof}</td>
       <td style="padding:10px;color:#64748b">${m.nombreArchivo || '-'}</td>
       <td style="padding:10px;color:#64748b">${fecha}</td>

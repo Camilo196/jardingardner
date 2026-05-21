@@ -156,6 +156,10 @@ type MallaCurricular {
   id: ID!
   asignaturaId: ID!
   profesorId: ID!
+  tipo: String
+  cursoId: ID
+  nombreReferencia: String
+  cursoResumen: String
   nombreArchivo: String!
   mimeType: String!
   contenidoBase64: String!
@@ -164,6 +168,7 @@ type MallaCurricular {
   updatedAt: String
   asignatura: Asignatura
   profesor: Profesor
+  curso: Curso
 }
 
 type Asistencia {
@@ -533,8 +538,8 @@ type Mutation {
   eliminarAsignatura(id: ID!): Boolean!
 
   # Malla curricular
-  guardarMallaCurricular(asignaturaId: ID!, nombreArchivo: String!, mimeType: String!, contenidoBase64: String!): MallaCurricular!
-  eliminarMallaCurricular(asignaturaId: ID!): Boolean!
+  guardarMallaCurricular(asignaturaId: ID, cursoId: ID, tipo: String, nombreArchivo: String!, mimeType: String!, contenidoBase64: String!): MallaCurricular!
+  eliminarMallaCurricular(asignaturaId: ID, cursoId: ID, tipo: String, mallaId: ID): Boolean!
 
   # Administrador
   crearAdmin(email: String!, password: String!): AuthPayload

@@ -115,6 +115,23 @@ function redondearNota(nota: any): number {
     return Number.isFinite(n) ? Math.round((n + Number.EPSILON) * 100) / 100 : n;
 }
 
+function normalizarTextoBase(valor: any): string {
+    return String(valor || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function claveMallaCurso(cursoId: any): string {
+    return '__curso__:' + String(cursoId || '').trim();
+}
+
+function esClaveMallaCurso(asignaturaId: any): boolean {
+    return String(asignaturaId || '').startsWith('__curso__:');
+}
+
 function valoracionDesdeNota(nota: number | null): string {
     if (nota === null) return 'Sin nota';
     if (nota >= 4.6) return 'Superior';
@@ -737,16 +754,117 @@ export const resolvers = {
             return await MallaCurricularModel.find().sort({ updatedAt: -1 }).lean();
         },
 
-        mallasPorProfesor: async (_: any, { profesorId }: any, { user }: any) => {
+        mallasPorProfesor: async (_: any, { profesorId }: any, { user, repositories }: any) => {
             if (!user || (user.role !== 'ADMIN' && String(user.username) !== String(profesorId))) throw new Error('No autorizado');
-            return await MallaCurricularModel.find({ profesorId: String(profesorId) }).sort({ updatedAt: -1 }).lean();
+
+            const profesorIdStr = String(profesorId);
+            const [asignaturas, cursos, rawDocs] = await Promise.all([
+                repositories.asignaturaRepository.findByProfesorId(profesorIdStr).catch(() => []),
+                repositories.cursoRepository.findAll().catch(() => []),
+                MallaCurricularModel.find({ profesorId: profesorIdStr }).sort({ updatedAt: -1 }).lean(),
+            ]);
+            const cursosMap = new Map<string, any>((cursos || []).map((curso: any) => [String(curso?.id ?? curso?._id ?? ''), curso] as [string, any]));
+
+            const materias = new Map<string, any>();
+            const docsPorAsignatura = new Map<string, any>();
+            for (const doc of rawDocs) {
+                if (doc?.asignaturaId) docsPorAsignatura.set(String(doc.asignaturaId), doc);
+            }
+
+            for (const asig of asignaturas) {
+                const clave = normalizarTextoBase(asig?.nombre);
+                if (!clave) continue;
+                if (!materias.has(clave)) {
+                    materias.set(clave, {
+                        clave,
+                        nombre: asig?.nombre || '',
+                        asignaturaBase: asig,
+                        asignaturas: [],
+                        cursoNombres: new Set<string>(),
+                    });
+                }
+                const grupo = materias.get(clave);
+                grupo.asignaturas.push(asig);
+                const cursoAsig = cursosMap.get(String(asig?.cursoId || ''));
+                if (cursoAsig?.nombre) grupo.cursoNombres.add(cursoAsig.nombre);
+            }
+
+            const resultado: any[] = [];
+            for (const grupo of materias.values()) {
+                const asignaturaIds = grupo.asignaturas.map((a: any) => String(a.id ?? a._id ?? ''));
+                const existente = rawDocs.find((doc: any) =>
+                    String(doc.tipo || 'MATERIA') !== 'CURSO_GENERAL' && (
+                        normalizarTextoBase(doc.nombreReferencia) === grupo.clave ||
+                        asignaturaIds.includes(String(doc.asignaturaId || ''))
+                    )
+                );
+                if (existente) {
+                    resultado.push({
+                        ...existente,
+                        tipo: existente.tipo || 'MATERIA',
+                        nombreReferencia: existente.nombreReferencia || grupo.nombre,
+                        asignatura: grupo.asignaturaBase,
+                        cursoResumen: (Array.from(grupo.cursoNombres) as string[]).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' })).join(', '),
+                    });
+                    continue;
+                }
+                const legacy = grupo.asignaturas
+                    .map((a: any) => docsPorAsignatura.get(String(a.id ?? a._id ?? '')))
+                    .filter(Boolean)
+                    .sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())[0];
+                if (legacy) {
+                    resultado.push({
+                        ...legacy,
+                        tipo: legacy.tipo || 'MATERIA',
+                        nombreReferencia: legacy.nombreReferencia || grupo.nombre,
+                        asignatura: grupo.asignaturaBase,
+                        cursoResumen: (Array.from(grupo.cursoNombres) as string[]).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' })).join(', '),
+                    });
+                }
+            }
+
+            const cursosDirector = (cursos || []).filter((curso: any) => String(curso?.profesorId || '') === profesorIdStr);
+            for (const curso of cursosDirector) {
+                const cursoId = String(curso?.id ?? curso?._id ?? '');
+                if (!cursoId) continue;
+                const doc = rawDocs.find((item: any) => String(item.tipo || '') === 'CURSO_GENERAL' && String(item.cursoId || '') === cursoId)
+                    || rawDocs.find((item: any) => String(item.asignaturaId || '') === claveMallaCurso(cursoId));
+                if (!doc) continue;
+                resultado.push({
+                    ...doc,
+                    tipo: 'CURSO_GENERAL',
+                    cursoId,
+                    nombreReferencia: doc.nombreReferencia || curso.nombre,
+                    curso,
+                });
+            }
+
+            return resultado.sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
         },
 
         mallaPorAsignatura: async (_: any, { asignaturaId }: any, { user, repositories }: any) => {
-            const malla = await MallaCurricularModel.findOne({ asignaturaId: String(asignaturaId) }).lean();
+            const asignaturaIdStr = String(asignaturaId || '');
+            let malla = await MallaCurricularModel.findOne({ asignaturaId: asignaturaIdStr }).lean();
+            const asig = esClaveMallaCurso(asignaturaIdStr)
+                ? null
+                : await repositories.asignaturaRepository.findById(asignaturaIdStr).catch(() => null);
+
+            if (!malla && asig) {
+                const asignaturasProfesor = await repositories.asignaturaRepository.findByProfesorId(String(asig.profesorId)).catch(() => []);
+                const nombres = asignaturasProfesor
+                    .filter((item: any) => normalizarTextoBase(item?.nombre) === normalizarTextoBase(asig.nombre))
+                    .map((item: any) => String(item.id ?? item._id ?? ''));
+                malla = await MallaCurricularModel.findOne({
+                    profesorId: String(asig.profesorId),
+                    $or: [
+                        { nombreReferencia: asig.nombre },
+                        { asignaturaId: { $in: nombres } },
+                    ],
+                }).sort({ updatedAt: -1 }).lean();
+            }
+
             if (!malla) return null;
             if (user?.role === 'ADMIN') return malla;
-            const asig = await repositories.asignaturaRepository.findById(asignaturaId).catch(() => null);
             if (user?.role === 'PROFESOR' && String(asig?.profesorId) === String(user.username)) return malla;
             throw new Error('No autorizado');
         },
@@ -1521,33 +1639,102 @@ export const resolvers = {
         },
 
         // -- Malla curricular --------------------------------
-        guardarMallaCurricular: async (_: any, { asignaturaId, nombreArchivo, mimeType, contenidoBase64 }: any, { user, repositories }: any) => {
+        guardarMallaCurricular: async (_: any, { asignaturaId, cursoId, tipo, nombreArchivo, mimeType, contenidoBase64 }: any, { user, repositories }: any) => {
             if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado');
-            const asig = await repositories.asignaturaRepository.findById(asignaturaId);
-            if (!asig) throw new Error('Asignatura no encontrada');
-            if (user.role === 'PROFESOR' && String(asig.profesorId) !== String(user.username)) throw new Error('No autorizado para esta asignatura');
             if (String(mimeType) !== 'application/pdf') throw new Error('Solo se permite subir archivos PDF');
             const cleanBase64 = String(contenidoBase64 || '').replace(/^data:application\/pdf;base64,/, '');
             if (!cleanBase64) throw new Error('El PDF es obligatorio');
             if (cleanBase64.length > 10 * 1024 * 1024) throw new Error('El PDF supera el tamano permitido');
+
+            const tipoDoc = String(tipo || 'MATERIA').toUpperCase() === 'CURSO_GENERAL' ? 'CURSO_GENERAL' : 'MATERIA';
+
+            if (tipoDoc === 'CURSO_GENERAL') {
+                const curso = await repositories.cursoRepository.findById(String(cursoId || '')).catch(() => null);
+                if (!curso) throw new Error('Curso no encontrado');
+                if (user.role === 'PROFESOR' && String(curso.profesorId) !== String(user.username)) throw new Error('Solo el director de grupo puede subir la malla general del curso');
+                const profesorResponsable = String(curso.profesorId || user.username || '');
+                const cursoCanonicoId = String(curso.id ?? curso._id ?? cursoId);
+                const doc = await MallaCurricularModel.findOneAndUpdate(
+                    { asignaturaId: claveMallaCurso(cursoCanonicoId) },
+                    {
+                        asignaturaId: claveMallaCurso(cursoCanonicoId),
+                        profesorId: profesorResponsable,
+                        tipo: 'CURSO_GENERAL',
+                        cursoId: cursoCanonicoId,
+                        nombreReferencia: String(curso.nombre || 'Curso'),
+                        nombreArchivo: String(nombreArchivo || 'malla-curricular.pdf'),
+                        mimeType: 'application/pdf',
+                        contenidoBase64: cleanBase64,
+                        creadoPor: String(user.username || ''),
+                    },
+                    { upsert: true, new: true, setDefaultsOnInsert: true },
+                ).lean();
+                return doc;
+            }
+
+            const asig = await repositories.asignaturaRepository.findById(String(asignaturaId || ''));
+            if (!asig) throw new Error('Asignatura no encontrada');
+            if (user.role === 'PROFESOR' && String(asig.profesorId) !== String(user.username)) throw new Error('No autorizado para esta asignatura');
+
+            const asignaturasProfesor = await repositories.asignaturaRepository.findByProfesorId(String(asig.profesorId)).catch(() => []);
+            const asignaturasMismaMateria = asignaturasProfesor.filter((item: any) => normalizarTextoBase(item?.nombre) === normalizarTextoBase(asig.nombre));
+            const idsMateria = asignaturasMismaMateria.map((item: any) => String(item.id ?? item._id ?? ''));
+            const existente = await MallaCurricularModel.findOne({
+                profesorId: String(asig.profesorId),
+                tipo: { $ne: 'CURSO_GENERAL' },
+                $or: [
+                    { nombreReferencia: asig.nombre },
+                    { asignaturaId: { $in: idsMateria } },
+                ],
+            }).sort({ updatedAt: -1 });
+
+            const asignaturaCanonica = String(existente?.asignaturaId || asig.id || asig._id || asignaturaId);
             const doc = await MallaCurricularModel.findOneAndUpdate(
-                { asignaturaId: String(asignaturaId) },
-                { asignaturaId: String(asignaturaId), profesorId: String(asig.profesorId), nombreArchivo: String(nombreArchivo || 'malla-curricular.pdf'), mimeType: 'application/pdf', contenidoBase64: cleanBase64, creadoPor: String(user.username || '') },
+                { asignaturaId: asignaturaCanonica },
+                {
+                    asignaturaId: asignaturaCanonica,
+                    profesorId: String(asig.profesorId),
+                    tipo: 'MATERIA',
+                    cursoId: null,
+                    nombreReferencia: String(asig.nombre || ''),
+                    nombreArchivo: String(nombreArchivo || 'malla-curricular.pdf'),
+                    mimeType: 'application/pdf',
+                    contenidoBase64: cleanBase64,
+                    creadoPor: String(user.username || ''),
+                },
                 { upsert: true, new: true, setDefaultsOnInsert: true },
             ).lean();
             return doc;
         },
 
-        eliminarMallaCurricular: async (_: any, { asignaturaId }: any, { user, repositories }: any) => {
+        eliminarMallaCurricular: async (_: any, { asignaturaId, cursoId, tipo, mallaId }: any, { user, repositories }: any) => {
             if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado');
-            const asig = await repositories.asignaturaRepository.findById(asignaturaId);
-            if (!asig) throw new Error('Asignatura no encontrada');
-            if (user.role === 'PROFESOR' && String(asig.profesorId) !== String(user.username)) throw new Error('No autorizado para esta asignatura');
-            const res = await MallaCurricularModel.deleteOne({ asignaturaId: String(asignaturaId) });
+
+            let doc = null as any;
+            if (mallaId) doc = await MallaCurricularModel.findById(String(mallaId)).lean();
+            if (!doc && String(tipo || '').toUpperCase() === 'CURSO_GENERAL' && cursoId) {
+                doc = await MallaCurricularModel.findOne({ asignaturaId: claveMallaCurso(cursoId) }).lean();
+            }
+            if (!doc && asignaturaId) {
+                doc = await MallaCurricularModel.findOne({ asignaturaId: String(asignaturaId) }).lean();
+            }
+            if (!doc) throw new Error('Malla curricular no encontrada');
+
+            if (user.role === 'PROFESOR') {
+                if (String(doc.tipo || '') === 'CURSO_GENERAL' || doc.cursoId) {
+                    const curso = await repositories.cursoRepository.findById(String(doc.cursoId || cursoId || '')).catch(() => null);
+                    if (!curso || String(curso.profesorId) !== String(user.username)) throw new Error('No autorizado para esta malla curricular');
+                } else {
+                    const asig = await repositories.asignaturaRepository.findById(String(doc.asignaturaId || asignaturaId || '')).catch(() => null);
+                    if (!asig || String(asig.profesorId) !== String(user.username)) throw new Error('No autorizado para esta malla curricular');
+                }
+            }
+
+            const res = await MallaCurricularModel.deleteOne({ _id: doc._id });
             return res.deletedCount > 0;
         },
 
-        // ── Asistencias ───────────────────────────────────────
+        // -- Asistencias
         registrarLista: async (_: any, { input }: any, { repositories }: any) => {
             const registros = input.estudiantes.map((est: any) => ({
                 estudianteId:  est.estudianteId,
@@ -1692,12 +1879,21 @@ export const resolvers = {
     MallaCurricular: {
         id: (malla: any) => malla?.id ?? malla?._id?.toString() ?? '',
         asignatura: async (malla: any, _: any, { repositories }: any) => {
-            if (!malla.asignaturaId) return null;
-            return await repositories.asignaturaRepository.findById(malla.asignaturaId);
+            if (!malla.asignaturaId || esClaveMallaCurso(malla.asignaturaId)) return null;
+            return await repositories.asignaturaRepository.findById(malla.asignaturaId).catch(() => null);
         },
         profesor: async (malla: any, _: any, { repositories }: any) => {
             if (!malla.profesorId) return null;
             return await repositories.profesorRepository.findById(malla.profesorId);
+        },
+        curso: async (malla: any, _: any, { repositories }: any) => {
+            if (malla?.curso) return malla.curso;
+            if (malla?.cursoId) return await repositories.cursoRepository.findById(malla.cursoId).catch(() => null);
+            const asig = (!malla?.asignaturaId || esClaveMallaCurso(malla.asignaturaId))
+                ? null
+                : await repositories.asignaturaRepository.findById(malla.asignaturaId).catch(() => null);
+            if (!asig?.cursoId) return null;
+            return await repositories.cursoRepository.findById(asig.cursoId).catch(() => null);
         },
         createdAt: (malla: any) => malla?.createdAt ? new Date(malla.createdAt).toISOString() : null,
         updatedAt: (malla: any) => malla?.updatedAt ? new Date(malla.updatedAt).toISOString() : null,
