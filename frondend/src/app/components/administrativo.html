@@ -6773,6 +6773,12 @@ function abrirPdfBase64Admin(b64, nombre='malla-curricular.pdf') {
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
+function abrirMallaAdmin(id){
+  const item=(MALLAS_ADMIN||[]).find(m=>String(m.id)===String(id));
+  if(!item?.contenidoBase64){ alert('No se pudo abrir la malla curricular'); return; }
+  abrirPdfBase64Admin(item.contenidoBase64, item.nombreArchivo || 'malla-curricular.pdf');
+}
+
 async function cargarMallasAdmin() {
   const msg = document.getElementById('mallaAdminMsg');
   const tb = document.getElementById('mallaAdminTbody');
@@ -6792,13 +6798,17 @@ async function cargarMallasAdmin() {
 
 function renderMallasAdmin() {
   const tb = document.getElementById('mallaAdminTbody');
+  const msg = document.getElementById('mallaAdminMsg');
   if (!tb) return;
   const q = (document.getElementById('mallaAdminBuscar')?.value || '').toLowerCase().trim();
-  const rows = MALLAS_ADMIN.filter(m => {
+  const rows = [...MALLAS_ADMIN].filter(m => {
     const prof = `${m.profesor?.nombre || ''} ${m.profesor?.primerApellido || ''} ${m.profesorId || ''}`;
     const txt = `${m.asignatura?.nombre || ''} ${m.asignatura?.curso?.nombre || ''} ${prof} ${m.nombreArchivo || ''}`.toLowerCase();
     return !q || txt.includes(q);
-  });
+  }).sort((a,b)=>new Date(b.updatedAt||0)-new Date(a.updatedAt||0));
+  if(msg && MALLAS_ADMIN.length){
+    msg.textContent = q ? `${rows.length} resultado(s) de ${MALLAS_ADMIN.length} malla(s)` : `${MALLAS_ADMIN.length} malla(s) cargada(s)`;
+  }
   if (!rows.length) {
     tb.innerHTML = '<tr><td colspan="6" style="padding:18px;text-align:center;color:#64748b">Sin resultados.</td></tr>';
     return;
@@ -6806,14 +6816,13 @@ function renderMallasAdmin() {
   tb.innerHTML = rows.map(m => {
     const prof = m.profesor ? `${m.profesor.nombre} ${m.profesor.primerApellido}` : (m.profesorId || '-');
     const fecha = m.updatedAt ? new Date(m.updatedAt).toLocaleDateString('es-CO') : '-';
-    const nombre = String(m.nombreArchivo || 'malla.pdf').replace(/'/g, "\\'");
     return `<tr style="border-top:1px solid #e5e7eb">
       <td style="padding:10px;font-weight:700">${m.asignatura?.nombre || '-'}</td>
       <td style="padding:10px">${m.asignatura?.curso?.nombre || '-'}</td>
       <td style="padding:10px">${prof}</td>
       <td style="padding:10px;color:#64748b">${m.nombreArchivo || '-'}</td>
       <td style="padding:10px;color:#64748b">${fecha}</td>
-      <td style="padding:10px;text-align:center"><button onclick="abrirPdfBase64Admin('${m.contenidoBase64}','${nombre}')" style="padding:6px 14px;background:#4f46e5;color:#fff;border:none;border-radius:5px;font-size:13px;cursor:pointer"><i class="fas fa-eye"></i> Abrir PDF</button></td>
+      <td style="padding:10px;text-align:center"><button onclick="abrirMallaAdmin('${m.id}')" style="padding:6px 14px;background:#4f46e5;color:#fff;border:none;border-radius:5px;font-size:13px;cursor:pointer"><i class="fas fa-eye"></i> Abrir PDF</button></td>
     </tr>`;
   }).join('');
 }
