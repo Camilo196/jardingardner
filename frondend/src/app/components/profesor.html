@@ -1302,6 +1302,7 @@ function parseMallaSeleccion(value){
 function construirOpcionesMallaProfesor(){
   const materias=new Map();
   (W.asignaturas||[]).forEach(a=>{
+    if(esCursoPreescolarNombre(a?.curso?.nombre||'')) return;
     const clave=normalizarMallaTexto(a?.nombre);
     if(!clave) return;
     if(!materias.has(clave)) materias.set(clave,{clave,nombre:a.nombre||'',asignaturaId:a.id,cursos:[]});
@@ -1312,6 +1313,7 @@ function construirOpcionesMallaProfesor(){
   (W.asignaturas||[]).forEach(a=>{
     const curso=a?.curso;
     if(!curso?.id) return;
+    if(!esCursoPreescolarNombre(curso.nombre||'')) return;
     if(String(curso.profesorId||'').trim()!==String(W.profId||'').trim()) return;
     if(!cursosDirector.has(String(curso.id))) cursosDirector.set(String(curso.id),{cursoId:String(curso.id),nombre:curso.nombre||'Curso'});
   });

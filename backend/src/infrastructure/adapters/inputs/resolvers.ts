@@ -772,6 +772,8 @@ export const resolvers = {
             }
 
             for (const asig of asignaturas) {
+                const cursoAsig = cursosMap.get(String(asig?.cursoId || ''));
+                if (esCursoPreescolarNombre(cursoAsig?.nombre || '')) continue;
                 const clave = normalizarTextoBase(asig?.nombre);
                 if (!clave) continue;
                 if (!materias.has(clave)) {
@@ -785,7 +787,6 @@ export const resolvers = {
                 }
                 const grupo = materias.get(clave);
                 grupo.asignaturas.push(asig);
-                const cursoAsig = cursosMap.get(String(asig?.cursoId || ''));
                 if (cursoAsig?.nombre) grupo.cursoNombres.add(cursoAsig.nombre);
             }
 
@@ -823,7 +824,7 @@ export const resolvers = {
                 }
             }
 
-            const cursosDirector = (cursos || []).filter((curso: any) => String(curso?.profesorId || '') === profesorIdStr);
+            const cursosDirector = (cursos || []).filter((curso: any) => String(curso?.profesorId || '') === profesorIdStr && esCursoPreescolarNombre(curso?.nombre || ''));
             for (const curso of cursosDirector) {
                 const cursoId = String(curso?.id ?? curso?._id ?? '');
                 if (!cursoId) continue;
@@ -1651,6 +1652,7 @@ export const resolvers = {
             if (tipoDoc === 'CURSO_GENERAL') {
                 const curso = await repositories.cursoRepository.findById(String(cursoId || '')).catch(() => null);
                 if (!curso) throw new Error('Curso no encontrado');
+                if (!esCursoPreescolarNombre(curso.nombre || '')) throw new Error('En primaria la malla se sube por materia.');
                 if (user.role === 'PROFESOR' && String(curso.profesorId) !== String(user.username)) throw new Error('Solo el director de grupo puede subir la malla general del curso');
                 const profesorResponsable = String(curso.profesorId || user.username || '');
                 const cursoCanonicoId = String(curso.id ?? curso._id ?? cursoId);
@@ -1674,6 +1676,8 @@ export const resolvers = {
 
             const asig = await repositories.asignaturaRepository.findById(String(asignaturaId || ''));
             if (!asig) throw new Error('Asignatura no encontrada');
+            const cursoAsignatura = await repositories.cursoRepository.findById(String(asig.cursoId || '')).catch(() => null);
+            if (esCursoPreescolarNombre(cursoAsignatura?.nombre || '')) throw new Error('En preescolar la malla se sube una sola vez por curso desde el director de grupo.');
             if (user.role === 'PROFESOR' && String(asig.profesorId) !== String(user.username)) throw new Error('No autorizado para esta asignatura');
 
             const asignaturasProfesor = await repositories.asignaturaRepository.findByProfesorId(String(asig.profesorId)).catch(() => []);
