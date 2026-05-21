@@ -452,9 +452,10 @@ table.t tbody tr:last-child td{border-bottom:none}
             <div class="fg"><label>PDF</label><input type="file" id="mallaFile" accept="application/pdf"></div>
             <button class="btn bp" onclick="subirMallaCurricular()" style="height:40px;align-self:flex-end"><i class="fas fa-upload"></i> Subir malla</button>
           </div>
+          <div id="mallaEstadoSel" style="font-size:12px;color:var(--muted);margin-top:-4px"></div>
           <div id="mallaMsg" style="font-size:13px;color:var(--muted)"></div>
           <div class="twrap">
-            <table class="t"><thead><tr><th>Asignatura</th><th>Curso</th><th>Archivo</th><th>Actualizada</th><th></th></tr></thead><tbody id="mallaTbody"></tbody></table>
+            <table class="t"><thead><tr><th>Asignatura</th><th>Curso</th><th>Estado</th><th>Archivo</th><th>Actualizada</th><th></th></tr></thead><tbody id="mallaTbody"></tbody></table>
           </div>
         </div>
       </div>
@@ -1285,6 +1286,27 @@ function abrirPdfBase64(b64,nombre='documento.pdf'){
 
 let MALLAS_PROF = [];
 
+function badgeEstadoMalla(existe){
+  return existe
+    ? '<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--green-lt);color:var(--green);font-size:11px;font-weight:800"><i class="fas fa-check-circle"></i> Ya subida</span>'
+    : '<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--surface);color:var(--muted);font-size:11px;font-weight:800"><i class="fas fa-clock"></i> Sin malla</span>';
+}
+
+function actualizarEstadoMallaSeleccionada(){
+  const sel=document.getElementById('mallaAsigSel');
+  const estado=document.getElementById('mallaEstadoSel');
+  if(!sel||!estado) return;
+  const asigId=String(sel.value||'');
+  if(!asigId){
+    estado.textContent='Selecciona una asignatura para ver si ya tiene malla curricular.';
+    return;
+  }
+  const item=(MALLAS_PROF||[]).find(m=>String(m.asignaturaId)===asigId);
+  estado.innerHTML=item
+    ? `${badgeEstadoMalla(true)} <span style="margin-left:8px;color:var(--muted)">Se reemplazará el archivo actual si subes otro PDF.</span>`
+    : `${badgeEstadoMalla(false)} <span style="margin-left:8px;color:var(--muted)">Todavía no hay PDF cargado para esta asignatura.</span>`;
+}
+
 function abrirMallaProfesor(id){
   const item=(MALLAS_PROF||[]).find(m=>String(m.id)===String(id));
   if(!item?.contenidoBase64){ toast('No se pudo abrir la malla','er'); return; }
@@ -1318,18 +1340,21 @@ async function cargarMallaProfesor(){
   });
   sel.innerHTML='<option value="">Seleccionar asignatura...</option>'+asignaturasOrdenadas.map(a=>`<option value="${a.id}">${a.nombre}${a.curso?' - '+a.curso.nombre:''}</option>`).join('');
   if(seleccionActual && [...sel.options].some(o=>o.value===seleccionActual)) sel.value=seleccionActual;
-  tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:18px">Cargando...</td></tr>';
+  sel.onchange=actualizarEstadoMallaSeleccionada;
+  tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:18px">Cargando...</td></tr>';
   try{
     const d=await gql(`query{mallasPorProfesor(profesorId:"${W.profId}"){id asignaturaId nombreArchivo contenidoBase64 updatedAt asignatura{id nombre curso{id nombre}}}}`);
     const rows=(d.mallasPorProfesor||[]).sort((a,b)=>new Date(b.updatedAt||0)-new Date(a.updatedAt||0));
     MALLAS_PROF=rows;
     if(msg) msg.textContent=rows.length?`${rows.length} malla(s) cargada(s)`:'Aún no has subido mallas curriculares.';
-    if(!rows.length){ tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:18px;color:var(--muted)">Aún no has subido mallas curriculares.</td></tr>'; return; }
+    actualizarEstadoMallaSeleccionada();
+    if(!rows.length){ tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:18px;color:var(--muted)">Aún no has subido mallas curriculares.</td></tr>'; return; }
     tb.innerHTML=rows.map(m=>{
       const f=m.updatedAt?new Date(m.updatedAt).toLocaleDateString('es-CO'):'-';
       return `<tr>
         <td style="font-weight:700">${m.asignatura?.nombre||'-'}</td>
         <td>${m.asignatura?.curso?.nombre||'-'}</td>
+        <td>${badgeEstadoMalla(true)}</td>
         <td style="color:var(--muted)">${m.nombreArchivo}</td>
         <td>${f}</td>
         <td>
@@ -1340,7 +1365,7 @@ async function cargarMallaProfesor(){
         </td>
       </tr>`;
     }).join('');
-  }catch(e){ tb.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--red);padding:18px">${e.message}</td></tr>`; }
+  }catch(e){ actualizarEstadoMallaSeleccionada(); tb.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--red);padding:18px">${e.message}</td></tr>`; }
 }
 
 async function subirMallaCurricular(){
@@ -1358,6 +1383,7 @@ async function subirMallaCurricular(){
     document.getElementById('mallaFile').value='';
     msg.textContent='Malla curricular guardada'; msg.style.color='var(--green)';
     await cargarMallaProfesor();
+    actualizarEstadoMallaSeleccionada();
   }catch(e){ msg.textContent='Error: '+e.message; msg.style.color='var(--red)'; }
 }
 
