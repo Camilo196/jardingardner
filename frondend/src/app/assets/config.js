@@ -12,6 +12,23 @@
   const host = window.location.hostname || '';
   const isLocalHost = /^(localhost|127\.0\.0\.1)$/i.test(host);
 
+  function normalizeApiCandidate(value) {
+    const raw = typeof value === 'string' ? value.trim() : '';
+    if (!raw) return '';
+    try {
+      const url = new URL(raw, window.location.origin);
+      const cleanPath = (url.pathname || '/').replace(/\/+$/, '') || '/';
+      if (/\/graphql$/i.test(cleanPath)) {
+        url.pathname = cleanPath;
+        return url.toString();
+      }
+      url.pathname = cleanPath === '/' ? '/graphql' : `${cleanPath}/graphql`;
+      return url.toString();
+    } catch (_) {
+      return raw;
+    }
+  }
+
   const metaApi = document
     .querySelector('meta[name="learnscape-api"]')
     ?.getAttribute('content')
@@ -30,9 +47,9 @@
   const sameOriginApi = `${window.location.origin.replace(/\/$/, '')}/graphql`;
 
   const resolvedApi =
-    globalApi ||
-    metaApi ||
-    storageApi ||
+    normalizeApiCandidate(globalApi) ||
+    normalizeApiCandidate(metaApi) ||
+    normalizeApiCandidate(storageApi) ||
     (isLocalHost ? 'http://localhost:4000/graphql' : sameOriginApi);
 
   window.LEARNSCAPE_API = resolvedApi;
