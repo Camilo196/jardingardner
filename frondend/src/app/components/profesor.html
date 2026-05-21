@@ -1602,7 +1602,7 @@ function normalizarCursoNombre(nombre=''){
 
 function esCursoPreescolarNombre(nombre=''){
   const n=normalizarCursoNombre(nombre);
-  return CURSOS_PREESCOLAR.some(k=>n.includes(k));
+  return CURSOS_PREESCOLAR.some(k=>n.includes(k)) || ['parv','pre jard','prejard','jard','trans'].some(k=>n.includes(k));
 }
 
 function esCursoPrimariaNombre(nombre=''){

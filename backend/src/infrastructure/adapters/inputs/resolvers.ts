@@ -149,7 +149,8 @@ function normalizarCursoNombre(nombre = ''): string {
 
 function esCursoPreescolarNombre(nombre = ''): boolean {
     const n = normalizarCursoNombre(nombre);
-    return ['parvulos', 'parvulo', 'pre jardin', 'prejardin', 'jardin', 'transicion'].some(k => n.includes(k));
+    return ['parvulos', 'parvulo', 'pre jardin', 'prejardin', 'jardin', 'transicion'].some(k => n.includes(k))
+        || ['parv', 'pre jard', 'prejard', 'jard', 'trans'].some(k => n.includes(k));
 }
 
 function esCursoPrimariaNombre(nombre = ''): boolean {
