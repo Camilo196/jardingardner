@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
 <script src="../assets/config.js"></script>
 <style>
-/* â”€â”€ RESET & TOKENS â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ RESET & TOKENS Ã¢â€â‚¬Ã¢â€â‚¬ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --blue:#1a56db;--blue-dark:#1040b0;--blue-lt:#dbeafe;--blue-mid:#3b82f6;
@@ -27,7 +27,7 @@
 }
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;font-size:14px}
 
-/* â”€â”€ SIDEBAR â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ SIDEBAR Ã¢â€â‚¬Ã¢â€â‚¬ */
 .sidebar{
   width:var(--sidebar-w);min-height:100vh;
   background:var(--ink2);
@@ -61,7 +61,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .sb-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.65);padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;font-family:inherit;width:100%;text-align:left}
 .sb-btn:hover{background:rgba(255,255,255,.15);color:#fff}
 
-/* â”€â”€ MAIN â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ MAIN Ã¢â€â‚¬Ã¢â€â‚¬ */
 .main{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column}
 .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-xs);}
 .topbar-left{display:flex;align-items:center;gap:12px}
@@ -72,7 +72,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .content{padding:24px 28px;flex:1}
 .section{display:none}.section.active{display:block}
 
-/* â”€â”€ STATS â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ STATS Ã¢â€â‚¬Ã¢â€â‚¬ */
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
 .kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;box-shadow:var(--shadow-xs);transition:.2s;position:relative;overflow:hidden}
 .kpi:hover{box-shadow:var(--shadow-sm);transform:translateY(-1px)}
@@ -83,7 +83,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .kpi-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px}
 .kpi-val{font-size:28px;font-weight:900;color:var(--ink)}
 
-/* â”€â”€ CARDS ASIGNATURA â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ CARDS ASIGNATURA Ã¢â€â‚¬Ã¢â€â‚¬ */
 .cc{border:1px solid var(--border);border-radius:var(--r);margin-bottom:16px;overflow:hidden;transition:.2s;background:var(--white)}
 .cc:hover{border-color:#bfdbfe}
 .ch{background:linear-gradient(135deg,var(--blue),var(--blue-dark));color:#fff;padding:18px 22px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -94,7 +94,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .ch-tog{font-size:16px;transition:.25s;flex-shrink:0}.ch-tog.o{transform:rotate(180deg)}
 .cbody{display:none;padding:22px;background:#fafbff}.cbody.o{display:block}
 
-/* â”€â”€ TABLES â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ TABLES Ã¢â€â‚¬Ã¢â€â‚¬ */
 .twrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border)}
 table.t{width:100%;border-collapse:collapse;font-size:13px}
 table.t thead{background:var(--surface)}
@@ -107,7 +107,7 @@ table.t tbody tr:last-child td{border-bottom:none}
 .sinput{padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;width:220px;transition:.2s;font-family:inherit;outline:none}
 .sinput:focus{border-color:var(--blue);background:var(--white)}
 
-/* â”€â”€ PILLS & BTNS â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ PILLS & BTNS Ã¢â€â‚¬Ã¢â€â‚¬ */
 .pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-weight:700;font-size:11px}
 .pill-ok{background:var(--green-lt);color:var(--green)}
 .pill-er{background:var(--red-lt);color:var(--red)}
@@ -122,7 +122,7 @@ table.t tbody tr:last-child td{border-bottom:none}
 .bd{background:transparent;color:var(--red);border:1.5px solid var(--border)}.bd:hover{background:var(--red-lt)}
 .btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed}
 
-/* â”€â”€ MODALS â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ MODALS Ã¢â€â‚¬Ã¢â€â‚¬ */
 .mover{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:1000;justify-content:center;align-items:flex-start;padding:48px 20px;overflow-y:auto;backdrop-filter:blur(3px)}
 .mover.o{display:flex}
 .mbox{background:#fff;border-radius:16px;width:100%;box-shadow:var(--shadow);animation:up .25s ease}
@@ -135,13 +135,13 @@ table.t tbody tr:last-child td{border-bottom:none}
 .mcls:hover{background:var(--surface);color:var(--ink)}
 .mbody{padding:22px}
 
-/* â”€â”€ MINI TABS â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ MINI TABS Ã¢â€â‚¬Ã¢â€â‚¬ */
 .mtabs{display:flex;border-bottom:2px solid var(--border);padding:0 22px}
 .mtbtn{padding:12px 18px;font-size:13px;font-weight:700;border:none;background:transparent;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;transition:.2s}
 .mtbtn.on{color:var(--blue);border-bottom-color:var(--blue)}
 .mpanel{display:none;padding:22px}.mpanel.on{display:block}
 
-/* â”€â”€ CALIFICACIONES â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ CALIFICACIONES Ã¢â€â‚¬Ã¢â€â‚¬ */
 .corte-card{border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden}
 .corte-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border)}
 .corte-title{font-weight:700;color:var(--ink);font-size:14px}
@@ -159,7 +159,7 @@ table.t tbody tr:last-child td{border-bottom:none}
 .fgroup input,.fgroup select,.fgroup textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;transition:.2s;background:var(--bg);outline:none}
 .fgroup input:focus,.fgroup select:focus,.fgroup textarea:focus{border-color:var(--blue);background:var(--white);box-shadow:0 0 0 3px rgba(26,86,219,.1)}
 
-/* â”€â”€ ASISTENCIA â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ ASISTENCIA Ã¢â€â‚¬Ã¢â€â‚¬ */
 .filtrow{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;padding:18px 22px;background:var(--surface);border-bottom:1px solid var(--border)}
 .fg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:150px}
 .fg label{font-size:12px;font-weight:700;color:var(--ink)}
@@ -177,7 +177,7 @@ table.t tbody tr:last-child td{border-bottom:none}
 .bpct{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700}
 .bpct-ok{background:var(--green-lt);color:var(--green)}.bpct-w{background:var(--amber-lt);color:#854d0e}.bpct-r{background:var(--red-lt);color:#991b1b}
 
-/* â”€â”€ ESTADOS â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ ESTADOS Ã¢â€â‚¬Ã¢â€â‚¬ */
 .empty{text-align:center;padding:60px 20px;color:var(--muted)}
 .empty-ico{font-size:46px;margin-bottom:12px;opacity:.6}
 .spin-w{display:flex;justify-content:center;padding:60px}
@@ -186,7 +186,7 @@ table.t tbody tr:last-child td{border-bottom:none}
 .toast{position:fixed;bottom:28px;right:28px;background:var(--ink);color:#fff;padding:13px 22px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;opacity:0;transform:translateY(16px);transition:.3s;pointer-events:none;max-width:360px}
 .toast.on{opacity:1;transform:translateY(0)}.toast.ok{border-left:4px solid var(--green)}.toast.er{border-left:4px solid var(--red)}
 
-/* â”€â”€ COMPORTAMIENTO â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ COMPORTAMIENTO Ã¢â€â‚¬Ã¢â€â‚¬ */
 .comp-card{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow-xs);overflow:hidden;margin-bottom:16px}
 .nivel-sel{padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;width:170px;transition:.2s;outline:none}
 .nivel-sel:focus{border-color:var(--purple)}
@@ -203,7 +203,7 @@ table.t tbody tr:last-child td{border-bottom:none}
 .nivel-input{width:70px;padding:7px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:14px;font-family:inherit;text-align:center;font-weight:800;transition:.2s;outline:none}
 .nivel-input:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
 
-/* â”€â”€ CRONOGRAMA â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ CRONOGRAMA Ã¢â€â‚¬Ã¢â€â‚¬ */
 .cal-wrap{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow-xs);overflow:hidden}
 .cal-top{background:linear-gradient(135deg,var(--blue),var(--blue-dark));color:#fff;padding:16px 22px;display:flex;align-items:center;justify-content:space-between}
 .cal-top h3{margin:0;font-size:16px;font-weight:800}
@@ -225,9 +225,9 @@ table.t tbody tr:last-child td{border-bottom:none}
 .leg-it{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700}
 .leg-dot{width:10px;height:10px;border-radius:3px}
 
-/* â”€â”€ PANEL CARD â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ PANEL CARD Ã¢â€â‚¬Ã¢â€â‚¬ */
 
-/* â”€â”€ JerarquÃ­a Materia â†’ Curso â†’ Estudiantes â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ JerarquÃƒÂ­a Materia Ã¢â€ â€™ Curso Ã¢â€ â€™ Estudiantes Ã¢â€â‚¬Ã¢â€â‚¬ */
 .materia-card{background:var(--white);border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 4px 16px rgba(26,86,219,.08);margin-bottom:20px;overflow:hidden;transition:box-shadow .2s;}
 .materia-card:hover{box-shadow:0 8px 24px rgba(26,86,219,.13);}
 .materia-head{padding:20px 24px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:linear-gradient(135deg,#1a56db 0%,#3b5bdb 100%);transition:filter .2s;}
@@ -272,7 +272,7 @@ table.t tbody tr:last-child td{border-bottom:none}
 .pcard{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow-xs);overflow:hidden;margin-bottom:20px}
 .pcard-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:linear-gradient(to right,var(--white),var(--bg))}
 .pcard-title{font-size:15px;font-weight:800;color:var(--blue)}
-/* â”€â”€ RESPONSIVE â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ RESPONSIVE Ã¢â€â‚¬Ã¢â€â‚¬ */
   @media(max-width:768px){
     body{display:block}
     .sidebar{width:100%;min-height:auto;height:auto;position:relative;top:auto;overflow:visible}
@@ -300,7 +300,7 @@ table.t tbody tr:last-child td{border-bottom:none}
 </head>
 <body>
 
-<!-- â•â• SIDEBAR â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢Â SIDEBAR Ã¢â€¢ÂÃ¢â€¢Â -->
 <aside class="sidebar">
   <div class="sb-logo">
     <div class="sb-mark"><img src="../assets/institution/pdf_image_2.jpg" alt="Logo Gardner"></div>
@@ -323,7 +323,7 @@ table.t tbody tr:last-child td{border-bottom:none}
     <span class="ico"><i class="fas fa-book"></i></span><span>Mis Asignaturas</span>
   </button>
 
-  <div class="sb-section">Académico</div>
+  <div class="sb-section">AcadÃ©mico</div>
   <button class="sb-item" onclick="showSection('asistencia',this)">
     <span class="ico"><i class="fas fa-clipboard-list"></i></span><span>Asistencia</span>
   </button>
@@ -339,11 +339,11 @@ table.t tbody tr:last-child td{border-bottom:none}
 
   <div class="sb-footer">
     <button class="sb-btn" onclick="abrirCambioPass()"><i class="fas fa-key"></i> Cambiar clave</button>
-    <button class="sb-btn" onclick="salir()"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+    <button class="sb-btn" onclick="salir()"><i class="fas fa-sign-out-alt"></i> Cerrar sesiÃ³n</button>
   </div>
 </aside>
 
-<!-- â•â• MAIN â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢Â MAIN Ã¢â€¢ÂÃ¢â€¢Â -->
 <div class="main">
 
   <!-- Topbar -->
@@ -361,7 +361,7 @@ table.t tbody tr:last-child td{border-bottom:none}
 
   <div class="content">
 
-    <!-- â•â•â• SECCIÃ“N: ASIGNATURAS â•â•â• -->
+    <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â SECCIÃƒâ€œN: ASIGNATURAS Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
     <div id="sec-asignaturas" class="section active">
       <div class="kpis">
         <div class="kpi blue"><div class="kpi-lbl">Cursos</div><div class="kpi-val" id="stCursos">-</div></div>
@@ -371,7 +371,7 @@ table.t tbody tr:last-child td{border-bottom:none}
       <div id="asigContainer"><div class="spin-w"><div class="spin"></div></div></div>
     </div>
 
-    <!-- â•â•â• SECCIÃ“N: ASISTENCIA â•â•â• -->
+    <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â SECCIÃƒâ€œN: ASISTENCIA Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
     <div id="sec-asistencia" class="section">
       <div class="pcard">
         <div class="pcard-head">
@@ -385,7 +385,7 @@ table.t tbody tr:last-child td{border-bottom:none}
         </div>
         <div id="asListaWrap" style="display:none">
           <div style="padding:14px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--border)">
-            <span style="font-weight:700;font-size:14px" id="asTitulo">Lista del día</span>
+            <span style="font-weight:700;font-size:14px" id="asTitulo">Lista del dÃ­a</span>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn bo" onclick="marcarTodos('P')"><i class="fas fa-check-circle"></i> Todos presentes</button>
               <button class="btn bo" onclick="marcarTodos('A')"><i class="fas fa-times-circle"></i> Todos ausentes</button>
@@ -393,7 +393,7 @@ table.t tbody tr:last-child td{border-bottom:none}
             </div>
           </div>
           <div class="twrap" style="border-radius:0;border:none">
-            <table class="t"><thead><tr><th>#</th><th>Estudiante</th><th>Estado</th><th>Observación</th></tr></thead><tbody id="asTbody"></tbody></table>
+            <table class="t"><thead><tr><th>#</th><th>Estudiante</th><th>Estado</th><th>ObservaciÃ³n</th></tr></thead><tbody id="asTbody"></tbody></table>
           </div>
           <div class="resbar">
             <span class="rchip"><span class="dot dotP"></span><span id="cntP">0</span> Presentes</span>
@@ -405,7 +405,7 @@ table.t tbody tr:last-child td{border-bottom:none}
       </div>
 
       <div id="asHistorialCard" class="pcard" style="display:none">
-        <div class="pcard-head"><span class="pcard-title"><i class="fas fa-chart-bar"></i> Historial del Período</span></div>
+        <div class="pcard-head"><span class="pcard-title"><i class="fas fa-chart-bar"></i> Historial del PerÃ­odo</span></div>
         <div style="display:flex;border-bottom:2px solid var(--border);padding:0 22px">
           <button class="mtbtn on" id="htabBtn1" onclick="switchHistTab('hresumen')" style="padding:12px 16px;font-size:13px">Resumen por estudiante</button>
           <button class="mtbtn" id="htabBtn2" onclick="switchHistTab('hfechas')" style="padding:12px 16px;font-size:13px">Por fechas</button>
@@ -419,7 +419,7 @@ table.t tbody tr:last-child td{border-bottom:none}
       </div>
     </div>
 
-    <!-- â•â•â• SECCIÃ“N: CRONOGRAMA â•â•â• -->
+    <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â SECCIÃƒâ€œN: CRONOGRAMA Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
     <div id="sec-cronograma" class="section">
       <div class="cal-wrap">
         <div class="cal-top">
@@ -433,7 +433,7 @@ table.t tbody tr:last-child td{border-bottom:none}
         <div class="cal-grid" id="calGrid"></div>
         <div class="leyenda">
           <span class="leg-it"><span class="leg-dot ev-EXAMEN"></span>Examen</span>
-        <span class="leg-it"><span class="leg-dot ev-REUNION"></span>Reunión</span>
+        <span class="leg-it"><span class="leg-dot ev-REUNION"></span>ReuniÃ³n</span>
           <span class="leg-it"><span class="leg-dot ev-FESTIVO"></span>Festivo</span>
           <span class="leg-it"><span class="leg-dot ev-CULTURAL"></span>Cultural</span>
           <span class="leg-it"><span class="leg-dot ev-OTRO"></span>Otro</span>
@@ -464,7 +464,7 @@ table.t tbody tr:last-child td{border-bottom:none}
   </div><!-- /content -->
 </div><!-- /main -->
 
-<!-- â•â•â• MODAL: CALIFICACIONES â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â MODAL: CALIFICACIONES Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="mover" id="mCal" onclick="if(event.target===this)cerrarMCal()">
   <div class="mbox lg">
     <div class="mh">
@@ -476,7 +476,7 @@ table.t tbody tr:last-child td{border-bottom:none}
     </div>
     <div class="mtabs">
       <button class="mtbtn on" id="ctbtn1" onclick="switchCalTab('cAct')"><i class="fas fa-list"></i> Por Actividad</button>
-      <button class="mtbtn" id="ctbtn2" onclick="switchCalTab('cCortes')"><i class="fas fa-chart-line"></i> Por Período</button>
+      <button class="mtbtn" id="ctbtn2" onclick="switchCalTab('cCortes')"><i class="fas fa-chart-line"></i> Por PerÃ­odo</button>
       <button class="mtbtn" id="ctbtn3" onclick="switchCalTab('cIndicadores')"><i class="fas fa-bullseye"></i> Indicadores</button>
       <button class="mtbtn" id="ctbtn4" onclick="switchCalTab('cComportamiento')"><i class="fas fa-smile"></i> Comportamiento</button>
     </div>
@@ -486,18 +486,18 @@ table.t tbody tr:last-child td{border-bottom:none}
         <button class="btn bp" onclick="abrirNuevaAct()"><i class="fas fa-plus-circle"></i> Registrar nota individual</button>
       </div>
       <div class="twrap">
-        <table class="t"><thead><tr><th>Actividad</th><th>Tipo</th><th>Período</th><th>Nota</th><th>Fecha</th><th>Observaciones</th><th></th></tr></thead>
+        <table class="t"><thead><tr><th>Actividad</th><th>Tipo</th><th>PerÃ­odo</th><th>Nota</th><th>Fecha</th><th>Observaciones</th><th></th></tr></thead>
         <tbody id="tbActiv"><tr><td colspan="7" style="text-align:center;padding:20px">Cargando...</td></tr></tbody></table>
       </div>
     </div>
     <div id="cCortes" class="mpanel"><div id="cortesContent"><div class="spin-w"><div class="spin"></div></div></div></div>
     <div id="cIndicadores" class="mpanel">
       <div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-        <div><span id="indPanelTitle" style="font-weight:700;color:var(--ink);font-size:14px">Indicadores SABER / HACER / SER</span><div id="indPanelSub" style="font-size:12px;color:var(--muted);margin-top:2px">Se muestran en el boletín PDF del período</div></div>
+        <div><span id="indPanelTitle" style="font-weight:700;color:var(--ink);font-size:14px">Indicadores SABER / HACER / SER</span><div id="indPanelSub" style="font-size:12px;color:var(--muted);margin-top:2px">Se muestran en el boletÃ­n PDF del perÃ­odo</div></div>
         <span id="indEstado" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;background:var(--surface);color:var(--muted)">Sin guardar</span>
       </div>
       <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
-        <span style="font-size:13px;font-weight:700;color:var(--ink)"><i class="fas fa-calendar-alt"></i> Período del boletín:</span>
+        <span style="font-size:13px;font-weight:700;color:var(--ink)"><i class="fas fa-calendar-alt"></i> PerÃ­odo del boletÃ­n:</span>
         <select id="indPeriodoSel" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;cursor:pointer;outline:none" onchange="onIndPeriodoCambio()"></select>
       </div>
       <div id="indIntroWrap" style="display:none;margin-bottom:16px;border:1px solid var(--border);border-radius:8px;padding:12px 14px;background:#fff7ed">
@@ -516,21 +516,21 @@ table.t tbody tr:last-child td{border-bottom:none}
       </div>
       <div style="margin-bottom:16px;border:1.5px solid var(--blue-lt);border-radius:8px;overflow:hidden">
         <div style="background:var(--blue);color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
-          <strong id="indLabel-saber" style="font-size:13px"><i class="fas fa-book"></i> SABER - ¿Qué aprende?</strong>
+          <strong id="indLabel-saber" style="font-size:13px"><i class="fas fa-book"></i> SABER - Â¿QuÃ© aprende?</strong>
           <button class="btn" style="background:rgba(255,255,255,.2);color:#fff;padding:4px 10px;font-size:11px" onclick="agregarIndicador('saber')">+ Agregar</button>
         </div>
         <div id="ind-saber" style="padding:10px 14px;min-height:40px"></div>
       </div>
       <div style="margin-bottom:16px;border:1.5px solid var(--amber-lt);border-radius:8px;overflow:hidden">
         <div style="background:var(--amber);color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
-          <strong id="indLabel-hacer" style="font-size:13px"><i class="fas fa-tools"></i> HACER - ¿Qué hace?</strong>
+          <strong id="indLabel-hacer" style="font-size:13px"><i class="fas fa-tools"></i> HACER - Â¿QuÃ© hace?</strong>
           <button class="btn" style="background:rgba(255,255,255,.2);color:#fff;padding:4px 10px;font-size:11px" onclick="agregarIndicador('hacer')">+ Agregar</button>
         </div>
         <div id="ind-hacer" style="padding:10px 14px;min-height:40px"></div>
       </div>
       <div style="margin-bottom:16px;border:1.5px solid var(--green-lt);border-radius:8px;overflow:hidden">
         <div style="background:var(--green);color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
-          <strong id="indLabel-ser" style="font-size:13px"><i class="fas fa-heart"></i> SER - ¿Cómo es?</strong>
+          <strong id="indLabel-ser" style="font-size:13px"><i class="fas fa-heart"></i> SER - Â¿CÃ³mo es?</strong>
           <button class="btn" style="background:rgba(255,255,255,.2);color:#fff;padding:4px 10px;font-size:11px" onclick="agregarIndicador('ser')">+ Agregar</button>
         </div>
         <div id="ind-ser" style="padding:10px 14px;min-height:40px"></div>
@@ -543,14 +543,14 @@ table.t tbody tr:last-child td{border-bottom:none}
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
         <div>
           <span style="font-weight:800;color:var(--ink);font-size:14px"><i class="fas fa-smile"></i> Comportamiento del estudiante</span>
-          <div style="font-size:12px;color:var(--muted);margin-top:3px">Califica del 1 al 5 - el nivel se asigna automáticamente</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">Califica del 1 al 5 - el nivel se asigna automÃ¡ticamente</div>
         </div>
         <span id="compEstEstado" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;background:var(--surface);color:var(--muted)">Sin guardar</span>
       </div>
 
       <!-- Selector de periodo -->
       <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:18px">
-        <span style="font-size:13px;font-weight:700;color:var(--ink)"><i class="fas fa-calendar-alt"></i> Período:</span>
+        <span style="font-size:13px;font-weight:700;color:var(--ink)"><i class="fas fa-calendar-alt"></i> PerÃ­odo:</span>
         <select id="compEstPeriodo" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;cursor:pointer;outline:none" onchange="cargarCompEstudiante()"></select>
       </div>
 
@@ -579,10 +579,10 @@ table.t tbody tr:last-child td{border-bottom:none}
         <div onclick="setCompEstNota(3.4)" style="text-align:center;padding:10px 6px;border-radius:8px;background:#fee2e2;color:#991b1b;cursor:pointer;border:2px solid transparent;transition:.2s" class="comp-ref-cell" data-n="1"><div style="font-size:16px;font-weight:900">1.0 - 3.4</div><div style="font-size:11px;font-weight:700">Bajo</div></div>
       </div>
 
-      <!-- DescripciÃ³n -->
+      <!-- DescripciÃƒÂ³n -->
       <div class="fgroup" style="margin-bottom:18px">
-        <label>OBSERVACIÓN <span style="font-weight:400;opacity:.6">(opcional)</span></label>
-        <textarea id="compEstDesc" rows="3" placeholder="Descripción del comportamiento del estudiante..."></textarea>
+        <label>OBSERVACIÃ“N <span style="font-weight:400;opacity:.6">(opcional)</span></label>
+        <textarea id="compEstDesc" rows="3" placeholder="DescripciÃ³n del comportamiento del estudiante..."></textarea>
       </div>
 
       <button class="btn" style="background:var(--purple);color:#fff;width:100%;justify-content:center;padding:12px;font-size:14px" onclick="guardarCompEstudiante()"><i class="fas fa-save"></i> Guardar comportamiento</button>
@@ -591,7 +591,7 @@ table.t tbody tr:last-child td{border-bottom:none}
   </div>
 </div>
 
-<!-- â•â•â• MODAL: ACTIVIDAD POR CURSO â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â MODAL: ACTIVIDAD POR CURSO Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="mover" id="mActCurso" onclick="if(event.target===this)cerrarMActCurso()">
   <div class="mbox sm">
     <div class="mh"><h3>Actividad por curso</h3><button class="mcls" onclick="cerrarMActCurso()">&times;</button></div>
@@ -603,7 +603,7 @@ table.t tbody tr:last-child td{border-bottom:none}
           <span class="tchip TRABAJO sel" data-t="TRABAJO" onclick="selTipoCurso(this)">Trabajo</span>
           <span class="tchip EXAMEN" data-t="EXAMEN" onclick="selTipoCurso(this)">Examen</span>
           <span class="tchip QUIZ" data-t="QUIZ" onclick="selTipoCurso(this)">Quiz</span>
-          <span class="tchip PARTICIPACION" data-t="PARTICIPACION" onclick="selTipoCurso(this)">Participación</span>
+          <span class="tchip PARTICIPACION" data-t="PARTICIPACION" onclick="selTipoCurso(this)">ParticipaciÃ³n</span>
           <span class="tchip TALLER" data-t="TALLER" onclick="selTipoCurso(this)">Taller</span>
         </div>
         <input type="hidden" id="actCursoTipo" value="TRABAJO">
@@ -614,13 +614,13 @@ table.t tbody tr:last-child td{border-bottom:none}
         <div class="fgroup"><label>FECHA INICIO</label><input type="date" id="actCursoFecha"></div>
         <div class="fgroup"><label>FECHA FIN <span style="font-weight:400;opacity:.6">(opcional)</span></label><input type="date" id="actCursoFechaFin"></div>
       </div>
-      <div class="fgroup"><label>DESCRIPCIÓN <span style="font-weight:400;opacity:.6">(opcional)</span></label><textarea id="actCursoObs" rows="2" placeholder="Qué se trabajará durante esas fechas..."></textarea></div>
+      <div class="fgroup"><label>DESCRIPCIÃ“N <span style="font-weight:400;opacity:.6">(opcional)</span></label><textarea id="actCursoObs" rows="2" placeholder="QuÃ© se trabajarÃ¡ durante esas fechas..."></textarea></div>
       <button class="btn bp" style="width:100%;justify-content:center;padding:12px;font-size:14px" onclick="guardarActividadCurso()"><i class="fas fa-paper-plane"></i> Publicar en cronograma</button>
     </div>
   </div>
 </div>
 
-<!-- â•â•â• MODAL: NUEVA/EDITAR ACTIVIDAD â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â MODAL: NUEVA/EDITAR ACTIVIDAD Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="mover" id="mAct" onclick="if(event.target===this)cerrarMAct()">
   <div class="mbox sm">
     <div class="mh"><h3 id="actTit">Nueva Actividad</h3><button class="mcls" onclick="cerrarMAct()">&times;</button></div>
@@ -632,7 +632,7 @@ table.t tbody tr:last-child td{border-bottom:none}
           <span class="tchip TRABAJO sel" data-t="TRABAJO" onclick="selTipo(this)">Trabajo</span>
           <span class="tchip EXAMEN" data-t="EXAMEN" onclick="selTipo(this)">Examen</span>
           <span class="tchip QUIZ" data-t="QUIZ" onclick="selTipo(this)">Quiz</span>
-          <span class="tchip PARTICIPACION" data-t="PARTICIPACION" onclick="selTipo(this)">Participación</span>
+          <span class="tchip PARTICIPACION" data-t="PARTICIPACION" onclick="selTipo(this)">ParticipaciÃ³n</span>
           <span class="tchip TALLER" data-t="TALLER" onclick="selTipo(this)">Taller</span>
         </div>
         <input type="hidden" id="actTipo" value="TRABAJO">
@@ -647,7 +647,7 @@ table.t tbody tr:last-child td{border-bottom:none}
   </div>
 </div>
 
-<!-- â•â•â• MODAL: DETALLES ESTUDIANTE â•â•â• -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â MODAL: DETALLES ESTUDIANTE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div class="mover" id="mEst" onclick="if(event.target===this)document.getElementById('mEst').classList.remove('o')">
   <div class="mbox sm">
     <div class="mh"><h3>Detalles del Estudiante</h3><button class="mcls" onclick="document.getElementById('mEst').classList.remove('o')">&times;</button></div>
@@ -655,17 +655,17 @@ table.t tbody tr:last-child td{border-bottom:none}
   </div>
 </div>
 
-<!-- â”€â”€ MODAL CAMBIAR CONTRASEÃ‘A â”€â”€ -->
+<!-- Ã¢â€â‚¬Ã¢â€â‚¬ MODAL CAMBIAR CONTRASEÃƒâ€˜A Ã¢â€â‚¬Ã¢â€â‚¬ -->
 <div class="mover" id="mPass" onclick="if(event.target===this)cerrarPass()">
   <div class="mbox sm">
-    <div class="mh"><h3><i class="fas fa-key"></i> Cambiar contraseña</h3><button class="mcls" onclick="cerrarPass()">&times;</button></div>
+    <div class="mh"><h3><i class="fas fa-key"></i> Cambiar contraseÃ±a</h3><button class="mcls" onclick="cerrarPass()">&times;</button></div>
     <div class="mbody">
       <div style="display:flex;flex-direction:column;gap:14px">
-        <div class="fgroup"><label>CONTRASEÑA ACTUAL</label><input type="password" id="passActual" placeholder="Tu contraseña actual"></div>
-        <div class="fgroup"><label>NUEVA CONTRASEÑA</label><input type="password" id="passNueva" placeholder="Mínimo 6 caracteres"></div>
-        <div class="fgroup"><label>CONFIRMAR NUEVA CONTRASEÑA</label><input type="password" id="passConfirm" placeholder="Repite la nueva contraseña"></div>
+        <div class="fgroup"><label>CONTRASEÃ‘A ACTUAL</label><input type="password" id="passActual" placeholder="Tu contraseÃ±a actual"></div>
+        <div class="fgroup"><label>NUEVA CONTRASEÃ‘A</label><input type="password" id="passNueva" placeholder="MÃ­nimo 6 caracteres"></div>
+        <div class="fgroup"><label>CONFIRMAR NUEVA CONTRASEÃ‘A</label><input type="password" id="passConfirm" placeholder="Repite la nueva contraseÃ±a"></div>
         <div id="passError" style="display:none;background:var(--red-lt);color:#991b1b;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:700"></div>
-        <button class="btn bp" id="btnCambiarPass" onclick="guardarNuevaPass()" style="width:100%;justify-content:center;padding:11px">Guardar nueva contraseña</button>
+        <button class="btn bp" id="btnCambiarPass" onclick="guardarNuevaPass()" style="width:100%;justify-content:center;padding:11px">Guardar nueva contraseÃ±a</button>
       </div>
     </div>
   </div>
@@ -717,8 +717,24 @@ function decJWT(t){ try{ return JSON.parse(decodeURIComponent(atob(t.split('.')[
 async function gql(q,v={}){
   const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk()},body:JSON.stringify({query:q,variables:v})});
   const j=await r.json();
-  if(j.errors){ const msg=j.errors[0].message; if(msg.includes('jwt expired')||msg.includes('invalid token')||msg.includes('No autenticado')){ sessionStorage.clear(); alert('Tu sesión ha expirado.'); window.location.href='principal.html'; return; } throw new Error(msg); }
+  if(j.errors){ const msg=j.errors[0].message; if(msg.includes('jwt expired')||msg.includes('invalid token')||msg.includes('No autenticado')){ sessionStorage.clear(); alert('Tu sesiÃ³n ha expirado.'); window.location.href='principal.html'; return; } throw new Error(msg); }
   return j.data;
+}
+function hoyIsoLocal(){
+  const ahora=new Date();
+  const local=new Date(ahora.getTime()-ahora.getTimezoneOffset()*60000);
+  return local.toISOString().split('T')[0];
+}
+function fechaInputValue(valor){
+  if(!valor) return hoyIsoLocal();
+  if(typeof valor==='string'){
+    const m=valor.match(/^(\d{4}-\d{2}-\d{2})/);
+    if(m) return m[1];
+  }
+  const d=new Date(valor);
+  if(isNaN(d.getTime())) return hoyIsoLocal();
+  const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);
+  return local.toISOString().split('T')[0];
 }
 function salir(){ sessionStorage.removeItem('token'); window.location.href='principal.html'; }
 function toast(msg,t='ok',d=3500){ const el=document.getElementById('toast'); el.textContent=msg; el.className=`toast on ${t}`; setTimeout(()=>el.className='toast',d); }
@@ -787,7 +803,7 @@ async function cargarAsignaturas(){
 
 function renderAsignaturas(){
   const c=document.getElementById('asigContainer');
-  if(!W.asignaturas.length){ c.innerHTML=`<div class="empty"><div class="empty-ico"><i class="fas fa-book"></i></div><p>No tienes asignaturas asignadas aún.<br>Contacta al administrador.</p></div>`; return; }
+  if(!W.asignaturas.length){ c.innerHTML=`<div class="empty"><div class="empty-ico"><i class="fas fa-book"></i></div><p>No tienes asignaturas asignadas aÃºn.<br>Contacta al administrador.</p></div>`; return; }
 
   // Estadisticas globales
   let totalEst=0; const cursosU=new Set();
@@ -815,7 +831,7 @@ function renderAsignaturas(){
       const cid='cc'+a.id;
       const totalC=(a.matriculas||[]).filter(m=>m.estudiante && matriculaVisibleProfesor(m)).length;
       const periodo=a.matriculas?.[0]?.periodo||'-';
-      const periodoLabel2=periodo.match(/^(\d{4})-(\d)$/)?`${{'1':'1er','2':'2do','3':'3er','4':'4to'}[periodo.split('-')[1]]||'P'+periodo.split('-')[1]} Período ${periodo.split('-')[0]}`:periodo;
+      const periodoLabel2=periodo.match(/^(\d{4})-(\d)$/)?`${{'1':'1er','2':'2do','3':'3er','4':'4to'}[periodo.split('-')[1]]||'P'+periodo.split('-')[1]} PerÃ­odo ${periodo.split('-')[0]}`:periodo;
       const filas=ordenarMatriculasPorApellido(a.matriculas||[]).filter(m=>m.estudiante && matriculaVisibleProfesor(m)).map((m,mi)=>{
         const e=m.estudiante; const n=`${e.nombre} ${e.primerApellido} ${e.segundoApellido||''}`.trim();
         const initials=(n.split(' ').slice(0,2).map(w=>w[0]).join('')).toUpperCase();
@@ -835,7 +851,7 @@ function renderAsignaturas(){
           </div>
           <div class="curso-right">
             <span class="curso-badge">${totalC} estudiante${totalC!==1?'s':''}</span>
-            <span class="curso-tog" id="tog${cid}">▼</span>
+            <span class="curso-tog" id="tog${cid}">â–¼</span>
           </div>
         </div>
         <div class="cbody" id="${cid}">
@@ -859,12 +875,12 @@ function renderAsignaturas(){
           <div class="ch-icon">${ico}</div>
           <div style="min-width:0">
             <div class="ch-name">${g.nombre}</div>
-            <div class="ch-meta">${totalCursos} curso${totalCursos!==1?'s':''} · ${totalEstG} estudiante${totalEstG!==1?'s':''}</div>
+            <div class="ch-meta">${totalCursos} curso${totalCursos!==1?'s':''} Â· ${totalEstG} estudiante${totalEstG!==1?'s':''}</div>
           </div>
         </div>
         <div class="mat-tag">
           <span class="mat-pill">${totalCursos} cursos</span>
-          <span class="mat-tog" id="togg${gid}">▼</span>
+          <span class="mat-tog" id="togg${gid}">â–¼</span>
         </div>
       </div>
       <div class="materia-body" id="${gid}">
@@ -922,7 +938,7 @@ function verDetalles(matId){
   if(!mat?.estudiante)return;
   const e=mat.estudiante; const n=`${e.nombre} ${e.primerApellido} ${e.segundoApellido||''}`.trim();
   const fecha=mat.fechaMatricula?new Date(mat.fechaMatricula).toLocaleDateString('es-CO'):'-';
-  document.getElementById('mEstBody').innerHTML=[['Nombre completo',n],['Cédula',e.cedula],['Email',e.email||'-'],['Estado',mat.estado||'ACTIVA'],['Asignatura',asig?.nombre||'-'],['Matrícula',fecha]].map(([k,v])=>`<div style="display:flex;padding:11px 0;border-bottom:1px solid var(--border)"><strong style="width:40%;font-size:12px;color:var(--muted);font-weight:700">${k}</strong><span style="width:60%;font-size:14px;font-weight:600">${v}</span></div>`).join('');
+  document.getElementById('mEstBody').innerHTML=[['Nombre completo',n],['CÃ©dula',e.cedula],['Email',e.email||'-'],['Estado',mat.estado||'ACTIVA'],['Asignatura',asig?.nombre||'-'],['MatrÃ­cula',fecha]].map(([k,v])=>`<div style="display:flex;padding:11px 0;border-bottom:1px solid var(--border)"><strong style="width:40%;font-size:12px;color:var(--muted);font-weight:700">${k}</strong><span style="width:60%;font-size:14px;font-weight:600">${v}</span></div>`).join('');
   document.getElementById('mEst').classList.add('o');
 }
 
@@ -965,7 +981,7 @@ function switchCalTab(id){
 async function recargarCals(){
   if(esCursoPreescolarNombre(W.cursoNombre)){
     W.cals=[];
-    document.getElementById('tbActiv').innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">Preescolar se registra solo con indicadores pedagógicos.</td></tr>';
+    document.getElementById('tbActiv').innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">Preescolar se registra solo con indicadores pedagÃ³gicos.</td></tr>';
     document.getElementById('cortesContent').innerHTML='<p style="text-align:center;padding:24px;color:var(--muted)">Preescolar no maneja notas por materia.</p>';
     return;
   }
@@ -982,7 +998,7 @@ async function recargarCals(){
 
 function renderActiv(cals){
   const tb=document.getElementById('tbActiv');
-  if(!cals.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);font-style:italic">Sin actividades. ¡Agrega la primera!</td></tr>';return;}
+  if(!cals.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);font-style:italic">Sin actividades. Â¡Agrega la primera!</td></tr>';return;}
   const sorted=[...cals].sort((a,b)=>((a.corte||0)-(b.corte||0))||new Date(a.fecha||0)-new Date(b.fecha||0));
   tb.innerHTML=sorted.map(c=>{ const n=Number(c.nota);const tipo=c.tipoActividad||'EXAMEN'; const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'-'; const per=c.periodo||'-';
     return `<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 9px;border-radius:10px;font-weight:700" class="badge-${tipo}">${tipo.charAt(0)+tipo.slice(1).toLowerCase()}</span></td><td style="font-size:12px;color:var(--muted)">${per}</td><td><strong style="color:${n>=4?'var(--green)':n>=3.5?'var(--amber)':'var(--red)'}">${n.toFixed(2)}</strong></td><td style="font-size:12px;color:var(--muted)">${f}</td><td style="font-size:12px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.observaciones||'-'}</td><td style="white-space:nowrap"><button class="btn bo" style="padding:4px 8px;font-size:11px;margin-right:3px" onclick="editarAct('${c.id}')"><i class="fas fa-pen"></i></button><button class="btn bd" style="padding:4px 8px;font-size:11px" onclick="eliminarCal('${c.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
@@ -992,13 +1008,13 @@ function renderActiv(cals){
 function renderCortes(cals){
   const cont=document.getElementById('cortesContent');
   if(!cals.length){ cont.innerHTML='<p style="text-align:center;padding:24px;color:var(--muted)">Sin calificaciones registradas.</p>'; return; }
-  // Agrupar por perÃ­odo
-  const periodos=[...new Set(cals.map(c=>c.periodo||'Sin período'))].sort();
+  // Agrupar por perÃƒÂ­odo
+  const periodos=[...new Set(cals.map(c=>c.periodo||'Sin perÃ­odo'))].sort();
   let html='';
   periodos.forEach(per=>{
-    const acts=cals.filter(c=>(c.periodo||'Sin período')===per);
+    const acts=cals.filter(c=>(c.periodo||'Sin perÃ­odo')===per);
     const avg=acts.length?acts.reduce((s,c)=>s+Number(c.nota),0)/acts.length:null;
-    const perLabel=per.match(/^(\d{4})-(\d)$/)?`${{1:'1er',2:'2do',3:'3er',4:'4to'}[per.split('-')[1]]||'P'+per.split('-')[1]} Período ${per.split('-')[0]}`:per;
+    const perLabel=per.match(/^(\d{4})-(\d)$/)?`${{1:'1er',2:'2do',3:'3er',4:'4to'}[per.split('-')[1]]||'P'+per.split('-')[1]} PerÃ­odo ${per.split('-')[0]}`:per;
     const tabla=`<table class="t" style="font-size:12px"><thead><tr><th>Actividad</th><th>Tipo</th><th>Nota</th><th>Fecha</th><th>Observaciones</th></tr></thead><tbody>${acts.map(a=>{const n=Number(a.nota);const f=a.fecha?new Date(a.fecha).toLocaleDateString('es-CO'):'-';return`<tr><td style="font-weight:700">${a.nombreActividad||'Actividad'}</td><td><span class="badge-${a.tipoActividad||'EXAMEN'}" style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">${(a.tipoActividad||'EXAMEN').charAt(0)+(a.tipoActividad||'EXAMEN').slice(1).toLowerCase()}</span></td><td><strong style="color:${n>=4?'var(--green)':n>=3.5?'var(--amber)':'var(--red)'}">${n.toFixed(2)}</strong></td><td style="font-size:11px;color:var(--muted)">${f}</td><td style="font-size:11px;color:var(--muted)">${a.observaciones||'-'}</td></tr>`;}).join('')}</tbody></table>`;
     html+=`<div class="corte-card"><div class="corte-head"><div><div class="corte-title"><i class="fas fa-calendar-alt"></i> ${perLabel}</div><div class="corte-peso">${acts.length} actividad(es)</div></div><div class="corte-avg">${avg!==null?avg.toFixed(2):'-'}</div></div>${tabla}</div>`;
   });
@@ -1023,7 +1039,7 @@ function periodoAbiertoParaNota(cfg){
 
 async function cargarPeriodosCalificacion(preferido){
   const sel=document.getElementById('actPeriodo'); if(!sel) return;
-  const ay=anioActual(); const labels={1:'1er Período',2:'2do Período',3:'3er Período'};
+  const ay=anioActual(); const labels={1:'1er PerÃ­odo',2:'2do PerÃ­odo',3:'3er PerÃ­odo'};
   let configs=[];
   try{
     const d=await gql(`query{periodosConfig(anio:${ay}){numeroPeriodo abierto fechaApertura fechaCierre}}`);
@@ -1110,7 +1126,7 @@ async function abrirActividadCurso(){
   llenarSelectPeriodosAbiertos(periodoSel, W.periodo||periodoLabel());
   document.getElementById('actCursoNombre').value='';
   document.getElementById('actCursoObs').value='';
-  document.getElementById('actCursoFecha').value=new Date().toISOString().split('T')[0];
+  document.getElementById('actCursoFecha').value=hoyIsoLocal();
   document.getElementById('actCursoFechaFin').value='';
   setPeriodoSelectById('actCursoPeriodo', W.periodo||periodoLabel());
   document.querySelectorAll('#mActCurso .tchip').forEach(c=>c.classList.remove('sel'));
@@ -1131,7 +1147,7 @@ async function guardarActividadCurso(){
   if(!asigId||!nombre||!periodo||!fecha){ toast('Completa curso, nombre, periodo y fecha de inicio','er'); return; }
   if(fechaFin && fechaFin < fecha){ toast('La fecha fin no puede ser anterior a la fecha de inicio','er'); return; }
   const asig=W.asignaturas.find(a=>a.id===asigId);
-  if(!asig){ toast('No se encontró la asignatura seleccionada','er'); return; }
+  if(!asig){ toast('No se encontrÃ³ la asignatura seleccionada','er'); return; }
   const cursoId=asig.curso?.id||asig.cursoId;
   if(!cursoId){ toast('La asignatura no tiene curso asociado','er'); return; }
   const tipoCronograma = tipo === 'EXAMEN' ? 'EXAMEN' : 'OTRO';
@@ -1161,16 +1177,16 @@ async function guardarActividadCurso(){
     toast('Error: '+err.message,'er');
   }
 }
-async function abrirNuevaAct(){ if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; } document.getElementById('actId').value=''; document.getElementById('actTit').textContent='Nueva Actividad'; document.getElementById('actNombre').value=''; document.getElementById('actNota').value=''; document.getElementById('actObs').value=''; document.getElementById('actFecha').value=new Date().toISOString().split('T')[0]; await cargarPeriodosCalificacion(W.periodo||periodoLabel()); document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); document.querySelector('.tchip.TRABAJO').classList.add('sel'); document.getElementById('actTipo').value='TRABAJO'; document.getElementById('mAct').classList.add('o'); }
-async function editarAct(id){ const cal=W.cals.find(c=>c.id===id);if(!cal)return; document.getElementById('actId').value=id; document.getElementById('actTit').textContent='Editar Actividad'; document.getElementById('actNombre').value=cal.nombreActividad||''; document.getElementById('actNota').value=cal.nota; document.getElementById('actObs').value=cal.observaciones||''; document.getElementById('actFecha').value=cal.fecha?(new Date(cal.fecha).toISOString().split('T')[0]):new Date().toISOString().split('T')[0]; await cargarPeriodosCalificacion(cal.periodo||W.periodo||periodoLabel()); setPeriodoSelect(cal.periodo||W.periodo||periodoLabel()); document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); const chip=document.querySelector(`.tchip.${cal.tipoActividad||'EXAMEN'}`); if(chip)chip.classList.add('sel'); document.getElementById('actTipo').value=cal.tipoActividad||'EXAMEN'; document.getElementById('mAct').classList.add('o'); }
+async function abrirNuevaAct(){ if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; } document.getElementById('actId').value=''; document.getElementById('actTit').textContent='Nueva Actividad'; document.getElementById('actNombre').value=''; document.getElementById('actNota').value=''; document.getElementById('actObs').value=''; document.getElementById('actFecha').value=hoyIsoLocal(); await cargarPeriodosCalificacion(W.periodo||periodoLabel()); document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); document.querySelector('.tchip.TRABAJO').classList.add('sel'); document.getElementById('actTipo').value='TRABAJO'; document.getElementById('mAct').classList.add('o'); }
+async function editarAct(id){ const cal=W.cals.find(c=>c.id===id);if(!cal)return; document.getElementById('actId').value=id; document.getElementById('actTit').textContent='Editar Actividad'; document.getElementById('actNombre').value=cal.nombreActividad||''; document.getElementById('actNota').value=cal.nota; document.getElementById('actObs').value=cal.observaciones||''; document.getElementById('actFecha').value=fechaInputValue(cal.fecha); await cargarPeriodosCalificacion(cal.periodo||W.periodo||periodoLabel()); setPeriodoSelect(cal.periodo||W.periodo||periodoLabel()); document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); const chip=document.querySelector(`.tchip.${cal.tipoActividad||'EXAMEN'}`); if(chip)chip.classList.add('sel'); document.getElementById('actTipo').value=cal.tipoActividad||'EXAMEN'; document.getElementById('mAct').classList.add('o'); }
 function selTipo(chip){ document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); chip.classList.add('sel'); document.getElementById('actTipo').value=chip.dataset.t; }
 function notaDosDecimales(valor){ const n=parseFloat(valor); return Number.isFinite(n)?Math.round((n+Number.EPSILON)*100)/100:NaN; }
 async function guardarActividad(){
   if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; }
   const id=document.getElementById('actId').value; const tipo=document.getElementById('actTipo').value; const nombre=document.getElementById('actNombre').value.trim(); const nota=notaDosDecimales(document.getElementById('actNota').value); const periodo=document.getElementById('actPeriodo').value.trim(); const fecha=document.getElementById('actFecha').value; const obs=document.getElementById('actObs').value.trim();
-  if(!periodoNotaHabilitado()){toast('Ese período no está habilitado para calificar','er');return;}
+  if(!periodoNotaHabilitado()){toast('Ese perÃ­odo no estÃ¡ habilitado para calificar','er');return;}
   if(!nombre||isNaN(nota)||!periodo||!fecha){toast('Completa todos los campos obligatorios','er');return;} if(nota<0||nota>5){toast('La nota debe estar entre 0.0 y 5.0','er');return;}
-  try{ if(id){ await gql(`mutation A($id:ID!,$inp:CalificacionInput!){actualizarCalificacion(id:$id,input:$inp){id}}`,{id,inp:{estudianteId:W.estId,asignaturaId:W.asigId,nota,periodo,observaciones:obs,tipoActividad:tipo,nombreActividad:nombre}}); toast('Actividad actualizada'); }else{ await gql(`mutation C($inp:CalificacionInput!){crearCalificacion(input:$inp){id}}`,{inp:{estudianteId:W.estId,asignaturaId:W.asigId,nota,periodo,observaciones:obs,tipoActividad:tipo,nombreActividad:nombre}}); toast('Actividad registrada'); } cerrarMAct(); await recargarCals(); }catch(err){toast('Error: '+err.message,'er');}
+  try{ if(id){ await gql(`mutation A($id:ID!,$inp:CalificacionInput!){actualizarCalificacion(id:$id,input:$inp){id}}`,{id,inp:{estudianteId:W.estId,asignaturaId:W.asigId,nota,periodo,fecha,observaciones:obs,tipoActividad:tipo,nombreActividad:nombre}}); toast('Actividad actualizada'); }else{ await gql(`mutation C($inp:CalificacionInput!){crearCalificacion(input:$inp){id}}`,{inp:{estudianteId:W.estId,asignaturaId:W.asigId,nota,periodo,fecha,observaciones:obs,tipoActividad:tipo,nombreActividad:nombre}}); toast('Actividad registrada'); } cerrarMAct(); await recargarCals(); }catch(err){toast('Error: '+err.message,'er');}
 }
 async function guardarActividadV2(){
   if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; }
@@ -1181,7 +1197,7 @@ async function guardarActividadV2(){
   const periodo=document.getElementById('actPeriodo').value.trim();
   const fecha=document.getElementById('actFecha').value;
   const obs=document.getElementById('actObs').value.trim();
-  if(!periodoNotaHabilitado()){toast('Ese período no está habilitado para calificar','er');return;}
+  if(!periodoNotaHabilitado()){toast('Ese perÃ­odo no estÃ¡ habilitado para calificar','er');return;}
   if(!nombre||isNaN(nota)||!periodo||!fecha){toast('Completa todos los campos obligatorios','er');return;}
   if(nota<0||nota>5){toast('La nota debe estar entre 0.0 y 5.0','er');return;}
   const inp={estudianteId:W.estId,asignaturaId:W.asigId,nota,periodo,fecha,observaciones:obs,tipoActividad:tipo,nombreActividad:nombre};
@@ -1199,16 +1215,16 @@ async function guardarActividadV2(){
     toast('Error: '+err.message,'er');
   }
 }
-async function eliminarCal(id){ if(!confirm('¿Eliminar esta actividad?'))return; try{await gql(`mutation{eliminarCalificacion(id:"${id}")}`);toast('Eliminado');await recargarCals();}catch(err){toast('Error: '+err.message,'er');} }
+async function eliminarCal(id){ if(!confirm('Â¿Eliminar esta actividad?'))return; try{await gql(`mutation{eliminarCalificacion(id:"${id}")}`);toast('Eliminado');await recargarCals();}catch(err){toast('Error: '+err.message,'er');} }
 function cerrarMCal(){document.getElementById('mCal').classList.remove('o');}
 function cerrarMAct(){document.getElementById('mAct').classList.remove('o');}
 function cerrarMActCurso(){document.getElementById('mActCurso').classList.remove('o');}
 
-function llenarSelectAsig(){ const sel=document.getElementById('asSelAsig'); sel.innerHTML='<option value="">Seleccionar asignatura</option>'; W.asignaturas.forEach(a=>{ const o=document.createElement('option'); o.value=a.id; o.textContent=`${a.nombre}${a.curso?' - '+a.curso.nombre:''}`; sel.appendChild(o); }); if(!document.getElementById('asSelFecha').value) document.getElementById('asSelFecha').value=new Date().toISOString().split('T')[0]; }
+function llenarSelectAsig(){ const sel=document.getElementById('asSelAsig'); sel.innerHTML='<option value="">Seleccionar asignatura</option>'; W.asignaturas.forEach(a=>{ const o=document.createElement('option'); o.value=a.id; o.textContent=`${a.nombre}${a.curso?' - '+a.curso.nombre:''}`; sel.appendChild(o); }); if(!document.getElementById('asSelFecha').value) document.getElementById('asSelFecha').value=hoyIsoLocal(); }
 
 async function cargarLista(){
   const asigId=document.getElementById('asSelAsig').value; const fecha=document.getElementById('asSelFecha').value; const periodo=document.getElementById('asSelPeriodo').value.trim();
-  if(!asigId){toast('Selecciona una asignatura','er');return;} if(!fecha){toast('Selecciona una fecha','er');return;} if(!periodo){toast('Ingresa el período','er');return;}
+  if(!asigId){toast('Selecciona una asignatura','er');return;} if(!fecha){toast('Selecciona una fecha','er');return;} if(!periodo){toast('Ingresa el perÃ­odo','er');return;}
   W.asEst=[];W.asEstados={};W.asObs={};
   try{
     const dm=await gql(`query{matriculasPorAsignatura(asignaturaId:"${asigId}"){id estado estudiante{cedula nombre primerApellido segundoApellido}}}`);
@@ -1225,7 +1241,7 @@ function renderLista(fecha){
   const tb=document.getElementById('asTbody');
   const estadoInfo={P:{cls:'echip-P',ico:'<i class="fas fa-check-circle"></i>',lbl:'Presente'},A:{cls:'echip-A',ico:'<i class="fas fa-times-circle"></i>',lbl:'Ausente'},T:{cls:'echip-T',ico:'<i class="fas fa-clock"></i>',lbl:'Tarde'},E:{cls:'echip-E',ico:'<i class="fas fa-file-alt"></i>',lbl:'Excusa'}};
   tb.innerHTML=W.asEst.map((e,i)=>{ const n=`${e.nombre} ${e.primerApellido} ${e.segundoApellido||''}`.trim(); const chips=Object.entries(estadoInfo).map(([k,v])=>`<span class="echip ${v.cls} ${W.asEstados[e.cedula]===k?'sel':''}" onclick="cambiarEstado('${e.cedula}','${k}',this)">${v.ico} ${v.lbl}</span>`).join('');
-    return `<tr id="fila-${e.cedula}"><td style="color:var(--muted);font-size:12px;font-weight:700">${i+1}</td><td><strong style="font-size:13px">${n}</strong><br><span style="font-size:11px;color:var(--muted)">${e.cedula}</span></td><td><div class="estad-chips" style="flex-wrap:wrap">${chips}</div></td><td><input type="text" style="border:1.5px solid var(--border);border-radius:6px;padding:6px 9px;font-size:12px;width:180px;font-family:inherit;outline:none" placeholder="Observación..." value="${W.asObs[e.cedula]||''}" oninput="W.asObs['${e.cedula}']=this.value"></td></tr>`;
+    return `<tr id="fila-${e.cedula}"><td style="color:var(--muted);font-size:12px;font-weight:700">${i+1}</td><td><strong style="font-size:13px">${n}</strong><br><span style="font-size:11px;color:var(--muted)">${e.cedula}</span></td><td><div class="estad-chips" style="flex-wrap:wrap">${chips}</div></td><td><input type="text" style="border:1.5px solid var(--border);border-radius:6px;padding:6px 9px;font-size:12px;width:180px;font-family:inherit;outline:none" placeholder="ObservaciÃ³n..." value="${W.asObs[e.cedula]||''}" oninput="W.asObs['${e.cedula}']=this.value"></td></tr>`;
   }).join('');
   document.getElementById('asListaWrap').style.display='block'; actualizarResumen();
 }
@@ -1253,7 +1269,7 @@ async function cargarHistorial(asigId,periodo){
 function renderHistResumen(data){
   const mapaE={};W.asEst.forEach(e=>{mapaE[e.cedula]=e;});
   const tb=document.getElementById('hTbodyResumen');
-  if(!data.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Sin registros en este período</td></tr>';return;}
+  if(!data.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Sin registros en este perÃ­odo</td></tr>';return;}
   tb.innerHTML=[...data].sort((a,b)=>{ const ea=mapaE[a.estudianteId], eb=mapaE[b.estudianteId]; const an=ea?`${ea.primerApellido||''} ${ea.segundoApellido||''} ${ea.nombre||''}`:String(a.estudianteId); const bn=eb?`${eb.primerApellido||''} ${eb.segundoApellido||''} ${eb.nombre||''}`:String(b.estudianteId); return an.localeCompare(bn,'es',{sensitivity:'base'}); }).map(r=>{ const e=mapaE[r.estudianteId]; const n=e?`${e.nombre} ${e.primerApellido}`.trim():r.estudianteId; const pct=r.porcentajeAsistencia; const cls=pct>=80?'bpct-ok':pct>=60?'bpct-w':'bpct-r';
     return `<tr><td><strong style="font-size:13px">${n}</strong><br><span style="font-size:11px;color:var(--muted)">${r.estudianteId}</span></td><td style="font-weight:700">${r.totalClases}</td><td style="color:var(--green);font-weight:700">${r.presentes}</td><td style="color:var(--red);font-weight:700">${r.ausentes}</td><td style="color:var(--amber);font-weight:700">${r.tardes}</td><td style="color:var(--purple);font-weight:700">${r.excusas}</td><td><span class="bpct ${cls}">${pct}%</span></td></tr>`;
   }).join('');
@@ -1453,12 +1469,12 @@ async function subirMallaCurricular(){
 }
 
 async function cargarConfigPeriodo(periodo){ const anio=new Date().getFullYear(); const key=`${anio}-${periodo}`; if(W.periodoConfigCache[key])return W.periodoConfigCache[key]; try{ const d=await gql(`query{periodoConfig(anio:${anio},numeroPeriodo:${parseInt(periodo)||1}){numCortes pesoPorCorte}}`); const cfg=d.periodoConfig??{numCortes:3,pesoPorCorte:33.3}; W.periodoConfigCache[key]=cfg; return cfg; }catch{return{numCortes:3,pesoPorCorte:33.3};} }
-async function actualizarSelectCortes(){ const periodo=document.getElementById('actPeriodo').value.trim()||W.periodo; const cfg=await cargarConfigPeriodo(periodo); const sel=document.getElementById('actCorte'); const prev=sel.value; sel.innerHTML=''; for(let c=1;c<=cfg.numCortes;c++){const o=document.createElement('option');o.value=c;o.textContent=`${c}° Corte - ${cfg.pesoPorCorte.toFixed(1)}%`;sel.appendChild(o);} if(prev&&parseInt(prev)<=cfg.numCortes)sel.value=prev; }
+async function actualizarSelectCortes(){ const periodo=document.getElementById('actPeriodo').value.trim()||W.periodo; const cfg=await cargarConfigPeriodo(periodo); const sel=document.getElementById('actCorte'); const prev=sel.value; sel.innerHTML=''; for(let c=1;c<=cfg.numCortes;c++){const o=document.createElement('option');o.value=c;o.textContent=`${c}Â° Corte - ${cfg.pesoPorCorte.toFixed(1)}%`;sel.appendChild(o);} if(prev&&parseInt(prev)<=cfg.numCortes)sel.value=prev; }
 
 
 
 
-// â”€â”€ helpers nivel â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ helpers nivel Ã¢â€â‚¬Ã¢â€â‚¬
 function notaToNivel(n){ const v=parseFloat(n); if(v>=4.6)return'Superior'; if(v>=4.0)return'Alto'; if(v>=3.5)return'Basico'; if(v>=1)return'Bajo'; return''; }
 
 function getNivelCfg(n){
@@ -1510,7 +1526,7 @@ function poblarCompEstPeriodo(){
   sel.innerHTML='';
   [1,2,3].forEach(n=>{
     const val=`${ay}-${n}`;
-    const labels={1:'1er Período',2:'2do Período',3:'3er Período'};
+    const labels={1:'1er PerÃ­odo',2:'2do PerÃ­odo',3:'3er PerÃ­odo'};
     const opt=document.createElement('option');
     opt.value=val; opt.textContent=`${labels[n]} (${val})`;
     if(val===periodoActual) opt.selected=true;
@@ -1519,7 +1535,7 @@ function poblarCompEstPeriodo(){
 }
 
 async function iniciarCompEstudiante(){
-  if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar se maneja solo con indicadores pedagógicos','er'); return; }
+  if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar se maneja solo con indicadores pedagÃ³gicos','er'); return; }
   poblarCompEstPeriodo(); await cargarCompEstudiante();
 }
 
@@ -1543,7 +1559,7 @@ async function cargarCompEstudiante(){
 }
 
 async function guardarCompEstudiante(){
-  if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar se maneja solo con indicadores pedagógicos','er'); return; }
+  if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar se maneja solo con indicadores pedagÃ³gicos','er'); return; }
   const periodo=document.getElementById('compEstPeriodo').value;
   const nota=parseFloat(document.getElementById('compEstNota').value);
   const desc=document.getElementById('compEstDesc').value.trim();
@@ -1563,15 +1579,15 @@ function calMes(delta){ W.calMesActual+=delta; if(W.calMesActual>11){W.calMesAct
 function renderCalendario(){
   const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   document.getElementById('calMesTxt').textContent=`${meses[W.calMesActual]} ${W.calAnioActual}`;
-  const grid=document.getElementById('calGrid'); const dias=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const grid=document.getElementById('calGrid'); const dias=['Lun','Mar','MiÃ©','Jue','Vie','SÃ¡b','Dom'];
   let html=dias.map(d=>`<div class="cal-dh">${d}</div>`).join('');
   const hoy=new Date(); const primero=new Date(W.calAnioActual,W.calMesActual,1); let inicioSem=primero.getDay(); inicioSem=inicioSem===0?6:inicioSem-1;
   const ultimoDia=new Date(W.calAnioActual,W.calMesActual+1,0).getDate(); const mesPrev=new Date(W.calAnioActual,W.calMesActual,0).getDate();
   for(let i=inicioSem-1;i>=0;i--) html+=`<div class="cal-cel otro-mes"><div class="cal-num">${mesPrev-i}</div></div>`;
   for(let d=1;d<=ultimoDia;d++){
-    const fecha=new Date(W.calAnioActual,W.calMesActual,d); const esHoy=fecha.toDateString()===hoy.toDateString(); const fechaStr=fecha.toISOString().split('T')[0];
+    const fecha=new Date(W.calAnioActual,W.calMesActual,d); const esHoy=fecha.toDateString()===hoy.toDateString(); const fechaStr=fechaInputValue(fecha);
     const evs=W.calEventos.filter(e=>{const fi=e.fechaInicio.split('T')[0];const ff=e.fechaFin?e.fechaFin.split('T')[0]:fi;return fechaStr>=fi&&fechaStr<=ff;});
-    html+=`<div class="cal-cel${esHoy?' hoy':''}"><div class="cal-num">${d}</div>${evs.slice(0,3).map(e=>`<div class="cal-ev ev-${e.tipo}" title="${e.titulo}">${e.titulo}</div>`).join('')}${evs.length>3?`<div style="font-size:9px;color:var(--muted)">+${evs.length-3} más</div>`:''}</div>`;
+    html+=`<div class="cal-cel${esHoy?' hoy':''}"><div class="cal-num">${d}</div>${evs.slice(0,3).map(e=>`<div class="cal-ev ev-${e.tipo}" title="${e.titulo}">${e.titulo}</div>`).join('')}${evs.length>3?`<div style="font-size:9px;color:var(--muted)">+${evs.length-3} mÃ¡s</div>`:''}</div>`;
   }
   const total=inicioSem+ultimoDia; const resto=total%7===0?0:7-(total%7);
   for(let i=1;i<=resto;i++) html+=`<div class="cal-cel otro-mes"><div class="cal-num">${i}</div></div>`;
@@ -1584,14 +1600,14 @@ async function guardarNuevaPass(){
   const actual=document.getElementById('passActual').value; const nueva=document.getElementById('passNueva').value; const confirma=document.getElementById('passConfirm').value;
   const errDiv=document.getElementById('passError'); const btn=document.getElementById('btnCambiarPass'); errDiv.style.display='none';
   if(!actual||!nueva||!confirma){errDiv.textContent='Completa todos los campos.';errDiv.style.display='block';return;}
-  if(nueva!==confirma){errDiv.textContent='Las contraseñas no coinciden.';errDiv.style.display='block';return;}
-  if(nueva.length<6){errDiv.textContent='Mínimo 6 caracteres.';errDiv.style.display='block';return;}
+  if(nueva!==confirma){errDiv.textContent='Las contraseÃ±as no coinciden.';errDiv.style.display='block';return;}
+  if(nueva.length<6){errDiv.textContent='MÃ­nimo 6 caracteres.';errDiv.style.display='block';return;}
   btn.disabled=true;btn.textContent='Guardando...';
-  try{ await gql(`mutation CP($u:String!,$o:String!,$n:String!){cambiarPassword(username:$u,oldPassword:$o,newPassword:$n)}`,{u:sessionStorage.getItem('currentUsername')||W.profId,o:actual,n:nueva}); cerrarPass(); toast('Contraseña actualizada correctamente'); }catch(e){ errDiv.textContent=e.message||'Error al cambiar la contraseña.'; errDiv.style.display='block'; }finally{btn.disabled=false;btn.textContent='Guardar nueva contraseña';}
+  try{ await gql(`mutation CP($u:String!,$o:String!,$n:String!){cambiarPassword(username:$u,oldPassword:$o,newPassword:$n)}`,{u:sessionStorage.getItem('currentUsername')||W.profId,o:actual,n:nueva}); cerrarPass(); toast('ContraseÃ±a actualizada correctamente'); }catch(e){ errDiv.textContent=e.message||'Error al cambiar la contraseÃ±a.'; errDiv.style.display='block'; }finally{btn.disabled=false;btn.textContent='Guardar nueva contraseÃ±a';}
 }
 
 
-// â”€â”€ Indicadores SABER / HACER / SER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Indicadores SABER / HACER / SER Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 const IND = { intro:'', saber:[], hacer:[], ser:[] };
 const CURSOS_PREESCOLAR = ['parvulos','parvulo','pre jardin','prejardin','jardin','transicion'];
 const CURSOS_PRIMARIA = ['primero','segundo','tercero','cuarto','quinto'];
@@ -1613,13 +1629,13 @@ function esCursoPrimariaNombre(nombre=''){
 function metaIndicadores(){
   if(esCursoPreescolarNombre(W.cursoNombre)){
     return {
-      title:'Seguimiento pedagógico de preescolar',
-      sub:'Estas secciones se reflejan en la carta informativa del período.',
+      title:'Seguimiento pedagÃ³gico de preescolar',
+      sub:'Estas secciones se reflejan en la carta informativa del perÃ­odo.',
       saber:'RESUMEN DEL AVANCE',
       hacer:'OBJETIVO',
       ser:'ACTIVIDADES',
       placeholders:{
-        saber:'Ej: Los niños han avanzado en la expresión de palabras, sonidos y gestos para comunicarse.',
+        saber:'Ej: Los niÃ±os han avanzado en la expresiÃ³n de palabras, sonidos y gestos para comunicarse.',
         hacer:'Ej: Desarrollar habilidades de comunicacion y lenguaje.',
         ser:'Ej: Leer libros con imagenes; cantar canciones; jugar con palabras y sonidos.'
       }
@@ -1628,12 +1644,12 @@ function metaIndicadores(){
   if(esCursoPrimariaNombre(W.cursoNombre)){
     return {
       title:'Indicadores SABER / HACER / SER',
-      sub:'Se muestran en el boletín PDF del período.',
-      saber:'📘 SABER — ¿Qué aprende?',
-      hacer:'🔧 HACER — ¿Qué hace?',
-      ser:'💚 SER — ¿Cómo es?',
+      sub:'Se muestran en el boletÃ­n PDF del perÃ­odo.',
+      saber:'ðŸ“˜ SABER â€” Â¿QuÃ© aprende?',
+      hacer:'ðŸ”§ HACER â€” Â¿QuÃ© hace?',
+      ser:'ðŸ’š SER â€” Â¿CÃ³mo es?',
       placeholders:{
-        saber:'Ej: Reconoce las características principales del tema trabajado.',
+        saber:'Ej: Reconoce las caracterÃ­sticas principales del tema trabajado.',
         hacer:'Ej: Resuelve ejercicios aplicando el procedimiento explicado en clase.',
         ser:'Ej: Participa con respeto y cumple las normas durante la actividad.'
       }
@@ -1641,12 +1657,12 @@ function metaIndicadores(){
   }
   return {
     title:'Indicadores por curso',
-    sub:'El formato cambia automáticamente según el grado seleccionado.',
-    saber:'📘 SABER — ¿Qué aprende?',
-    hacer:'🔧 HACER — ¿Qué hace?',
-    ser:'💚 SER — ¿Cómo es?',
+    sub:'El formato cambia automÃ¡ticamente segÃºn el grado seleccionado.',
+    saber:'ðŸ“˜ SABER â€” Â¿QuÃ© aprende?',
+    hacer:'ðŸ”§ HACER â€” Â¿QuÃ© hace?',
+    ser:'ðŸ’š SER â€” Â¿CÃ³mo es?',
     placeholders:{
-      saber:'Ej: Reconoce las características principales del tema trabajado.',
+      saber:'Ej: Reconoce las caracterÃ­sticas principales del tema trabajado.',
       hacer:'Ej: Resuelve ejercicios aplicando el procedimiento explicado en clase.',
       ser:'Ej: Participa con respeto y cumple las normas durante la actividad.'
     }
@@ -1683,7 +1699,7 @@ function renderIndEstudiantes(){
   const cont=document.getElementById('ind-estudiantes'); if(!cont) return;
   const estudiantes=W.indEstudiantes||[];
   if(!estudiantes.length){
-    cont.innerHTML='<div style="color:var(--muted);font-size:13px;font-style:italic">No hay estudiantes activos en este salón.</div>';
+    cont.innerHTML='<div style="color:var(--muted);font-size:13px;font-style:italic">No hay estudiantes activos en este salÃ³n.</div>';
     return;
   }
   if(esCursoPreescolarNombre(W.cursoNombre)){
@@ -1698,7 +1714,7 @@ function renderIndEstudiantes(){
           <input type="checkbox" value="${ced}" ${checked} onchange="toggleIndEstudiante('${ced}',this.checked)" style="width:16px;height:16px;margin-top:2px;flex:0 0 auto">
           <span style="min-width:0"><strong style="display:block;color:var(--ink);line-height:1.25;overflow-wrap:anywhere">${nombre}</strong><small style="color:var(--muted)">${ced}</small></span>
         </label>
-        <textarea id="indObs-${ced}" rows="3" ${disabled} placeholder="Observación individual para este estudiante..." oninput="setIndObs('${ced}',this.value)" style="box-sizing:border-box;width:100%;max-width:100%;padding:9px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;line-height:1.35;resize:vertical;min-height:78px;overflow:auto">${val.replace(/</g,'&lt;')}</textarea>
+        <textarea id="indObs-${ced}" rows="3" ${disabled} placeholder="ObservaciÃ³n individual para este estudiante..." oninput="setIndObs('${ced}',this.value)" style="box-sizing:border-box;width:100%;max-width:100%;padding:9px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;line-height:1.35;resize:vertical;min-height:78px;overflow:auto">${val.replace(/</g,'&lt;')}</textarea>
       </div>`;
     }).join('');
     return;
@@ -1798,17 +1814,17 @@ function renderIndLista(tipo){
   if(esCursoPreescolarNombre(W.cursoNombre)){
     if(tipo==='saber'){
       const val=(IND.saber||[]).join('\n');
-      ul.innerHTML=`<textarea rows="4" placeholder="Resumen del avance que va en la franja azul del boletín..." oninput="setPreResumen(this.value)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical">${val.replace(/</g,'&lt;')}</textarea>`;
+      ul.innerHTML=`<textarea rows="4" placeholder="Resumen del avance que va en la franja azul del boletÃ­n..." oninput="setPreResumen(this.value)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical">${val.replace(/</g,'&lt;')}</textarea>`;
       return;
     }
     if(tipo==='hacer'){
       const val=(IND.hacer&&IND.hacer[0])||'';
-      ul.innerHTML=`<textarea rows="3" placeholder="Objetivo de la materia para este período..." oninput="setPreObjetivo(this.value)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical">${val.replace(/</g,'&lt;')}</textarea>`;
+      ul.innerHTML=`<textarea rows="3" placeholder="Objetivo de la materia para este perÃ­odo..." oninput="setPreObjetivo(this.value)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical">${val.replace(/</g,'&lt;')}</textarea>`;
       return;
     }
     if(tipo==='ser'){
       const val=(IND.hacer||[]).slice(1).join('\n');
-      ul.innerHTML=`<textarea rows="4" placeholder="Una actividad por línea..." oninput="setPreActividades(this.value)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical">${val.replace(/</g,'&lt;')}</textarea>`;
+      ul.innerHTML=`<textarea rows="4" placeholder="Una actividad por lÃ­nea..." oninput="setPreActividades(this.value)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical">${val.replace(/</g,'&lt;')}</textarea>`;
       return;
     }
   }
@@ -1837,7 +1853,7 @@ function setPreActividades(valor){
 
 function separarIndicadoresTexto(valor){
   return String(valor||'')
-    .replace(/([.!?])\s+(?=[A-Z0-9\u00C0-\u00D6\u00D8-\u00DE¿¡])/gu,'$1\n')
+    .replace(/([.!?])\s+(?=[A-Z0-9\u00C0-\u00D6\u00D8-\u00DEÂ¿Â¡])/gu,'$1\n')
     .split('\n')
     .map(x=>x.trim())
     .filter(Boolean);

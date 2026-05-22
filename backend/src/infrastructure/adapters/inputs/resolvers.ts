@@ -1940,7 +1940,11 @@ export const resolvers = {
         fecha: (cal: any) => {
             if (!cal?.fecha) return null;
             const d = new Date(cal.fecha);
-            return isNaN(d.getTime()) ? null : d.toISOString();
+            if (isNaN(d.getTime())) return null;
+            const yyyy = d.getUTCFullYear();
+            const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const dd = String(d.getUTCDate()).padStart(2, '0');
+            return yyyy + '-' + mm + '-' + dd + 'T12:00:00.000Z';
         },
     },
 
