@@ -17,6 +17,7 @@ import { EmpleadoRepositoryImpl } from './infrastructure/adapters/outputs/emplea
 import { AsignaturaRepositoryImpl } from './infrastructure/adapters/outputs/asignaturaRepositoryImpl';
 import { UserRepositoryImpl } from './infrastructure/adapters/outputs/userRepositoryImpl';
 import { UserModel } from './infrastructure/adapters/outputs/models/UserModel';
+import { CalificacionModel } from './infrastructure/adapters/outputs/models/CalificacionModel';
 import { crearAdminSiNoExiste } from './core/services/adminSetup';
 import { verificarConexionEmail } from './core/services/Emailservice';
 import { AsistenciaRepositoryImpl } from './infrastructure/adapters/outputs/asistenciaRepositoryImpl';
@@ -41,6 +42,47 @@ if (!process.env.JWT_SECRET) {
 
 let repositories: any;
 let db: any;
+
+function fechaEsMedianocheUtc(fecha: Date) {
+  return (
+    fecha.getUTCHours() === 0 &&
+    fecha.getUTCMinutes() === 0 &&
+    fecha.getUTCSeconds() === 0 &&
+    fecha.getUTCMilliseconds() === 0
+  );
+}
+
+function mismaFechaUtcAlMediodia(fecha: Date) {
+  return new Date(Date.UTC(
+    fecha.getUTCFullYear(),
+    fecha.getUTCMonth(),
+    fecha.getUTCDate(),
+    12,
+    0,
+    0,
+    0
+  ));
+}
+
+async function corregirFechasCalificacionesSinDesfase() {
+  const docs = await CalificacionModel.find({ fecha: { $type: 'date' } })
+    .select('_id fecha')
+    .lean();
+
+  const ops = docs
+    .filter((doc: any) => doc.fecha instanceof Date && fechaEsMedianocheUtc(doc.fecha))
+    .map((doc: any) => ({
+      updateOne: {
+        filter: { _id: doc._id, fecha: doc.fecha },
+        update: { $set: { fecha: mismaFechaUtcAlMediodia(doc.fecha) } },
+      },
+    }));
+
+  if (!ops.length) return;
+
+  const result = await CalificacionModel.bulkWrite(ops, { ordered: false });
+  console.log(`Fechas de calificaciones corregidas: ${result.modifiedCount}`);
+}
 
 // Inicializar repositorios
 const initializeRepositories = () => {
@@ -161,6 +203,9 @@ const startServer = async () => {
     await connectMongo();
     console.log('✅ Conectado a MongoDB Atlas');
     db = mongoose.connection;
+
+    // Corrige calificaciones antiguas guardadas como medianoche UTC para evitar desfase en Colombia.
+    await corregirFechasCalificacionesSinDesfase();
 
     // Crear admin si no existe (no detiene el servidor si falla)
     await crearAdminSiNoExiste();
