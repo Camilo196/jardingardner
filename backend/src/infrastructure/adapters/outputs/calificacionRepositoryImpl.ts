@@ -4,6 +4,31 @@ import { CalificacionRepository } from '../../../core/ports/CalificacionReposito
 import { AsignaturaModel } from '../outputs/models/AsignaturaModel.js';
 import mongoose from 'mongoose';
 
+function fechaCalificacionSinDesfase(fecha: any): Date {
+  if (!fecha) {
+    const partes = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Bogota',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date());
+    const get = (type: string) => Number(partes.find(p => p.type === type)?.value);
+    return new Date(Date.UTC(get('year'), get('month') - 1, get('day'), 12, 0, 0));
+  }
+
+  if (typeof fecha === 'string') {
+    const match = fecha.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const [, year, month, day] = match;
+      return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), 12, 0, 0));
+    }
+  }
+
+  const parsed = fecha instanceof Date ? fecha : new Date(fecha);
+  if (Number.isNaN(parsed.getTime())) return fechaCalificacionSinDesfase(null);
+  return parsed;
+}
+
 export class CalificacionRepositoryImpl implements CalificacionRepository {
   async findByCursoId(cursoId: string): Promise<Calificacion[]> {
     try {
@@ -96,7 +121,7 @@ export class CalificacionRepositoryImpl implements CalificacionRepository {
         nota:            calificacion.nota,
         periodo:         calificacion.periodo,
         observaciones:   calificacion.observaciones || '',
-        fecha:           calificacion.fecha || new Date(),
+        fecha:           fechaCalificacionSinDesfase(calificacion.fecha),
         boletinId:       calificacion.boletinId,
         tipoActividad:   calificacion.tipoActividad,
         nombreActividad: calificacion.nombreActividad,
@@ -112,7 +137,11 @@ export class CalificacionRepositoryImpl implements CalificacionRepository {
   }
 
   async update(id: string, calificacion: Partial<Calificacion>): Promise<Calificacion | null> {
-    const updated = await CalificacionModel.findByIdAndUpdate(id, calificacion, { new: true }).exec();
+    const data = { ...calificacion } as any;
+    if (Object.prototype.hasOwnProperty.call(data, 'fecha')) {
+      data.fecha = fechaCalificacionSinDesfase(data.fecha);
+    }
+    const updated = await CalificacionModel.findByIdAndUpdate(id, data, { new: true }).exec();
     return updated ? this.mapToEntity(updated) : null;
   }
 
