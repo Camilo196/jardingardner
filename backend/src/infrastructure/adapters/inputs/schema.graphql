@@ -171,6 +171,23 @@ type MallaCurricular {
   curso: Curso
 }
 
+type ExperienciaSignificativa {
+  id: ID!
+  cursoId: ID!
+  profesorId: ID!
+  titulo: String!
+  descripcion: String
+  fecha: String!
+  nombreArchivo: String!
+  mimeType: String!
+  contenidoBase64: String!
+  creadoPor: String
+  createdAt: String
+  updatedAt: String
+  curso: Curso
+  profesor: Profesor
+}
+
 type Asistencia {
   id: ID!
   estudianteId: String!
@@ -440,6 +457,11 @@ type Query {
   mallasPorProfesor(profesorId: ID!): [MallaCurricular!]!
   mallaPorAsignatura(asignaturaId: ID!): MallaCurricular
 
+  # Experiencias significativas
+  experienciasSignificativas: [ExperienciaSignificativa!]!
+  experienciasPorProfesor(profesorId: ID!): [ExperienciaSignificativa!]!
+  experienciasPorEstudiante(estudianteId: ID!): [ExperienciaSignificativa!]!
+
   # Asistencias
   asistencias: [Asistencia!]!
   asistencia(id: ID!): Asistencia
@@ -540,6 +562,10 @@ type Mutation {
   # Malla curricular
   guardarMallaCurricular(asignaturaId: ID, cursoId: ID, tipo: String, nombreArchivo: String!, mimeType: String!, contenidoBase64: String!): MallaCurricular!
   eliminarMallaCurricular(asignaturaId: ID, cursoId: ID, tipo: String, mallaId: ID): Boolean!
+
+  # Experiencias significativas
+  guardarExperienciaSignificativa(cursoId: ID!, titulo: String!, descripcion: String, fecha: String!, nombreArchivo: String!, mimeType: String!, contenidoBase64: String!): ExperienciaSignificativa!
+  eliminarExperienciaSignificativa(id: ID!): Boolean!
 
   # Administrador
   crearAdmin(email: String!, password: String!): AuthPayload

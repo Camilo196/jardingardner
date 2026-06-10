@@ -12,6 +12,7 @@ import { ComportamientoModel } from '../outputs/models/ComportamientoModel.js';
 import { AsistenciaModel } from '../outputs/models/AsistenciaModel.js';
 import { CronogramaModel } from '../outputs/models/CronogramaModel.js';
 import { MallaCurricularModel } from '../outputs/models/MallaCurricularModel.js';
+import { ExperienciaSignificativaModel } from '../outputs/models/ExperienciaSignificativaModel.js';
 import { AsignaturaModel } from '../outputs/models/AsignaturaModel.js';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
@@ -159,6 +160,13 @@ function esCursoPrimariaNombre(nombre = ''): boolean {
         || /\b(1|2|3|4|5)(ro|do|to)?\b/.test(n);
 }
 
+async function profesorPuedeGestionarCursoPreescolar(cursoId: string, profesorId: string, repositories: any): Promise<boolean> {
+    const curso = await repositories.cursoRepository.findById(cursoId).catch(() => null);
+    if (!curso || !esCursoPreescolarNombre(curso.nombre || '')) return false;
+    if (String(curso.profesorId || '') === String(profesorId)) return true;
+    const asignatura = await AsignaturaModel.findOne({ cursoId, profesorId }).lean().catch(() => null);
+    return !!asignatura;
+}
 function indicadoresParaEstudiante(ind: any, estudianteId?: string | null) {
     const estId = estudianteId ? String(estudianteId) : '';
     const porEstudiante = Array.isArray(ind?.porEstudiante) ? ind.porEstudiante : [];
@@ -868,6 +876,37 @@ export const resolvers = {
             throw new Error('No autorizado');
         },
 
+
+        // Experiencias significativas
+        experienciasSignificativas: async (_: any, __: any, { user }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            return await ExperienciaSignificativaModel.find().sort({ fecha: -1, createdAt: -1 }).lean();
+        },
+
+        experienciasPorProfesor: async (_: any, { profesorId }: any, { user }: any) => {
+            if (!user || (user.role !== 'ADMIN' && String(user.username) !== String(profesorId))) throw new Error('No autorizado');
+            return await ExperienciaSignificativaModel.find({ profesorId: String(profesorId) }).sort({ fecha: -1, createdAt: -1 }).lean();
+        },
+
+        experienciasPorEstudiante: async (_: any, { estudianteId }: any, { user, repositories }: any) => {
+            if (!user) throw new Error('No autorizado');
+            const estudianteIdStr = String(estudianteId || '').trim();
+            if (user.role === 'ESTUDIANTE' && String(user.username) !== estudianteIdStr) {
+                const estToken = await repositories.estudianteRepository.findByCedula(String(user.username)).catch(() => null);
+                if (String(estToken?.cedula || estToken?.id || '') !== estudianteIdStr) throw new Error('No autorizado');
+            }
+            const est = await repositories.estudianteRepository.findByCedula(estudianteIdStr).catch(() => null)
+                || await repositories.estudianteRepository.findById(estudianteIdStr).catch(() => null);
+            if (!est) return [];
+            const matriculas = await MatriculaModel.find({ estudianteId: String(est.cedula || est.id || estudianteIdStr) }).lean().catch(() => []);
+            const cursos = await Promise.all(matriculas.map((m: any) => repositories.cursoRepository.findById(String(m.cursoId || '')).catch(() => null)));
+            const cursoIds = cursos
+                .filter((curso: any) => curso && esCursoPreescolarNombre(curso.nombre || ''))
+                .map((curso: any) => String(curso.id ?? curso._id ?? ''))
+                .filter(Boolean);
+            if (!cursoIds.length) return [];
+            return await ExperienciaSignificativaModel.find({ cursoId: { $in: [...new Set(cursoIds)] } }).sort({ fecha: -1, createdAt: -1 }).lean();
+        },
         // Asistencias
         asistencias: async (_: any, __: any, { repositories }: any) =>
             await repositories.asistenciaRepository.findAll(),
@@ -1736,6 +1775,46 @@ export const resolvers = {
             return res.deletedCount > 0;
         },
 
+
+        // -- Experiencias significativas ----------------------
+        guardarExperienciaSignificativa: async (_: any, { cursoId, titulo, descripcion, fecha, nombreArchivo, mimeType, contenidoBase64 }: any, { user, repositories }: any) => {
+            if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado');
+            const mime = String(mimeType || '').toLowerCase();
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(mime)) throw new Error('Solo se permiten imagenes JPG, PNG o WEBP');
+            const cleanBase64 = String(contenidoBase64 || '').replace(/^data:image\/(jpeg|jpg|png|webp);base64,/i, '');
+            if (!cleanBase64) throw new Error('La imagen es obligatoria');
+            if (cleanBase64.length > 7 * 1024 * 1024) throw new Error('La imagen no debe superar 5 MB');
+
+            const curso = await repositories.cursoRepository.findById(String(cursoId || '')).catch(() => null);
+            if (!curso) throw new Error('Curso no encontrado');
+            if (!esCursoPreescolarNombre(curso.nombre || '')) throw new Error('Las experiencias significativas son solo para preescolar');
+            if (user.role === 'PROFESOR') {
+                const autorizado = await profesorPuedeGestionarCursoPreescolar(String(curso.id ?? curso._id ?? cursoId), String(user.username), repositories);
+                if (!autorizado) throw new Error('No autorizado para este curso de preescolar');
+            }
+
+            const doc = await ExperienciaSignificativaModel.create({
+                cursoId: String(curso.id ?? curso._id ?? cursoId),
+                profesorId: String(user.role === 'PROFESOR' ? user.username : (curso.profesorId || user.username || '')),
+                titulo: String(titulo || '').trim() || 'Experiencia significativa',
+                descripcion: String(descripcion || '').trim(),
+                fecha: String(fecha || '').trim() || new Date().toISOString().slice(0, 10),
+                nombreArchivo: String(nombreArchivo || 'experiencia.jpg'),
+                mimeType: mime,
+                contenidoBase64: cleanBase64,
+                creadoPor: String(user.username || ''),
+            });
+            return doc.toObject();
+        },
+
+        eliminarExperienciaSignificativa: async (_: any, { id }: any, { user }: any) => {
+            if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado');
+            const doc = await ExperienciaSignificativaModel.findById(String(id)).lean();
+            if (!doc) throw new Error('Experiencia no encontrada');
+            if (user.role === 'PROFESOR' && String(doc.profesorId) !== String(user.username)) throw new Error('No autorizado para esta experiencia');
+            const res = await ExperienciaSignificativaModel.deleteOne({ _id: doc._id });
+            return res.deletedCount > 0;
+        },
         // -- Asistencias
         registrarLista: async (_: any, { input }: any, { repositories }: any) => {
             const registros = input.estudiantes.map((est: any) => ({
@@ -1901,6 +1980,20 @@ export const resolvers = {
         updatedAt: (malla: any) => malla?.updatedAt ? new Date(malla.updatedAt).toISOString() : null,
     },
 
+
+    ExperienciaSignificativa: {
+        id: (exp: any) => exp?.id ?? exp?._id?.toString() ?? '',
+        curso: async (exp: any, _: any, { repositories }: any) => {
+            if (!exp?.cursoId) return null;
+            return await repositories.cursoRepository.findById(exp.cursoId).catch(() => null);
+        },
+        profesor: async (exp: any, _: any, { repositories }: any) => {
+            if (!exp?.profesorId) return null;
+            return await repositories.profesorRepository.findById(exp.profesorId).catch(() => null);
+        },
+        createdAt: (exp: any) => exp?.createdAt ? new Date(exp.createdAt).toISOString() : null,
+        updatedAt: (exp: any) => exp?.updatedAt ? new Date(exp.updatedAt).toISOString() : null,
+    },
     Estudiante: {
         id: (e: any) => e.cedula ?? e._id ?? e.id,
         nombre: (e: any) => e.nombre ?? '',

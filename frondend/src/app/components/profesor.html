@@ -333,6 +333,9 @@ table.t tbody tr:last-child td{border-bottom:none}
   <button class="sb-item" onclick="showSection('malla',this)">
     <span class="ico"><i class="fas fa-file-pdf"></i></span><span>Malla curricular</span>
   </button>
+  <button class="sb-item" onclick="showSection('experiencias',this)">
+    <span class="ico"><i class="fas fa-images"></i></span><span>Experiencias</span>
+  </button>
   <button class="sb-item" onclick="abrirActividadCurso()">
     <span class="ico"><i class="fas fa-plus-circle"></i></span><span>Actividad por curso</span>
   </button>
@@ -457,6 +460,30 @@ table.t tbody tr:last-child td{border-bottom:none}
           <div class="twrap">
             <table class="t"><thead><tr><th>Asignatura</th><th>Curso</th><th>Estado</th><th>Archivo</th><th>Actualizada</th><th></th></tr></thead><tbody id="mallaTbody"></tbody></table>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sec-experiencias" class="section">
+      <div class="pcard">
+        <div class="pcard-head">
+          <span class="pcard-title"><i class="fas fa-images"></i> Experiencias significativas</span>
+        </div>
+        <div style="padding:20px 22px;display:grid;gap:14px">
+          <div class="filtrow" style="padding:0">
+            <div class="fg"><label>Curso de preescolar</label><select id="expCursoSel"></select></div>
+            <div class="fg"><label>Fecha</label><input type="date" id="expFecha"></div>
+          </div>
+          <div class="filtrow" style="padding:0">
+            <div class="fg"><label>Titulo</label><input type="text" id="expTitulo" placeholder="Ej: Exploracion sensorial"></div>
+            <div class="fg"><label>Imagen</label><input type="file" id="expFile" accept="image/png,image/jpeg,image/webp"></div>
+          </div>
+          <div class="fg"><label>Descripcion</label><textarea id="expDescripcion" rows="3" placeholder="Describe brevemente la experiencia..." style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;resize:vertical"></textarea></div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button class="btn bp" onclick="subirExperienciaSignificativa()"><i class="fas fa-upload"></i> Subir experiencia</button>
+            <span id="expMsg" style="font-size:13px;color:var(--muted)"></span>
+          </div>
+          <div id="expGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px"></div>
         </div>
       </div>
     </div>
@@ -680,7 +707,8 @@ const SECTION_LABELS = {
   asignaturas: ['Mis Asignaturas','Cursos y estudiantes a tu cargo'],
   asistencia:  ['Asistencia','Registro diario de clases'],
   cronograma:  ['Cronograma','Calendario institucional'],
-  malla:       ['Malla curricular','Sube y consulta tus PDF por asignatura']
+  malla:       ['Malla curricular','Sube y consulta tus PDF por asignatura'],
+  experiencias:['Experiencias significativas','Fotos compartidas con acudientes y estudiantes']
 };
 
 function showSection(id, btn){
@@ -694,6 +722,7 @@ function showSection(id, btn){
   if(id==='asistencia') llenarSelectAsig();
   if(id==='cronograma') iniciarCronograma();
   if(id==='malla') cargarMallaProfesor();
+  if(id==='experiencias') cargarExperienciasProfesor();
 }
 
 function periodoActualAuto(){ const m=new Date().getMonth()+1; if(m<=3)return'1'; if(m<=6)return'2'; if(m<=9)return'3'; return'4'; }
@@ -797,6 +826,8 @@ async function cargarAsignaturas(){
     const da=await gql(`query{ asignaturasPorProfesor(profesorId:"${W.profId}"){ id nombre horario profesorId cursoId curso{id nombre profesorId} } }`);
     W.asignaturas=(da.asignaturasPorProfesor||[]).filter(a=>String(a.profesorId).trim()===String(W.profId).trim());
     for(const a of W.asignaturas){ try{ const dm=await gql(`query{ matriculasPorAsignatura(asignaturaId:"${a.id}"){ id estado periodo fechaMatricula estudiante{cedula nombre primerApellido segundoApellido email} } }`); a.matriculas=dm.matriculasPorAsignatura||[]; }catch{ a.matriculas=[]; } }
+    const expBtn=[...document.querySelectorAll('.sb-item')].find(b=>String(b.getAttribute('onclick')||'').includes("'experiencias'"));
+    if(expBtn) expBtn.style.display=W.asignaturas.some(a=>esCursoPreescolarNombre(a?.curso?.nombre||''))?'':'none';
     renderAsignaturas();
   }catch(err){ c.innerHTML=`<div class="empty"><div class="empty-ico"><i class="fas fa-exclamation-triangle"></i></div><p style="font-size:14px">${err.message}</p></div>`; }
 }
@@ -1465,6 +1496,107 @@ async function subirMallaCurricular(){
     await cargarMallaProfesor();
     actualizarEstadoMallaSeleccionada();
   }catch(e){ msg.textContent='Error: '+e.message; msg.style.color='var(--red)'; }
+}
+
+let EXPERIENCIAS_PROF = [];
+
+function escHtml(v){
+  return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function cursosPreescolarProfesor(){
+  const map=new Map();
+  (W.asignaturas||[]).forEach(a=>{
+    const c=a?.curso;
+    if(!c?.id || !esCursoPreescolarNombre(c.nombre||'')) return;
+    if(!map.has(String(c.id))) map.set(String(c.id),{id:String(c.id),nombre:c.nombre||'Curso'});
+  });
+  return [...map.values()].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'}));
+}
+
+function renderExperienciasProfesor(){
+  const grid=document.getElementById('expGrid');
+  const msg=document.getElementById('expMsg');
+  if(!grid) return;
+  const rows=EXPERIENCIAS_PROF||[];
+  if(msg) msg.textContent=rows.length?`${rows.length} experiencia(s) cargada(s)`:'Aun no has subido experiencias.';
+  if(!rows.length){
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:24px;border:1px dashed var(--border);border-radius:8px">Aun no hay experiencias significativas.</div>';
+    return;
+  }
+  grid.innerHTML=rows.map(x=>{
+    const src=`data:${x.mimeType};base64,${x.contenidoBase64}`;
+    const fecha=x.fecha?new Date(x.fecha+'T12:00:00').toLocaleDateString('es-CO'):'-';
+    return `<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#fff;box-shadow:var(--shadow-xs)">
+      <img src="${src}" alt="${escHtml(x.titulo)}" style="width:100%;height:150px;object-fit:cover;display:block">
+      <div style="padding:12px;display:grid;gap:6px">
+        <div style="font-weight:800;color:var(--ink);font-size:14px">${escHtml(x.titulo)}</div>
+        <div style="font-size:11px;color:var(--muted)">${escHtml(x.curso?.nombre||'Preescolar')} - ${fecha}</div>
+        ${x.descripcion?`<div style="font-size:12px;color:var(--ink);line-height:1.4">${escHtml(x.descripcion)}</div>`:''}
+        <button class="btn bd" onclick="eliminarExperienciaProfesor('${x.id}')" style="justify-content:center;margin-top:4px"><i class="fas fa-trash"></i> Eliminar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function cargarExperienciasProfesor(){
+  const sel=document.getElementById('expCursoSel');
+  const grid=document.getElementById('expGrid');
+  const msg=document.getElementById('expMsg');
+  const fecha=document.getElementById('expFecha');
+  if(fecha && !fecha.value) fecha.value=hoyIsoLocal();
+  if(!sel||!grid) return;
+  const cursos=cursosPreescolarProfesor();
+  sel.innerHTML='<option value="">Seleccionar curso...</option>'+cursos.map(c=>`<option value="${c.id}">${escHtml(c.nombre)}</option>`).join('');
+  if(!cursos.length){
+    if(msg) msg.textContent='Esta seccion solo aplica para cursos de preescolar.';
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:24px;border:1px dashed var(--border);border-radius:8px">No tienes cursos de preescolar asignados.</div>';
+    return;
+  }
+  grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:18px;color:var(--muted)">Cargando experiencias...</div>';
+  try{
+    const d=await gql(`query($prof:ID!){experienciasPorProfesor(profesorId:$prof){id cursoId titulo descripcion fecha nombreArchivo mimeType contenidoBase64 createdAt curso{id nombre}}}`,{prof:W.profId});
+    EXPERIENCIAS_PROF=d.experienciasPorProfesor||[];
+    renderExperienciasProfesor();
+  }catch(e){
+    if(msg){ msg.textContent='Error: '+e.message; msg.style.color='var(--red)'; }
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--red);padding:18px">No se pudieron cargar las experiencias.</div>';
+  }
+}
+
+async function subirExperienciaSignificativa(){
+  const cursoId=document.getElementById('expCursoSel')?.value||'';
+  const titulo=document.getElementById('expTitulo')?.value||'';
+  const descripcion=document.getElementById('expDescripcion')?.value||'';
+  const fecha=document.getElementById('expFecha')?.value||hoyIsoLocal();
+  const file=document.getElementById('expFile')?.files?.[0];
+  const msg=document.getElementById('expMsg');
+  if(!cursoId){ if(msg){ msg.textContent='Selecciona un curso'; msg.style.color='var(--red)'; } return; }
+  if(!file){ if(msg){ msg.textContent='Selecciona una imagen'; msg.style.color='var(--red)'; } return; }
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type)){ if(msg){ msg.textContent='Solo se permiten imagenes JPG, PNG o WEBP'; msg.style.color='var(--red)'; } return; }
+  if(file.size>5*1024*1024){ if(msg){ msg.textContent='La imagen no debe superar 5 MB'; msg.style.color='var(--red)'; } return; }
+  try{
+    if(msg){ msg.textContent='Subiendo experiencia...'; msg.style.color='var(--blue)'; }
+    const contenidoBase64=await fileToBase64(file);
+    await gql(`mutation($cursoId:ID!,$titulo:String!,$descripcion:String,$fecha:String!,$nom:String!,$mime:String!,$img:String!){guardarExperienciaSignificativa(cursoId:$cursoId,titulo:$titulo,descripcion:$descripcion,fecha:$fecha,nombreArchivo:$nom,mimeType:$mime,contenidoBase64:$img){id}}`,{
+      cursoId,titulo:titulo.trim()||'Experiencia significativa',descripcion,fecha,nom:file.name,mime:file.type,img:contenidoBase64
+    });
+    document.getElementById('expTitulo').value='';
+    document.getElementById('expDescripcion').value='';
+    document.getElementById('expFile').value='';
+    if(msg){ msg.textContent='Experiencia guardada'; msg.style.color='var(--green)'; }
+    await cargarExperienciasProfesor();
+  }catch(e){ if(msg){ msg.textContent='Error: '+e.message; msg.style.color='var(--red)'; } }
+}
+
+async function eliminarExperienciaProfesor(id){
+  if(!confirm('Eliminar esta experiencia significativa?')) return;
+  const msg=document.getElementById('expMsg');
+  try{
+    await gql(`mutation($id:ID!){eliminarExperienciaSignificativa(id:$id)}`,{id});
+    if(msg){ msg.textContent='Experiencia eliminada'; msg.style.color='var(--green)'; }
+    await cargarExperienciasProfesor();
+  }catch(e){ if(msg){ msg.textContent='Error: '+e.message; msg.style.color='var(--red)'; } }
 }
 
 async function cargarConfigPeriodo(periodo){ const anio=new Date().getFullYear(); const key=`${anio}-${periodo}`; if(W.periodoConfigCache[key])return W.periodoConfigCache[key]; try{ const d=await gql(`query{periodoConfig(anio:${anio},numeroPeriodo:${parseInt(periodo)||1}){numCortes pesoPorCorte}}`); const cfg=d.periodoConfig??{numCortes:3,pesoPorCorte:33.3}; W.periodoConfigCache[key]=cfg; return cfg; }catch{return{numCortes:3,pesoPorCorte:33.3};} }

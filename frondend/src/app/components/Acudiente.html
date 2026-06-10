@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -187,6 +187,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   <button class="sb-item" onclick="showSection('boletin',this)">
     <span class="ico">📄</span><span>Boletín PDF</span>
   </button>
+  <button class="sb-item" onclick="showSection('experiencias',this)">
+    <span class="ico">IMG</span><span>Experiencias</span>
+  </button>
 
   <div class="sb-footer">
     <!-- Sin cambio de contraseña para acudiente (clave = cédula del estudiante) -->
@@ -279,6 +282,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       </div>
     </div>
 
+
+    <div id="sec-experiencias" class="section">
+      <div class="pcard">
+        <div class="pcard-head"><span class="pcard-title">Experiencias significativas</span></div>
+        <div class="pcard-body" id="experienciasC"><div class="spin-w"><div class="spin"></div></div></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -306,7 +316,8 @@ const SECTION_LABELS = {
   resumen:    ['Resumen','Estado académico de tu hijo/a'],
   notas:      ['Calificaciones','Notas por asignatura y período'],
   asistencia: ['Asistencia','Registro de asistencia escolar'],
-  boletin:    ['Boletín PDF','Descarga los boletines oficiales']
+  boletin:    ['Boletín PDF','Descarga los boletines oficiales'],
+  experiencias:['Experiencias significativas','Fotos compartidas por los profesores']
 };
 
 const G = {
@@ -315,6 +326,7 @@ const G = {
   cursos: [],
   cals: [],
   asistencias: [],
+  experiencias: [],
   cargado: false,
   _periodoSelBoletin: null
 };
@@ -330,6 +342,7 @@ function showSection(id, btn){
   if(id==='notas' && G.cargado) renderNotas();
   if(id==='asistencia' && G.cargado) cargarAsistencia();
   if(id==='boletin' && G.cargado) renderBoletin();
+  if(id==='experiencias' && G.cargado) renderExperiencias();
 }
 
 const tk = () => sessionStorage.getItem('token');
@@ -342,6 +355,8 @@ async function gql(q, v={}){
 }
 function salir(){ sessionStorage.removeItem('token'); window.location.href='principal.html'; }
 function showT(m,t='ok',d=3500){ const el=document.getElementById('toast'); el.textContent=m; el.className=`toast on ${t}`; setTimeout(()=>el.className='toast',d); }
+function normalizarCursoNombre(nombre=''){ return String(nombre||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
+function esCursoPreescolarNombre(nombre=''){ const n=normalizarCursoNombre(nombre); return ['parvulos','parvulo','pre jardin','prejardin','jardin','transicion'].some(k=>n.includes(k)); }
 
 async function init(){
   const t = tk(); if(!t){ window.location.href='principal.html'; return; }
@@ -389,12 +404,19 @@ async function cargar(){
       id:m.curso?.id||'', nombre:m.curso?.nombre||'Sin curso', periodo:m.periodo||'',
       asignaturas:(m.asignaturas||[]).map(a=>({id:String(a.id),nombre:a.nombre,horario:a.horario||'',prof:a.profesor?`${a.profesor.nombre} ${a.profesor.primerApellido}`:'Sin docente'}))
     }));
+    const expBtn=[...document.querySelectorAll('.sb-item')].find(b=>String(b.getAttribute('onclick')||'').includes("'experiencias'"));
+    if(expBtn) expBtn.style.display=G.cursos.some(c=>esCursoPreescolarNombre(c.nombre))?'':'none';
 
     // Calificaciones
     try{
       const dc = await gql(`query{calificacionesPorEstudiante(estudianteId:"${G.estudianteId}"){id asignaturaId nota periodo observaciones fecha tipoActividad nombreActividad corte}}`);
       G.cals = (dc.calificacionesPorEstudiante||[]).map(c=>({...c,asignaturaId:String(c.asignaturaId)}));
     }catch{ G.cals=[]; }
+
+    try{
+      const dx = await gql(`query($eid:ID!){experienciasPorEstudiante(estudianteId:$eid){id cursoId titulo descripcion fecha mimeType contenidoBase64 curso{id nombre} profesor{nombre primerApellido}}}`, {eid:G.estudianteId});
+      G.experiencias = dx.experienciasPorEstudiante || [];
+    }catch{ G.experiencias = []; }
 
     G.cargado = true;
     renderResumen();
@@ -403,6 +425,20 @@ async function cargar(){
   }
 }
 
+
+function escHtml(v){ return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function renderExperiencias(){
+  const c=document.getElementById('experienciasC');
+  if(!c) return;
+  const rows=G.experiencias||[];
+  if(!rows.length){ c.innerHTML='<div class="empty"><div class="empty-ico">IMG</div><p>No hay experiencias significativas publicadas para este curso.</p></div>'; return; }
+  c.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px">${rows.map(x=>{
+    const src=`data:${x.mimeType};base64,${x.contenidoBase64}`;
+    const fecha=x.fecha?new Date(x.fecha+'T12:00:00').toLocaleDateString('es-CO'):'-';
+    const prof=x.profesor?`${x.profesor.nombre||''} ${x.profesor.primerApellido||''}`.trim():'Profesor';
+    return `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;box-shadow:var(--shadow-xs)"><img src="${src}" alt="${escHtml(x.titulo)}" style="width:100%;height:170px;object-fit:cover;display:block"><div style="padding:13px;display:grid;gap:6px"><div style="font-weight:900;color:var(--ink)">${escHtml(x.titulo)}</div><div style="font-size:12px;color:var(--muted)">${escHtml(x.curso?.nombre||'Preescolar')} - ${fecha}</div><div style="font-size:12px;color:var(--muted)">${escHtml(prof)}</div>${x.descripcion?`<div style="font-size:13px;line-height:1.45;color:var(--ink)">${escHtml(x.descripcion)}</div>`:''}</div></div>`;
+  }).join('')}</div>`;
+}
 function renderResumen(){
   const asigIds = new Set(G.cursos.flatMap(c=>c.asignaturas.map(a=>a.id)));
   document.getElementById('stA').textContent = asigIds.size;

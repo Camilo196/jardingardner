@@ -250,6 +250,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   <button class="sb-item" onclick="showSection('actividades',this)">
         <span class="ico"><i class="fa-regular fa-calendar-days"></i></span><span>Calendario de Actividades</span>
   </button>
+  <button class="sb-item" onclick="showSection('experiencias',this)">
+        <span class="ico"><i class="fa-regular fa-images"></i></span><span>Experiencias</span>
+  </button>
   <button class="sb-item" onclick="showSection('boletin',this)">
         <span class="ico"><i class="fa-regular fa-file-pdf"></i></span><span>Boletín PDF</span>
   </button>
@@ -385,6 +388,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       </div>
     </div>
 
+    <div id="sec-experiencias" class="section">
+      <div class="pcard">
+        <div class="pcard-head"><span class="pcard-title">Experiencias significativas</span></div>
+        <div class="pcard-body" id="experienciasC"><div class="spin-w"><div class="spin"></div></div></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -416,13 +426,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 <script>
 const API=window.LEARNSCAPE_API;
-const SECTION_LABELS={resumen:['Resumen','Tus cursos y estado académico'],horario:['Mi Horario','Horario semanal de clases'],notas:['Mis Notas','Calificaciones por asignatura'],asistencia:['Mi Asistencia','Registro de asistencia'],cronograma:['Cronograma','Calendario institucional'],actividades:['Calendario de actividades','Actividades asignadas por tus profesores'],boletin:['Boletín PDF','Descarga tus boletines']};
+const SECTION_LABELS={resumen:['Resumen','Tus cursos y estado académico'],horario:['Mi Horario','Horario semanal de clases'],notas:['Mis Notas','Calificaciones por asignatura'],asistencia:['Mi Asistencia','Registro de asistencia'],cronograma:['Cronograma','Calendario institucional'],actividades:['Calendario de actividades','Actividades asignadas por tus profesores'],experiencias:['Experiencias significativas','Fotos compartidas por tus profesores'],boletin:['Boletín PDF','Descarga tus boletines']};
 const DIAS=['lunes','martes','miercoles','jueves','viernes'];
 const DLAB={lunes:'Lunes',martes:'Martes',miercoles:'Miércoles',jueves:'Jueves',viernes:'Viernes'};
 let FRANJAS=[{id:'F1',h:6,l:'6:00'},{id:'F2',h:7,l:'7:00'},{id:'F3',h:8,l:'8:00'},{id:'F4',h:9,l:'9:00'},{id:'F5',h:10,l:'10:00'},{id:'F6',h:11,l:'11:00'},{id:'F7',h:12,l:'12:00'},{id:'F8',h:13,l:'13:00'},{id:'F9',h:14,l:'14:00'},{id:'FA',h:15,l:'15:00'},{id:'FB',h:16,l:'16:00'},{id:'FC',h:17,l:'17:00'}];
 const DIA_MAP={lun:'lunes',lunes:'lunes',mar:'martes',martes:'martes',mie:'miercoles',mié:'miercoles',miercoles:'miercoles',miércoles:'miercoles',jue:'jueves',jueves:'jueves',vie:'viernes',viernes:'viernes'};
 const DCLS={lunes:'lun',martes:'mar',miercoles:'mie',jueves:'jue',viernes:'vie'};
-const G={id:null,email:'',nombre:'',cursos:[],cals:[],asistencias:[],cargado:false,esPreescolar:false,calMesActual:new Date().getMonth(),calAnioActual:new Date().getFullYear(),calEventos:[],actMesActual:new Date().getMonth(),actAnioActual:new Date().getFullYear(),actEventos:[]};
+const G={id:null,email:'',nombre:'',cursos:[],cals:[],asistencias:[],experiencias:[],cargado:false,esPreescolar:false,calMesActual:new Date().getMonth(),calAnioActual:new Date().getFullYear(),calEventos:[],actMesActual:new Date().getMonth(),actAnioActual:new Date().getFullYear(),actEventos:[]};
 
 function normalizarCursoNombre(nombre=''){ return String(nombre||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
 function esCursoPreescolarNombre(nombre=''){ const n=normalizarCursoNombre(nombre); return ['parvulos','parvulo','pre jardin','prejardin','jardin','transicion'].some(k=>n.includes(k)); }
@@ -432,6 +442,8 @@ function actualizarVistaNivel(){
   if(notasBtn) notasBtn.style.display=G.esPreescolar?'none':'';
   const secNotas=document.getElementById('sec-notas');
   if(secNotas) secNotas.style.display=G.esPreescolar?'none':'';
+  const expBtn=[...document.querySelectorAll('.sb-item')].find(b=>String(b.getAttribute('onclick')||'').includes("'experiencias'"));
+  if(expBtn) expBtn.style.display=G.esPreescolar?'':'none';
   const promedioCard=document.getElementById('stP')?.closest('.kpi');
   if(promedioCard) promedioCard.style.display=G.esPreescolar?'none':'';
 }
@@ -454,7 +466,7 @@ function asegurarFranjaHorario(label){
   return f;
 }
 
-function showSection(id,btn){ if(id==='notas'&&G.esPreescolar) id='resumen'; document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active')); document.getElementById('sec-'+id).classList.add('active'); if(btn&&id!=='resumen')btn.classList.add('active'); const lbl=SECTION_LABELS[id]||[id,'']; document.getElementById('topTitle').textContent=lbl[0]; document.getElementById('topSub').textContent=lbl[1]; if(id==='horario'&&G.cargado)cargarHorario(); if(id==='notas'&&G.cargado)renderNotas(); if(id==='asistencia'&&G.cargado)cargarAsistencia(); if(id==='cronograma'&&G.cargado)iniciarCronograma(); if(id==='actividades'&&G.cargado)iniciarCalendarioActividades(); if(id==='boletin'&&G.cargado)renderBoletin(); }
+function showSection(id,btn){ if(id==='notas'&&G.esPreescolar) id='resumen'; document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active')); document.getElementById('sec-'+id).classList.add('active'); if(btn&&id!=='resumen')btn.classList.add('active'); const lbl=SECTION_LABELS[id]||[id,'']; document.getElementById('topTitle').textContent=lbl[0]; document.getElementById('topSub').textContent=lbl[1]; if(id==='horario'&&G.cargado)cargarHorario(); if(id==='notas'&&G.cargado)renderNotas(); if(id==='asistencia'&&G.cargado)cargarAsistencia(); if(id==='cronograma'&&G.cargado)iniciarCronograma(); if(id==='actividades'&&G.cargado)iniciarCalendarioActividades(); if(id==='experiencias'&&G.cargado)renderExperiencias(); if(id==='boletin'&&G.cargado)renderBoletin(); }
 
 function tk(){return sessionStorage.getItem('token');}
 function jwt(t){ try{return JSON.parse(decodeURIComponent(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')));}catch{return null;} }
@@ -503,6 +515,7 @@ async function cargar(){
     document.getElementById('sbAvatar').textContent=(parts.length>=2?parts[0][0]+parts[1][0]:G.nombre.substring(0,2)).toUpperCase();
     document.getElementById('sbName').textContent=G.nombre;
     try{ const dc=await gql(`query{calificacionesPorEstudiante(estudianteId:"${G.id}"){id asignaturaId nota periodo observaciones fecha tipoActividad nombreActividad corte}}`); G.cals=(dc.calificacionesPorEstudiante||[]).map(c=>({...c,asignaturaId:String(c.asignaturaId)})); }catch(e){ G.cals=[]; }
+    try{ const dx=await gql(`query($eid:ID!){experienciasPorEstudiante(estudianteId:$eid){id cursoId titulo descripcion fecha mimeType contenidoBase64 curso{id nombre} profesor{nombre primerApellido}}}`,{eid:G.id}); G.experiencias=dx.experienciasPorEstudiante||[]; }catch(e){ G.experiencias=[]; }
     G.cargado=true;
     renderResumen();
     renderNotas();
@@ -518,6 +531,21 @@ function getAsignaturaLookup(){
     });
   });
   return map;
+}
+
+function escHtml(v){ return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function renderExperiencias(){
+  const c=document.getElementById('experienciasC');
+  if(!c) return;
+  const rows=G.experiencias||[];
+  if(!G.esPreescolar){ c.innerHTML='<div class="empty"><div class="empty-ico">IMG</div><p>Las experiencias significativas estan disponibles solo para preescolar.</p></div>'; return; }
+  if(!rows.length){ c.innerHTML='<div class="empty"><div class="empty-ico">IMG</div><p>No hay experiencias significativas publicadas para tu curso.</p></div>'; return; }
+  c.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px">${rows.map(x=>{
+    const src=`data:${x.mimeType};base64,${x.contenidoBase64}`;
+    const fecha=x.fecha?new Date(x.fecha+'T12:00:00').toLocaleDateString('es-CO'):'-';
+    const prof=x.profesor?`${x.profesor.nombre||''} ${x.profesor.primerApellido||''}`.trim():'Profesor';
+    return `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;box-shadow:var(--shadow-xs)"><img src="${src}" alt="${escHtml(x.titulo)}" style="width:100%;height:170px;object-fit:cover;display:block"><div style="padding:13px;display:grid;gap:6px"><div style="font-weight:900;color:var(--ink)">${escHtml(x.titulo)}</div><div style="font-size:12px;color:var(--muted)">${escHtml(x.curso?.nombre||'Preescolar')} - ${fecha}</div><div style="font-size:12px;color:var(--muted)">${escHtml(prof)}</div>${x.descripcion?`<div style="font-size:13px;line-height:1.45;color:var(--ink)">${escHtml(x.descripcion)}</div>`:''}</div></div>`;
+  }).join('')}</div>`;
 }
 
 function renderResumen(){
