@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
@@ -600,6 +600,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   <button class="sb-item" onclick="showSection('mallas',this);cargarMallasAdmin()">
     <span class="ico"><i class="fas fa-file-pdf"></i></span><span>Mallas</span>
   </button>
+  <button class="sb-item" onclick="showSection('experiencias',this);cargarExperienciasAdmin()">
+    <span class="ico"><i class="fas fa-images"></i></span><span>Experiencias</span>
+  </button>
   <button class="sb-item" onclick="showSection('periodos',this);cargarPeriodos()">
     <span class="ico"><i class="fas fa-calendar-alt"></i></span><span>Períodos</span>
   </button>
@@ -1053,6 +1056,25 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         </div>
       </div>
     </div>
+    <div id="section-experiencias" class="section">
+      <div class="section-header">
+        <div class="section-title-txt"><i class="fas fa-images"></i> Experiencias significativas</div>
+      </div>
+      <div style="display:grid;gap:14px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div>
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Buscar</label>
+            <input id="expAdminBuscar" oninput="renderExperienciasAdmin()" placeholder="Profesor, curso o titulo..." style="padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;min-width:260px">
+          </div>
+          <button onclick="cargarExperienciasAdmin()" style="padding:9px 18px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer">
+            <i class="fas fa-sync"></i> Actualizar
+          </button>
+        </div>
+        <div id="expAdminMsg" style="font-size:14px;color:#64748b"></div>
+        <div id="expAdminGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px"></div>
+      </div>
+    </div>
+
     <div id="section-periodos" class="section">
       <div class="section-header">
         <div class="section-title-txt"><i class="fas fa-calendar-alt"></i> Configuración de Períodos</div>
@@ -6837,6 +6859,74 @@ function renderMallasAdmin() {
   }).join('');
 }
 
+let EXPERIENCIAS_ADMIN = [];
+
+function escHtmlAdmin(v) {
+  return String(v || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+function abrirExperienciaAdmin(id) {
+  const item = (EXPERIENCIAS_ADMIN || []).find(x => String(x.id) === String(id));
+  if (!item?.contenidoBase64) { alert('No se pudo abrir la experiencia'); return; }
+  const src = `data:${item.mimeType};base64,${item.contenidoBase64}`;
+  const win = window.open('', '_blank');
+  if (!win) { alert('Permite ventanas emergentes para abrir la imagen.'); return; }
+  win.document.write(`<!doctype html><html><head><title>${escHtmlAdmin(item.titulo || 'Experiencia')}</title><style>body{margin:0;font-family:Arial,sans-serif;background:#0f172a;color:#fff;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px;box-sizing:border-box}main{max-width:960px;width:100%}img{width:100%;max-height:78vh;object-fit:contain;background:#fff;border-radius:8px}.meta{margin-top:14px;line-height:1.5}</style></head><body><main><img src="${src}" alt="${escHtmlAdmin(item.titulo || '')}"><div class="meta"><strong>${escHtmlAdmin(item.titulo || '')}</strong><br>${escHtmlAdmin(item.descripcion || '')}</div></main></body></html>`);
+  win.document.close();
+}
+
+async function cargarExperienciasAdmin() {
+  const msg = document.getElementById('expAdminMsg');
+  const grid = document.getElementById('expAdminGrid');
+  if (!msg || !grid) return;
+  msg.textContent = 'Cargando experiencias significativas...';
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:18px;color:#64748b">Cargando...</div>';
+  try {
+    const data = await gqlAdmin(`query{experienciasSignificativas{id cursoId profesorId titulo descripcion fecha nombreArchivo mimeType contenidoBase64 createdAt curso{id nombre} profesor{cedula nombre primerApellido}}}`);
+    EXPERIENCIAS_ADMIN = data.experienciasSignificativas || [];
+    msg.textContent = EXPERIENCIAS_ADMIN.length ? `${EXPERIENCIAS_ADMIN.length} experiencia(s) cargada(s)` : 'No hay experiencias significativas subidas.';
+    renderExperienciasAdmin();
+  } catch (e) {
+    msg.textContent = 'Error: ' + e.message;
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#dc2626;padding:18px">No se pudieron cargar las experiencias.</div>';
+  }
+}
+
+function renderExperienciasAdmin() {
+  const grid = document.getElementById('expAdminGrid');
+  const msg = document.getElementById('expAdminMsg');
+  if (!grid) return;
+  const q = (document.getElementById('expAdminBuscar')?.value || '').toLowerCase().trim();
+  const rows = [...EXPERIENCIAS_ADMIN].filter(x => {
+    const prof = `${x.profesor?.nombre || ''} ${x.profesor?.primerApellido || ''} ${x.profesorId || ''}`;
+    const curso = x.curso?.nombre || '';
+    const txt = `${x.titulo || ''} ${x.descripcion || ''} ${curso} ${prof}`.toLowerCase();
+    return !q || txt.includes(q);
+  }).sort((a,b)=>new Date(b.createdAt || b.fecha || 0)-new Date(a.createdAt || a.fecha || 0));
+  if (msg && EXPERIENCIAS_ADMIN.length) {
+    msg.textContent = q ? `${rows.length} resultado(s) de ${EXPERIENCIAS_ADMIN.length} experiencia(s)` : `${EXPERIENCIAS_ADMIN.length} experiencia(s) cargada(s)`;
+  }
+  if (!rows.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#64748b;padding:18px;border:1px dashed #e5e7eb;border-radius:8px">Sin resultados.</div>';
+    return;
+  }
+  grid.innerHTML = rows.map(x => {
+    const src = `data:${x.mimeType};base64,${x.contenidoBase64}`;
+    const prof = x.profesor ? `${x.profesor.nombre} ${x.profesor.primerApellido}` : (x.profesorId || '-');
+    const fecha = x.fecha ? new Date(x.fecha + 'T12:00:00').toLocaleDateString('es-CO') : '-';
+    return `<div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 1px 4px rgba(15,23,42,.06)">
+      <img src="${src}" alt="${escHtmlAdmin(x.titulo)}" style="width:100%;height:160px;object-fit:cover;display:block">
+      <div style="padding:12px;display:grid;gap:6px">
+        <div style="font-weight:800;color:#111827">${escHtmlAdmin(x.titulo || 'Experiencia significativa')}</div>
+        <div style="font-size:12px;color:#64748b">${escHtmlAdmin(x.curso?.nombre || 'Preescolar')} - ${fecha}</div>
+        <div style="font-size:12px;color:#64748b">Prof. ${escHtmlAdmin(prof)}</div>
+        ${x.descripcion ? `<div style="font-size:13px;color:#374151;line-height:1.45">${escHtmlAdmin(x.descripcion)}</div>` : ''}
+        <button onclick="abrirExperienciaAdmin('${x.id}')" style="margin-top:4px;padding:7px 12px;background:#2563eb;color:#fff;border:none;border-radius:5px;font-size:13px;cursor:pointer"><i class="fas fa-eye"></i> Ver imagen</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 async function cargarDatosBoletines() {
   try {
     const anio = anioAdmActual();
@@ -9502,6 +9592,7 @@ const SECTION_META = {
   matriculas:  {title:'Matrículas',         sub:'Gestión de matrículas'},
   boletines:   {title:'Boletines',          sub:'Generación y descarga de boletines'},
   mallas:      {title:'Mallas Curriculares',sub:'PDF subidos por los profesores'},
+  experiencias:{title:'Experiencias',       sub:'Fotos subidas por profesores de preescolar'},
   periodos:    {title:'Períodos Académicos',sub:'Configuración de períodos'},
   cronograma:  {title:'Cronograma',         sub:'Eventos y calendario académico'},
   horarios:    {title:'Horario de Clases',   sub:'Vista semanal por curso — detecta choques'},
