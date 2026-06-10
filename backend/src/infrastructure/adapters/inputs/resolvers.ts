@@ -207,13 +207,11 @@ async function calcularPuestoCurso(
     let matriculas = await MatriculaModel.find({
         cursoId,
         periodo,
-        estado: { $in: ['ACTIVA', 'FINALIZADA'] },
     }).lean().catch(() => []);
 
     if (!(matriculas as any[]).length) {
         matriculas = await MatriculaModel.find({
             cursoId,
-            estado: { $in: ['ACTIVA', 'FINALIZADA'] },
         }).lean().catch(() => []);
     }
 
@@ -715,7 +713,6 @@ export const resolvers = {
             const docsPorCurso = asignatura?.cursoId
                 ? await MatriculaModel.find({
                     cursoId: String(asignatura.cursoId),
-                    estado: { $in: ['ACTIVA', 'FINALIZADA'] },
                 }).exec()
                 : [];
             const docsMap = new Map<string, any>();

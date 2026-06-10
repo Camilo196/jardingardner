@@ -927,8 +927,7 @@ function ordenarMatriculasPorApellido(lista){
   });
 }
 function matriculaVisibleProfesor(m){
-  const estado=String(m?.estado||'ACTIVA').trim().toUpperCase();
-  return estado==='ACTIVA' || estado==='FINALIZADA';
+  return !!m;
 }
 function filtrar(tid,q){ const t=document.getElementById(tid);if(!t)return;const f=q.toLowerCase(); t.querySelectorAll('tbody tr').forEach(r=>{r.style.display=(r.dataset.n||'').includes(f)||(r.dataset.c||'').includes(f)?'':'none';}); }
 
@@ -1229,7 +1228,7 @@ async function cargarLista(){
   try{
     const dm=await gql(`query{matriculasPorAsignatura(asignaturaId:"${asigId}"){id estado estudiante{cedula nombre primerApellido segundoApellido}}}`);
   const mats=(dm.matriculasPorAsignatura||[]).filter(m=>matriculaVisibleProfesor(m)&&m.estudiante); W.asEst=ordenarEstudiantesPorApellido(mats.map(m=>m.estudiante));
-    if(!W.asEst.length){toast('No hay estudiantes activos en esta asignatura','er');return;}
+    if(!W.asEst.length){toast('No hay estudiantes matriculados en esta asignatura','er');return;}
     try{ const da=await gql(`query{asistenciasPorFecha(asignaturaId:"${asigId}",fecha:"${fecha}"){estudianteId estado observaciones}}`); const ex={};(da.asistenciasPorFecha||[]).forEach(r=>{ex[r.estudianteId]=r;}); W.asEst.forEach(e=>{const r=ex[e.cedula];W.asEstados[e.cedula]=r?r.estado:'P';W.asObs[e.cedula]=r?r.observaciones||'':'';}); }catch{ W.asEst.forEach(e=>{W.asEstados[e.cedula]='P';W.asObs[e.cedula]='';});  }
     renderLista(fecha); await cargarHistorial(asigId,periodo);
   }catch(err){toast('Error: '+err.message,'er');}

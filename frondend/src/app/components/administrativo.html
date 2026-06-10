@@ -1715,8 +1715,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         m?.curso?.id === cursoId &&
         m?.estudiante &&
         m?.estudiante?.cedula &&
-        String(m.estudiante.cedula).toLowerCase() !== 'n/a' &&
-        (m.estado || 'ACTIVA') !== 'CANCELADA'
+        String(m.estudiante.cedula).toLowerCase() !== 'n/a'
       )
       .forEach(m => {
         const e = m.estudiante;
@@ -1828,8 +1827,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         m?.curso?.id === cursoId &&
         m?.estudiante &&
         m?.estudiante?.cedula &&
-        String(m.estudiante.cedula).toLowerCase() !== 'n/a' &&
-        (m.estado || 'ACTIVA') !== 'CANCELADA'
+        String(m.estudiante.cedula).toLowerCase() !== 'n/a'
       )
       .forEach(m => {
         const e = m.estudiante;
@@ -7830,7 +7828,7 @@ function buscarBoletinesEstudiante(estudianteId, cursoId, nombreEstudiante) {
     
     // Obtener cursos actuales del estudiante (matriculados)
     const cursosActuales = matriculasEstudiante
-      .filter(m => m.estado === 'ACTIVA')
+      .filter(m => m?.curso)
       .map(m => ({ 
         id: m.curso.id, 
         nombre: m.curso.nombre,

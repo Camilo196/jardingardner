@@ -361,11 +361,11 @@
                         }
                     }
                 `);
-                const matriculas = (dm.matriculasPorAsignatura || []).filter(m => m.estado === 'ACTIVA' && m.estudiante);
+                const matriculas = (dm.matriculasPorAsignatura || []).filter(m => m.estudiante);
                 estudiantesActuales = matriculas.map(m => m.estudiante);
 
                 if (!estudiantesActuales.length) {
-                    toast('No hay estudiantes activos en esta asignatura', 'error');
+                    toast('No hay estudiantes matriculados en esta asignatura', 'error');
                     return;
                 }
 

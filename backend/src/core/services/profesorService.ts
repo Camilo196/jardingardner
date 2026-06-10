@@ -24,10 +24,10 @@ export class ProfesorService {
             asignaturas.map(async (asig: any) => {
                 const matriculas = await this.repositories.matriculaRepository
                     .findByAsignaturaId(asig.id).catch(() => []);
-                const activas = matriculas.filter((m: any) => m.estado === 'ACTIVA' && m.periodo === periodo);
+                const visibles = matriculas.filter((m: any) => m.periodo === periodo);
                 return {
                     asignatura: asig,
-                    estudiantesActivos: activas.length,
+                    estudiantesActivos: visibles.length,
                 };
             })
         );
