@@ -890,11 +890,8 @@ export const resolvers = {
 
         experienciasPorEstudiante: async (_: any, { estudianteId }: any, { user, repositories }: any) => {
             if (!user) throw new Error('No autorizado');
+            if (!['ADMIN', 'PROFESOR'].includes(String(user.role || ''))) throw new Error('No autorizado');
             const estudianteIdStr = String(estudianteId || '').trim();
-            if (user.role === 'ESTUDIANTE' && String(user.username) !== estudianteIdStr) {
-                const estToken = await repositories.estudianteRepository.findByCedula(String(user.username)).catch(() => null);
-                if (String(estToken?.cedula || estToken?.id || '') !== estudianteIdStr) throw new Error('No autorizado');
-            }
             const est = await repositories.estudianteRepository.findByCedula(estudianteIdStr).catch(() => null)
                 || await repositories.estudianteRepository.findById(estudianteIdStr).catch(() => null);
             if (!est) return [];

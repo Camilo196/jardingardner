@@ -250,7 +250,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   <button class="sb-item" onclick="showSection('actividades',this)">
         <span class="ico"><i class="fa-regular fa-calendar-days"></i></span><span>Calendario de Actividades</span>
   </button>
-  <button class="sb-item" onclick="showSection('experiencias',this)">
+  <button class="sb-item" onclick="showSection('experiencias',this)" style="display:none">
         <span class="ico"><i class="fa-regular fa-images"></i></span><span>Experiencias</span>
   </button>
   <button class="sb-item" onclick="showSection('boletin',this)">
@@ -443,7 +443,7 @@ function actualizarVistaNivel(){
   const secNotas=document.getElementById('sec-notas');
   if(secNotas) secNotas.style.display=G.esPreescolar?'none':'';
   const expBtn=[...document.querySelectorAll('.sb-item')].find(b=>String(b.getAttribute('onclick')||'').includes("'experiencias'"));
-  if(expBtn) expBtn.style.display=G.esPreescolar?'':'none';
+  if(expBtn) expBtn.style.display='none';
   const promedioCard=document.getElementById('stP')?.closest('.kpi');
   if(promedioCard) promedioCard.style.display=G.esPreescolar?'none':'';
 }

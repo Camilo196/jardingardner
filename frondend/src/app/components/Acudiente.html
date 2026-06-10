@@ -187,7 +187,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   <button class="sb-item" onclick="showSection('boletin',this)">
     <span class="ico">📄</span><span>Boletín PDF</span>
   </button>
-  <button class="sb-item" onclick="showSection('experiencias',this)">
+  <button class="sb-item" onclick="showSection('experiencias',this)" style="display:none">
     <span class="ico">IMG</span><span>Experiencias</span>
   </button>
 
@@ -405,7 +405,7 @@ async function cargar(){
       asignaturas:(m.asignaturas||[]).map(a=>({id:String(a.id),nombre:a.nombre,horario:a.horario||'',prof:a.profesor?`${a.profesor.nombre} ${a.profesor.primerApellido}`:'Sin docente'}))
     }));
     const expBtn=[...document.querySelectorAll('.sb-item')].find(b=>String(b.getAttribute('onclick')||'').includes("'experiencias'"));
-    if(expBtn) expBtn.style.display=G.cursos.some(c=>esCursoPreescolarNombre(c.nombre))?'':'none';
+    if(expBtn) expBtn.style.display='none';
 
     // Calificaciones
     try{
