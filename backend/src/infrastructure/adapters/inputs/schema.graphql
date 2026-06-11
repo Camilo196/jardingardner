@@ -231,6 +231,7 @@ type EventoCronograma {
   tipo: String!
   cursoId: ID
   color: String
+  creadoPor: String
 }
 
 type ResumenAsistencia {

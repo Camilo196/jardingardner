@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -441,6 +441,7 @@ table.t tbody tr:last-child td{border-bottom:none}
           <span class="leg-it"><span class="leg-dot ev-CULTURAL"></span>Cultural</span>
           <span class="leg-it"><span class="leg-dot ev-OTRO"></span>Otro</span>
         </div>
+        <div id="profEventosList" style="padding:16px 20px;border-top:1px solid var(--border);background:var(--surface)"></div>
       </div>
     </div>
 
@@ -1705,7 +1706,7 @@ async function guardarCompEstudiante(){
 }
 
 async function iniciarCronograma(){ await cargarEventosCronograma(); renderCalendario(); }
-async function cargarEventosCronograma(){ try{ const d=await gql(`query{cronograma(anio:${W.calAnioActual}){id titulo tipo fechaInicio fechaFin color descripcion}}`); W.calEventos=d.cronograma||[]; }catch(e){W.calEventos=[];} }
+async function cargarEventosCronograma(){ try{ const d=await gql(`query{cronograma(anio:${W.calAnioActual}){id titulo tipo fechaInicio fechaFin color descripcion cursoId creadoPor}}`); W.calEventos=d.cronograma||[]; }catch(e){W.calEventos=[];} }
 function calMes(delta){ W.calMesActual+=delta; if(W.calMesActual>11){W.calMesActual=0;W.calAnioActual++;} if(W.calMesActual<0){W.calMesActual=11;W.calAnioActual--;} cargarEventosCronograma().then(()=>renderCalendario()); }
 function renderCalendario(){
   const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -1723,6 +1724,37 @@ function renderCalendario(){
   const total=inicioSem+ultimoDia; const resto=total%7===0?0:7-(total%7);
   for(let i=1;i<=resto;i++) html+=`<div class="cal-cel otro-mes"><div class="cal-num">${i}</div></div>`;
   grid.innerHTML=html;
+  renderListaEventosProfesor();
+}
+
+function renderListaEventosProfesor(){
+  const cont=document.getElementById('profEventosList');
+  if(!cont) return;
+  const mes=`${W.calAnioActual}-${String(W.calMesActual+1).padStart(2,'0')}`;
+  const eventos=(W.calEventos||[])
+    .filter(e=>String(e.fechaInicio||'').startsWith(mes))
+    .sort((a,b)=>String(a.fechaInicio||'').localeCompare(String(b.fechaInicio||'')));
+  if(!eventos.length){ cont.innerHTML='<p style="margin:0;color:var(--muted);font-style:italic">Sin eventos este mes.</p>'; return; }
+  cont.innerHTML=eventos.map(e=>{
+    const propio=String(e.creadoPor||'')===String(W.profId||'');
+    const fecha=new Date(String(e.fechaInicio).split('T')[0]+'T12:00:00').toLocaleDateString('es-CO');
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:#fff;border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
+      <div>
+        <div style="font-weight:800;color:var(--ink);font-size:13px">${e.titulo||'Evento'}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${fecha} - ${e.tipo||'OTRO'}${propio?' - creado por ti':''}</div>
+      </div>
+      ${propio?`<button class="btn bd" onclick="eliminarEventoProfesor('${e.id}')" style="padding:6px 10px"><i class="fas fa-trash"></i> Eliminar</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+async function eliminarEventoProfesor(id){
+  if(!confirm('Eliminar esta actividad del cronograma?')) return;
+  try{
+    await gql(`mutation($id:ID!){eliminarEventoCronograma(id:$id)}`,{id});
+    toast('Actividad eliminada del cronograma');
+    await iniciarCronograma();
+  }catch(e){ toast('Error: '+e.message,'er'); }
 }
 
 function abrirCambioPass(){ ['passActual','passNueva','passConfirm'].forEach(id=>document.getElementById(id).value=''); document.getElementById('passError').style.display='none'; document.getElementById('mPass').classList.add('o'); }

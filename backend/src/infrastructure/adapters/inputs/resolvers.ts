@@ -1925,7 +1925,12 @@ export const resolvers = {
         },
 
         eliminarEventoCronograma: async (_: any, { id }: any, { user }: any) => {
-            if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
+            if (!['ADMIN', 'PROFESOR'].includes(user?.role)) throw new Error('Solo administradores o profesores');
+            const evento = await CronogramaModel.findById(id).lean();
+            if (!evento) throw new Error('Evento no encontrado');
+            if (user?.role === 'PROFESOR' && String(evento.creadoPor || '') !== String(user.username || '')) {
+                throw new Error('Solo puedes eliminar actividades creadas por ti');
+            }
             const result = await CronogramaModel.findByIdAndDelete(id);
             return !!result;
         },
