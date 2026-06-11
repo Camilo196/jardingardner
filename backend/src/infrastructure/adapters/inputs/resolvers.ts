@@ -1928,8 +1928,15 @@ export const resolvers = {
             if (!['ADMIN', 'PROFESOR'].includes(user?.role)) throw new Error('Solo administradores o profesores');
             const evento = await CronogramaModel.findById(id).lean();
             if (!evento) throw new Error('Evento no encontrado');
-            if (user?.role === 'PROFESOR' && String(evento.creadoPor || '') !== String(user.username || '')) {
-                throw new Error('Solo puedes eliminar actividades creadas por ti');
+            if (user?.role === 'PROFESOR') {
+                const creadoPorMi = String(evento.creadoPor || '') === String(user.username || '');
+                let perteneceAsignatura = false;
+                if (!creadoPorMi && evento.cursoId) {
+                    const asignaturas = await AsignaturaModel.find({ cursoId: String(evento.cursoId), profesorId: String(user.username || '') }).lean().catch(() => []);
+                    const descripcion = String(evento.descripcion || '');
+                    perteneceAsignatura = asignaturas.some((asig: any) => descripcion.includes(`Asignatura: ${asig.nombre}`));
+                }
+                if (!creadoPorMi && !perteneceAsignatura) throw new Error('Solo puedes eliminar actividades creadas por ti');
             }
             const result = await CronogramaModel.findByIdAndDelete(id);
             return !!result;

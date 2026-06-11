@@ -1151,14 +1151,21 @@ function selTipoCurso(chip){
 async function abrirActividadCurso(){
   const sel=document.getElementById('actCursoAsig');
   sel.innerHTML='<option value="">Seleccionar curso / asignatura...</option>';
-  W.asignaturas.forEach(a=>{
-    if(esCursoPreescolarNombre(a.curso?.nombre||'')) return;
+  const asignaturasDisponibles=(W.asignaturas||[]).filter(a=>a?.id && (a?.curso?.id||a?.cursoId));
+  asignaturasDisponibles.forEach(a=>{
     const total=(a.matriculas||[]).filter(m=>m.estudiante && matriculaVisibleProfesor(m)).length;
     const opt=document.createElement('option');
     opt.value=a.id;
     opt.textContent=`${a.nombre}${a.curso?.nombre?' - '+a.curso.nombre:''} (${total} estudiantes)`;
     sel.appendChild(opt);
   });
+  if(!asignaturasDisponibles.length){
+    const opt=document.createElement('option');
+    opt.value='';
+    opt.textContent='No tienes asignaturas con curso asignado';
+    opt.disabled=true;
+    sel.appendChild(opt);
+  }
   await cargarPeriodosCalificacion(W.periodo||periodoLabel());
   const periodoSel=document.getElementById('actCursoPeriodo');
   llenarSelectPeriodosAbiertos(periodoSel, W.periodo||periodoLabel());
@@ -1739,7 +1746,7 @@ function renderListaEventosProfesor(){
   if(!cont) return;
   const mes=`${W.calAnioActual}-${String(W.calMesActual+1).padStart(2,'0')}`;
   const eventos=(W.calEventos||[])
-    .filter(e=>String(e.fechaInicio||'').startsWith(mes) && String(e.creadoPor||'')===String(W.profId||''))
+    .filter(e=>String(e.fechaInicio||'').startsWith(mes) && eventoPerteneceProfesor(e))
     .sort((a,b)=>String(a.fechaInicio||'').localeCompare(String(b.fechaInicio||'')));
   const header='<div class="prof-events-head"><div><div class="prof-events-title">Mis actividades publicadas</div><div class="prof-events-sub">Estas son las actividades por curso que subiste al cronograma durante este mes.</div></div><button class="btn bo" onclick="abrirActividadCurso()"><i class="fas fa-plus-circle"></i> Nueva actividad</button></div>';
   if(!eventos.length){ cont.innerHTML=header+'<p style="margin:0;color:var(--muted);font-style:italic">No has publicado actividades para este mes.</p>'; return; }
@@ -1756,6 +1763,17 @@ function renderListaEventosProfesor(){
     </div>`;
   }).join('');
   cont.innerHTML=header+cont.innerHTML;
+}
+
+function eventoPerteneceProfesor(e){
+  if(String(e.creadoPor||'')===String(W.profId||'')) return true;
+  const cursoId=String(e.cursoId||'');
+  const desc=String(e.descripcion||'');
+  if(!cursoId || !desc) return false;
+  return (W.asignaturas||[]).some(a=>{
+    const aCurso=String(a?.curso?.id||a?.cursoId||'');
+    return aCurso===cursoId && desc.includes(`Asignatura: ${a.nombre}`);
+  });
 }
 
 async function eliminarEventoProfesor(id){
