@@ -184,45 +184,65 @@ async function enviarEmail(params: {
   html: string;
 }): Promise<void> {
   const provider = providerActivo();
+  const candidatos = [
+    provider,
+    BREVO_API_KEY ? 'brevo' : 'none',
+    SENDGRID_API_KEY ? 'sendgrid' : 'none',
+    GMAIL_API_READY ? 'gmail-api' : 'none',
+    RESEND_API_KEY ? 'resend' : 'none',
+    GMAIL_USER && GMAIL_APP_PASSWORD ? 'gmail-smtp' : 'none',
+  ].filter((p, index, arr) => p !== 'none' && arr.indexOf(p) === index);
 
-  if (provider === 'brevo') {
-    await enviarEmailBrevo(params);
-    return;
-  }
-
-  if (provider === 'resend') {
-    await enviarEmailResend(params);
-    return;
-  }
-
-  if (provider === 'gmail-api') {
-    await enviarEmailGmailApi(params);
-    return;
-  }
-
-  if (provider === 'sendgrid') {
-    await sgMail.send({
-      from: {
-        email: FROM_EMAIL,
-        name: 'LearnScape',
-      },
-      to: params.to,
-      subject: params.subject,
-      html: params.html,
-    });
-    return;
-  }
-
-  if (provider === 'none') {
+  if (!candidatos.length) {
     throw new Error(`Servicio de correo no configurado para EMAIL_PROVIDER="${EMAIL_PROVIDER || 'auto'}"`);
   }
 
-  await transporter.sendMail({
-    from: `"LearnScape" <${FROM_EMAIL}>`,
-    to: params.to,
-    subject: params.subject,
-    html: params.html,
-  });
+  const errores: string[] = [];
+  for (const candidato of candidatos) {
+    try {
+      if (candidato === 'brevo') {
+        await enviarEmailBrevo(params);
+        return;
+      }
+
+      if (candidato === 'resend') {
+        await enviarEmailResend(params);
+        return;
+      }
+
+      if (candidato === 'gmail-api') {
+        await enviarEmailGmailApi(params);
+        return;
+      }
+
+      if (candidato === 'sendgrid') {
+        await sgMail.send({
+          from: {
+            email: FROM_EMAIL,
+            name: 'LearnScape',
+          },
+          to: params.to,
+          subject: params.subject,
+          html: params.html,
+        });
+        return;
+      }
+
+      await transporter.sendMail({
+        from: `"LearnScape" <${FROM_EMAIL}>`,
+        to: params.to,
+        subject: params.subject,
+        html: params.html,
+      });
+      return;
+    } catch (error: any) {
+      const detalle = `${candidato}: ${detalleErrorEmail(error)}`;
+      errores.push(detalle);
+      console.warn(`Proveedor de correo falló (${detalle}). Intentando siguiente si existe.`);
+    }
+  }
+
+  throw new Error(`No se pudo enviar el correo con ningun proveedor configurado. ${errores.join(' | ')}`);
 }
 
 // Verificar conexiÃ³n al iniciar
