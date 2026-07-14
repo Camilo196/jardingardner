@@ -110,6 +110,16 @@ type Indicadores {
     creadoPor: String
 }
 
+type TextoDirectorBoletin {
+  id: ID!
+  cursoId: ID!
+  estudianteId: ID!
+  periodo: String!
+  profesorId: ID!
+  introPreescolar: String
+  objetivoGeneralPrimaria: String
+}
+
 type CalificacionBoletin {
     asignaturaId: ID!
     asignaturaNombre: String!
@@ -313,6 +323,14 @@ input BoletinInput {
   observaciones: String
 }
 
+input TextoDirectorBoletinInput {
+  cursoId: ID!
+  estudianteId: ID!
+  periodo: String!
+  introPreescolar: String
+  objetivoGeneralPrimaria: String
+}
+
 input MatriculaInput {
   estudianteId: String!
   cursoId: ID!
@@ -432,6 +450,7 @@ type Query {
   # Indicadores
   indicadoresPorAsignatura(asignaturaId: ID!, periodo: String!, estudianteId: ID): Indicadores
   indicadoresPorProfesor(profesorId: ID!, periodo: String!): [Indicadores!]!
+  textoDirectorBoletin(cursoId: ID!, estudianteId: ID!, periodo: String!): TextoDirectorBoletin
 
   # Boletines
   boletines: [Boletin!]!
@@ -509,6 +528,7 @@ type Mutation {
     intro: String
     estudianteIds: [ID!]
   ): Indicadores!
+  guardarTextoDirectorBoletin(input: TextoDirectorBoletinInput!): TextoDirectorBoletin!
   eliminarIndicadores(asignaturaId: ID!, periodo: String!): Boolean!
 
   guardarCalificacionBoletin(

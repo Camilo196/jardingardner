@@ -536,9 +536,17 @@ table.t tbody tr:last-child td{border-bottom:none}
         <span style="font-size:13px;font-weight:700;color:var(--ink)"><i class="fas fa-calendar-alt"></i> Período del boletín:</span>
         <select id="indPeriodoSel" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;cursor:pointer;outline:none" onchange="onIndPeriodoCambio()"></select>
       </div>
-      <div id="indIntroWrap" style="display:none;margin-bottom:16px;border:1px solid var(--border);border-radius:8px;padding:12px 14px;background:#fff7ed">
-        <div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:6px"><i class="fas fa-comment-alt"></i> Texto inicial de la carta</div>
-        <textarea id="indIntroText" rows="4" placeholder="Escribe el saludo o introduccion que debe salir al inicio del boletin de preescolar..." oninput="setPreIntro(this.value)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical"></textarea>
+      <div id="dirBoletinWrap" style="display:none;margin-bottom:16px;border:1px solid var(--border);border-radius:8px;padding:12px 14px;background:#fff7ed">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+          <div>
+            <div id="dirBoletinTitle" style="font-size:13px;font-weight:800;color:var(--ink)"><i class="fas fa-comment-alt"></i> Texto del director de grado</div>
+            <div id="dirBoletinSub" style="font-size:12px;color:var(--muted);margin-top:2px"></div>
+          </div>
+          <span id="dirBoletinEstado" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;background:var(--surface);color:var(--muted)">Sin cargar</span>
+        </div>
+        <textarea id="dirBoletinIntroText" rows="4" placeholder="Texto inicial para Estimadas familias..." oninput="setDirectorIntro(this.value)" style="display:none;width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical"></textarea>
+        <textarea id="dirBoletinObjetivoText" rows="4" placeholder="Objetivo general que saldra al final del boletin de primaria..." oninput="setDirectorObjetivoGeneral(this.value)" style="display:none;width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical"></textarea>
+        <button class="btn bo" type="button" onclick="guardarTextoDirectorBoletin()" style="margin-top:10px;padding:7px 12px;font-size:12px"><i class="fas fa-save"></i> Guardar texto del director</button>
       </div>
       <div style="margin-bottom:16px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
         <div style="background:var(--surface);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
@@ -742,8 +750,9 @@ const W = {
   profId:null, profNombre:'',
   asignaturas:[],
   cursoNombre:'',
-  estId:null, asigId:null, asigActual:null, periodo:null,
+  estId:null, asigId:null, asigActual:null, periodo:null, cursoId:null, esDirectorGrupo:false,
   indEstudiantes:[], indSeleccionados:new Set(), indObservaciones:{},
+  dirBoletinIntro:'', dirBoletinObjetivo:'',
   cals:[], calTab:'cAct',
   asEst:[], asEstados:{}, asObs:{},
   calMesActual:new Date().getMonth(), calAnioActual:new Date().getFullYear(), calEventos:[],
@@ -994,7 +1003,7 @@ async function abrirCalificaciones(matId,asigId){
     }
   }
   if(!mat?.estudiante||!asig)return;
-  const est=mat.estudiante; W.estId=est.cedula; W.asigId=asig.id; W.asigActual=asig; W.periodo=mat.periodo||periodoLabel(); W.cursoNombre=asig.curso?.nombre||'';
+  const est=mat.estudiante; W.estId=est.cedula; W.asigId=asig.id; W.asigActual=asig; W.periodo=mat.periodo||periodoLabel(); W.cursoNombre=asig.curso?.nombre||''; W.cursoId=asig.curso?.id||asig.cursoId||''; W.esDirectorGrupo=String(asig.curso?.profesorId||'').trim()===String(W.profId||'').trim();
   W.indEstudiantes=ordenarEstudiantesPorApellido((asig.matriculas||[]).filter(m=>m.estudiante && matriculaVisibleProfesor(m)).map(m=>m.estudiante));
   const n=`${est.nombre} ${est.primerApellido} ${est.segundoApellido||''}`.trim();
   document.getElementById('calTit').textContent=n; document.getElementById('calSub').textContent=asig.nombre;
@@ -1877,8 +1886,16 @@ function actualizarIndicadoresUI(){
   if(btns) btns.style.display='flex';
   const serBox=document.getElementById('ind-ser')?.parentElement;
   if(serBox) serBox.style.display='block';
-  const introWrap=document.getElementById('indIntroWrap');
-  if(introWrap) introWrap.style.display=esPre?'block':'none';
+  const dirWrap=document.getElementById('dirBoletinWrap');
+  const dirTitle=document.getElementById('dirBoletinTitle');
+  const dirSub=document.getElementById('dirBoletinSub');
+  const dirIntro=document.getElementById('dirBoletinIntroText');
+  const dirObj=document.getElementById('dirBoletinObjetivoText');
+  if(dirWrap) dirWrap.style.display=W.esDirectorGrupo?'block':'none';
+  if(dirTitle) dirTitle.innerHTML=esPre?'<i class="fas fa-envelope-open-text"></i> Texto inicial del director de grado':'<i class="fas fa-bullhorn"></i> Objetivo general del director de grado';
+  if(dirSub) dirSub.textContent=esPre?'Solo el director de grado define el texto de Estimadas familias para este estudiante y periodo.':'Solo el director de grado define el objetivo general que sale al final del boletin.';
+  if(dirIntro) dirIntro.style.display=W.esDirectorGrupo&&esPre?'block':'none';
+  if(dirObj) dirObj.style.display=W.esDirectorGrupo&&!esPre?'block':'none';
   const contEst=document.getElementById('ind-estudiantes');
   if(contEst) contEst.style.gridTemplateColumns=esPre?'repeat(auto-fit,minmax(300px,1fr))':'repeat(auto-fit,minmax(220px,1fr))';
   ['saber','hacer','ser'].forEach(tipo=>{
@@ -1944,10 +1961,65 @@ function poblarIndPeriodoSel(preferido){
 
 function getIndPeriodo(){ const sel=document.getElementById('indPeriodoSel'); return sel?sel.value:(W.periodo||periodoLabel()); }
 
+function actualizarEstadoTextoDirector(txt,tipo='base'){
+  const el=document.getElementById('dirBoletinEstado'); if(!el) return;
+  el.textContent=txt;
+  if(tipo==='ok'){ el.style.background='var(--green-lt)'; el.style.color='var(--green)'; return; }
+  if(tipo==='er'){ el.style.background='#fee2e2'; el.style.color='var(--red)'; return; }
+  el.style.background='var(--surface)'; el.style.color='var(--muted)';
+}
+
+function setDirectorIntro(valor){ W.dirBoletinIntro=String(valor||''); }
+function setDirectorObjetivoGeneral(valor){ W.dirBoletinObjetivo=String(valor||''); }
+
+async function cargarTextoDirectorBoletin(periodoForzado){
+  const introEl=document.getElementById('dirBoletinIntroText');
+  const objEl=document.getElementById('dirBoletinObjetivoText');
+  if(introEl) introEl.value='';
+  if(objEl) objEl.value='';
+  W.dirBoletinIntro=''; W.dirBoletinObjetivo='';
+  if(!W.esDirectorGrupo || !W.cursoId || !W.estId){ actualizarEstadoTextoDirector('Solo director de grupo'); return; }
+  const periodo=periodoForzado||getIndPeriodo();
+  if(!periodo){ actualizarEstadoTextoDirector('Sin periodo'); return; }
+  try{
+    const d=await gql(`query($cursoId:ID!,$estudianteId:ID!,$periodo:String!){textoDirectorBoletin(cursoId:$cursoId,estudianteId:$estudianteId,periodo:$periodo){introPreescolar objetivoGeneralPrimaria}}`,{cursoId:W.cursoId,estudianteId:W.estId,periodo});
+    const item=d.textoDirectorBoletin||null;
+    W.dirBoletinIntro=String(item?.introPreescolar||'');
+    W.dirBoletinObjetivo=String(item?.objetivoGeneralPrimaria||'');
+    if(introEl) introEl.value=W.dirBoletinIntro;
+    if(objEl) objEl.value=W.dirBoletinObjetivo;
+    actualizarEstadoTextoDirector((W.dirBoletinIntro||W.dirBoletinObjetivo)?`Texto cargado - ${periodo}`:`Sin texto guardado - ${periodo}`,(W.dirBoletinIntro||W.dirBoletinObjetivo)?'ok':'base');
+  }catch(err){
+    actualizarEstadoTextoDirector('No se pudo cargar','er');
+  }
+}
+
+async function guardarTextoDirectorBoletin(){
+  if(!W.esDirectorGrupo){ toast('Solo el director de grupo puede guardar este texto','er'); return; }
+  if(!periodoSelectHabilitado('indPeriodoSel')){ toast('Ese periodo no esta habilitado','er'); return; }
+  if(!W.cursoId || !W.estId){ toast('Selecciona un estudiante valido','er'); return; }
+  const periodo=getIndPeriodo();
+  const introPreescolar=String(W.dirBoletinIntro||'').trim();
+  const objetivoGeneralPrimaria=String(W.dirBoletinObjetivo||'').trim();
+  if(esCursoPreescolarNombre(W.cursoNombre) && !introPreescolar){ toast('Escribe el texto inicial de Estimadas familias','er'); return; }
+  if(!esCursoPreescolarNombre(W.cursoNombre) && !objetivoGeneralPrimaria){ toast('Escribe el objetivo general final','er'); return; }
+  try{
+    await gql(`mutation($input:TextoDirectorBoletinInput!){guardarTextoDirectorBoletin(input:$input){id}}`,{
+      input:{cursoId:W.cursoId,estudianteId:W.estId,periodo,introPreescolar,objetivoGeneralPrimaria}
+    });
+    actualizarEstadoTextoDirector(`Guardado - ${periodo}`,'ok');
+    toast('Texto del director guardado');
+  }catch(err){
+    actualizarEstadoTextoDirector('Error al guardar','er');
+    toast('Error: '+err.message,'er');
+  }
+}
+
 async function onIndPeriodoCambio(){
   const sel=document.getElementById('indPeriodoSel');
   const periodo=sel?sel.value:(W.periodo||periodoLabel());
   await cargarIndicadores(periodo);
+  await cargarTextoDirectorBoletin(periodo);
 }
 
 async function cargarIndicadores(periodoForzado){
@@ -1995,8 +2067,7 @@ async function cargarIndicadores(periodoForzado){
     W.indObservaciones={};
     const el=document.getElementById('indEstado'); if(el){ el.textContent='Sin indicadores'; el.style.background='var(--surface)'; el.style.color='var(--muted)'; }
   }
-  const introText=document.getElementById('indIntroText');
-  if(introText) introText.value=IND.intro||'';
+  await cargarTextoDirectorBoletin(periodo);
   renderIndEstudiantes();
   render();
 }
