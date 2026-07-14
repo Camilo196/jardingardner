@@ -6,6 +6,7 @@ const GMAIL_USER = process.env.GMAIL_USER?.trim() || '';
 const GMAIL_APP_PASSWORD =
   process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, '').trim() || '';
 const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER?.trim().toLowerCase() || '';
+const BREVO_API_KEY = process.env.BREVO_API_KEY?.trim() || '';
 const RESEND_API_KEY = process.env.RESEND_API_KEY?.trim() || '';
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY?.trim() || '';
 const GMAIL_API_CLIENT_ID = process.env.GMAIL_API_CLIENT_ID?.trim() || '';
@@ -34,11 +35,13 @@ const FROM_EMAIL =
   GMAIL_USER;
 const APP_URL = process.env.APP_URL || 'http://localhost:4200';
 
-function providerActivo(): 'resend' | 'gmail-api' | 'sendgrid' | 'gmail-smtp' | 'none' {
+function providerActivo(): 'brevo' | 'resend' | 'gmail-api' | 'sendgrid' | 'gmail-smtp' | 'none' {
+  if (EMAIL_PROVIDER === 'brevo') return BREVO_API_KEY ? 'brevo' : 'none';
   if (EMAIL_PROVIDER === 'resend') return RESEND_API_KEY ? 'resend' : 'none';
   if (EMAIL_PROVIDER === 'gmail-api') return GMAIL_API_READY ? 'gmail-api' : 'none';
   if (EMAIL_PROVIDER === 'sendgrid') return SENDGRID_API_KEY ? 'sendgrid' : 'none';
   if (EMAIL_PROVIDER === 'gmail-smtp') return GMAIL_USER && GMAIL_APP_PASSWORD ? 'gmail-smtp' : 'none';
+  if (BREVO_API_KEY) return 'brevo';
   if (RESEND_API_KEY) return 'resend';
   if (GMAIL_API_READY) return 'gmail-api';
   if (SENDGRID_API_KEY) return 'sendgrid';
@@ -56,6 +59,35 @@ function detalleErrorEmail(error: any): string {
     }
   }
   return error?.message || String(error);
+}
+
+async function enviarEmailBrevo(params: {
+  to: string;
+  subject: string;
+  html: string;
+}): Promise<void> {
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'api-key': BREVO_API_KEY,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({
+      sender: {
+        email: FROM_EMAIL,
+        name: 'LearnScape',
+      },
+      to: [{ email: params.to }],
+      subject: params.subject,
+      htmlContent: params.html,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Brevo no pudo enviar el correo (${res.status}) ${text}`);
+  }
 }
 
 async function enviarEmailResend(params: {
@@ -153,6 +185,11 @@ async function enviarEmail(params: {
 }): Promise<void> {
   const provider = providerActivo();
 
+  if (provider === 'brevo') {
+    await enviarEmailBrevo(params);
+    return;
+  }
+
   if (provider === 'resend') {
     await enviarEmailResend(params);
     return;
@@ -192,6 +229,11 @@ async function enviarEmail(params: {
 export async function verificarConexionEmail(): Promise<void> {
   const provider = providerActivo();
 
+  if (provider === 'brevo') {
+    console.log('Servicio de correo configurado con Brevo');
+    return;
+  }
+
   if (provider === 'resend') {
     console.log('Servicio de correo configurado con Resend');
     return;
@@ -208,7 +250,7 @@ export async function verificarConexionEmail(): Promise<void> {
   }
 
   if (provider === 'none') {
-    console.warn('Servicio de correo no configurado. Define EMAIL_PROVIDER=sendgrid con SENDGRID_API_KEY y MAIL_FROM, o configura otro proveedor.');
+    console.warn('Servicio de correo no configurado. Define EMAIL_PROVIDER=brevo con BREVO_API_KEY y MAIL_FROM, o configura otro proveedor.');
     return;
   }
 
