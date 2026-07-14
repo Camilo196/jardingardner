@@ -312,8 +312,9 @@ export async function enviarPasswordRecuperacion(params: {
     });
     return true;
   } catch (error: any) {
-    console.error(`âŒ Error al enviar correo de recuperaciÃ³n a ${email}:`, detalleErrorEmail(error));
-    return false;
+    const detalle = detalleErrorEmail(error);
+    console.error(`Error al enviar correo de recuperacion a ${email}:`, detalle);
+    throw new Error(`No se pudo enviar el correo de recuperacion: ${detalle}`);
   }
 }
 
