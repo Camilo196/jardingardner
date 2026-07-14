@@ -1071,23 +1071,36 @@ export const resolvers = {
         },
 
         olvidarPassword: async (_: any, { identifier }: any, { repositories }: any): Promise<boolean> => {
-            let email = '', nombre = '', cedula = identifier;
+            let email = '', nombre = '', cedula = identifier, rolUsuario = '';
 
-            // Fix N+1: buscar primero por cÃ©dula, luego por email directo en DB (sin findAll)
+            // Fix N+1: buscar primero por cedula, luego por email directo en DB (sin findAll)
             const est = await repositories.estudianteRepository.findByCedula(identifier).catch(() => null)
                 ?? await repositories.estudianteRepository.findByEmail(identifier).catch(() => null);
 
             if (est) {
-                email = est.email; nombre = est.nombre; cedula = est.cedula;
+                email = est.email; nombre = est.nombre; cedula = est.cedula; rolUsuario = 'ESTUDIANTE';
             } else {
                 const prof = await repositories.profesorRepository.findByCedula(identifier).catch(() => null)
                     ?? await repositories.profesorRepository.findByEmail(identifier).catch(() => null);
-                if (prof) { email = prof.email; nombre = prof.nombre; cedula = prof.cedula; }
+                if (prof) { email = prof.email; nombre = prof.nombre; cedula = prof.cedula; rolUsuario = 'PROFESOR'; }
             }
 
             if (!email) throw new Error('No se encontró usuario con ese identificador');
             const clave = generarClaveAleatoria();
-            const passwordReset = await repositories.userRepository.resetPassword(cedula, clave);
+            let passwordReset = await repositories.userRepository.resetPassword(cedula, clave);
+            if (!passwordReset && email) {
+                passwordReset = await repositories.userRepository.resetPassword(email, clave);
+            }
+            if (!passwordReset) {
+                await repositories.userRepository.create({
+                    username: cedula,
+                    password: clave,
+                    role: rolUsuario || 'ESTUDIANTE',
+                    email,
+                    isFirstLogin: true,
+                });
+                passwordReset = true;
+            }
             if (!passwordReset) throw new Error('No se pudo restablecer la contraseña');
             const emailSent = await enviarPasswordRecuperacion({ email, nombre, cedula, passwordTemporal: clave });
             if (!emailSent) throw new Error('La contraseña se restableció, pero no se pudo enviar el correo');
@@ -2092,7 +2105,11 @@ export const resolvers = {
         fecha: (asistencia: any) => {
             if (!asistencia?.fecha) return null;
             const d = new Date(asistencia.fecha);
-            return isNaN(d.getTime()) ? null : d.toISOString();
+            if (isNaN(d.getTime())) return null;
+            const yyyy = d.getUTCFullYear();
+            const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const dd = String(d.getUTCDate()).padStart(2, '0');
+            return yyyy + '-' + mm + '-' + dd + 'T12:00:00.000Z';
         },
     },
 

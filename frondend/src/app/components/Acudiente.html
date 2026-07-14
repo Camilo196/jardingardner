@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -6,6 +6,7 @@
 <title>Portal Acudiente — Gardner</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <script src="../assets/config.js"></script>
+<script src="../assets/text-sanitizer.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -355,6 +356,8 @@ async function gql(q, v={}){
 }
 function salir(){ sessionStorage.removeItem('token'); window.location.href='principal.html'; }
 function showT(m,t='ok',d=3500){ const el=document.getElementById('toast'); el.textContent=m; el.className=`toast on ${t}`; setTimeout(()=>el.className='toast',d); }
+function soloFecha(v){return String(v||'').split('T')[0];}
+function fechaLocal(v){const f=soloFecha(v);if(!f)return'-';const [y,m,d]=f.split('-').map(Number);if(!y||!m||!d)return'-';return new Date(y,m-1,d,12).toLocaleDateString('es-CO');}
 function normalizarCursoNombre(nombre=''){ return String(nombre||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
 function esCursoPreescolarNombre(nombre=''){ const n=normalizarCursoNombre(nombre); return ['parvulos','parvulo','pre jardin','prejardin','jardin','transicion'].some(k=>n.includes(k)); }
 
@@ -434,7 +437,7 @@ function renderExperiencias(){
   if(!rows.length){ c.innerHTML='<div class="empty"><div class="empty-ico">IMG</div><p>No hay experiencias significativas publicadas para este curso.</p></div>'; return; }
   c.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px">${rows.map(x=>{
     const src=`data:${x.mimeType};base64,${x.contenidoBase64}`;
-    const fecha=x.fecha?new Date(x.fecha+'T12:00:00').toLocaleDateString('es-CO'):'-';
+    const fecha=x.fecha?fechaLocal(x.fecha):'-';
     const prof=x.profesor?`${x.profesor.nombre||''} ${x.profesor.primerApellido||''}`.trim():'Profesor';
     return `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;box-shadow:var(--shadow-xs)"><img src="${src}" alt="${escHtml(x.titulo)}" style="width:100%;height:170px;object-fit:cover;display:block"><div style="padding:13px;display:grid;gap:6px"><div style="font-weight:900;color:var(--ink)">${escHtml(x.titulo)}</div><div style="font-size:12px;color:var(--muted)">${escHtml(x.curso?.nombre||'Preescolar')} - ${fecha}</div><div style="font-size:12px;color:var(--muted)">${escHtml(prof)}</div>${x.descripcion?`<div style="font-size:13px;line-height:1.45;color:var(--ink)">${escHtml(x.descripcion)}</div>`:''}</div></div>`;
   }).join('')}</div>`;
@@ -480,7 +483,7 @@ function bloqueAsig(a,cals){
   else{
     const sorted=[...cals].sort((a,b)=>((a.corte||0)-(b.corte||0)));
     h+=`<table class="ntbl"><thead><tr><th>Actividad</th><th>Tipo</th><th>Corte</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>`;
-    sorted.forEach(c=>{ const n=Number(c.nota); const cor=c.corte||gc(c.observaciones)||'—'; const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'—';
+    sorted.forEach(c=>{ const n=Number(c.nota); const cor=c.corte||gc(c.observaciones)||'—'; const f=c.fecha?fechaLocal(c.fecha):'-';
       h+=`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.tipoActividad||'—'}</span></td><td style="font-size:12px;color:var(--muted)">${cor===1?'1° Corte':cor===2?'2° Corte':cor===3?'3° Corte':cor}</td><td><span class="pill ${n>=4?'g':n>=3.5?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`; });
     h+=`</tbody></table>`;
   }
@@ -513,7 +516,7 @@ function renderAsistencia(){
     totalPres+=pres+exc; totalClases+=total;
     h+=`<div class="asig-blk" style="margin-bottom:18px"><div class="asig-blk-h"><span>${nombre}</span><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="pill n">🏫 ${total}</span><span class="pill g">✅ ${pres}</span>${tard?`<span class="pill a">⏰ ${tard}</span>`:''} ${aus?`<span class="pill r">❌ ${aus}</span>`:''}<span style="font-size:13px;font-weight:800;color:${pctColor}">${pct}%</span></div></div><div style="overflow-x:auto"><table class="ntbl"><thead><tr><th>Fecha</th><th>Estado</th><th>Período</th><th>Observación</th></tr></thead><tbody>`;
     const sorted=[...rs].sort((a,b)=>new Date(b.fecha).getTime()-new Date(a.fecha).getTime());
-    for(const r of sorted){const f=r.fecha?new Date(r.fecha).toLocaleDateString('es-CO'):'—'; h+=`<tr><td style="font-weight:700">${f}</td><td><span class="pill ${estadoClase[r.estado]||'n'}">${estadoEmoji[r.estado]||''} ${r.estado}</span></td><td style="font-size:12px;color:var(--muted)">${periodoLabel(r.periodo)}</td><td style="font-size:12px;color:var(--muted)">${r.observaciones||'—'}</td></tr>`;}
+    for(const r of sorted){const f=r.fecha?fechaLocal(r.fecha):'-'; h+=`<tr><td style="font-weight:700">${f}</td><td><span class="pill ${estadoClase[r.estado]||'n'}">${estadoEmoji[r.estado]||''} ${r.estado}</span></td><td style="font-size:12px;color:var(--muted)">${periodoLabel(r.periodo)}</td><td style="font-size:12px;color:var(--muted)">${r.observaciones||'—'}</td></tr>`;}
     h+=`</tbody></table></div></div>`;
   }
   c.innerHTML=h;
@@ -527,7 +530,7 @@ async function renderBoletin(){
     const dp=await gql(`query{periodosConfig(anio:${anio}){numeroPeriodo abierto fechaCierre}}`);
     const configs=dp.periodosConfig||[];
     const periodosConNotas=[...new Set(G.cals.map(c=>c.periodo))].filter(Boolean);
-    const tarjetas=[1,2,3].map(n=>{ const valor=`${anio}-${n}`; const cfg=configs.find(c=>c.numeroPeriodo===n); const abierto=cfg?cfg.abierto:true; const tieneNotas=periodosConNotas.includes(valor); const labels={1:'1er Período',2:'2do Período',3:'3er Período'}; const fc=cfg?.fechaCierre?new Date(cfg.fechaCierre).toLocaleDateString('es-CO'):null;
+    const tarjetas=[1,2,3].map(n=>{ const valor=`${anio}-${n}`; const cfg=configs.find(c=>c.numeroPeriodo===n); const abierto=cfg?cfg.abierto:true; const tieneNotas=periodosConNotas.includes(valor); const labels={1:'1er Período',2:'2do Período',3:'3er Período'}; const fc=cfg?.fechaCierre?fechaLocal(cfg.fechaCierre):null;
       if(!abierto) return `<div style="border:2px solid #bbf7d0;border-radius:10px;padding:14px 18px;background:#f0fdf4;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px"><div><div style="font-weight:800;font-size:14px;color:#166534">✅ ${labels[n]} <span style="font-size:12px;background:var(--green-lt);color:var(--green);padding:2px 8px;border-radius:12px;margin-left:6px">CERRADO</span></div>${fc?`<div style="font-size:11px;color:#4ade80;margin-top:3px">Cerrado el ${fc}</div>`:''}</div><button class="btn btn-t" style="padding:8px 16px;font-size:12px;white-space:nowrap" onclick="descargar('${valor}',this)">⬇ Descargar</button></div>`;
       else if(tieneNotas) return `<div style="border:2px solid #fde68a;border-radius:10px;padding:14px 18px;background:#fffbeb;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px"><div><div style="font-weight:800;font-size:14px;color:#92400e">⏳ ${labels[n]} <span style="font-size:12px;background:var(--amber-lt);color:#92400e;padding:2px 8px;border-radius:12px;margin-left:6px">EN CURSO</span></div><div style="font-size:11px;color:#b45309;margin-top:3px">Disponible cuando el período sea cerrado</div></div><button class="btn" disabled style="background:var(--border);color:var(--muted);padding:8px 16px;font-size:12px;cursor:not-allowed">🔒 No disponible</button></div>`;
       else return `<div style="border:2px solid var(--border);border-radius:10px;padding:14px 18px;background:var(--surface);display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;opacity:.6"><div><div style="font-weight:800;font-size:14px;color:var(--muted)">⬜ ${labels[n]} <span style="font-size:12px;background:var(--surface);color:var(--muted);padding:2px 8px;border-radius:12px;margin-left:6px">SIN DATOS</span></div></div><button class="btn" disabled style="background:var(--border);color:var(--muted);padding:8px 16px;font-size:12px;cursor:not-allowed">— No disponible</button></div>`;

@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
 <script src="../assets/config.js"></script>
+<script src="../assets/text-sanitizer.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -26,7 +27,7 @@
 }
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;font-size:14px}
 
-/* â”€â”€ SIDEBAR â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ SIDEBAR ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--ink2);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:200}
 .sb-logo{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:12px}
 .sb-mark{width:46px;height:46px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;box-shadow:0 4px 12px rgba(15,23,42,.18);padding:4px}
@@ -46,7 +47,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .sb-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.65);padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;font-family:inherit;width:100%;text-align:left}
 .sb-btn:hover{background:rgba(255,255,255,.15);color:#fff}
 
-/* â”€â”€ MAIN â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ MAIN ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .main{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column}
 .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-xs)}
 .topbar-left{display:flex;align-items:center;gap:12px}
@@ -57,7 +58,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .content{padding:24px 28px;flex:1}
 .section{display:none}.section.active{display:block}
 
-/* â”€â”€ STATS â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ STATS ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
 .kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;box-shadow:var(--shadow-xs);transition:.2s;position:relative;overflow:hidden}
 .kpi:hover{box-shadow:var(--shadow-sm);transform:translateY(-1px)}
@@ -69,7 +70,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .kpi-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px}
 .kpi-val{font-size:28px;font-weight:900;color:var(--ink)}
 
-/* â”€â”€ CARDS & PANELS â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ CARDS & PANELS ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .pcard{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow-xs);overflow:hidden;margin-bottom:20px}
 .pcard-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:linear-gradient(to right,var(--white),var(--bg))}
 .pcard-title{font-size:15px;font-weight:800;color:var(--blue)}
@@ -88,7 +89,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .ame{font-size:12px;color:var(--muted);margin-top:3px;font-weight:600}
 .aacts{display:flex;gap:8px;align-items:center;flex-shrink:0}
 
-/* â”€â”€ PILLS / BTNS â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ PILLS / BTNS ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .pill{display:inline-flex;align-items:center;padding:4px 12px;border-radius:24px;font-weight:800;font-size:12px;gap:4px}
 .pill.g{background:var(--green-lt);color:var(--green)}
 .pill.a{background:var(--amber-lt);color:#854d0e}
@@ -100,7 +101,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .btn-o{background:transparent;color:var(--blue);border:1.5px solid var(--border)}.btn-o:hover{background:var(--blue-lt)}
 .btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed}
 
-/* â”€â”€ HORARIO â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ HORARIO ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .hscroll{overflow-x:auto}
 .hgrid{display:grid;grid-template-columns:70px repeat(5,1fr);min-width:520px}
 .dhd{padding:12px 8px;text-align:center;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.6px}
@@ -123,7 +124,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .ld{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .ld{width:10px;height:10px;border-radius:3px}
 
-/* â”€â”€ NOTAS â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ NOTAS ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .ntbl{width:100%;border-collapse:collapse;font-size:13px}
 .ntbl th,.ntbl td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
 .ntbl th{background:var(--surface);font-weight:800;font-size:12px;color:var(--muted);letter-spacing:.3px;text-transform:uppercase}
@@ -135,12 +136,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .asig-blk-h span{font-weight:800;color:var(--ink)}
 .asig-blk-h small{font-size:11px;color:var(--muted);font-weight:700}
 
-/* â”€â”€ BOLETÃN â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ BOLETÃƒÆ’Ã‚ÂN ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .bcard{background:linear-gradient(135deg,var(--blue-lt),#e0e7ff);border:1px solid #c7d2fe;border-radius:var(--r);padding:28px;text-align:center}
 .bcard h3{color:var(--blue-dark);font-size:20px;font-weight:900;margin-bottom:8px}
 .bcard p{color:var(--muted);font-size:14px;margin-bottom:24px;max-width:480px;margin-inline:auto}
 
-/* â”€â”€ CRONOGRAMA â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ CRONOGRAMA ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .cal-wrap{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow-xs);overflow:hidden}
 .cal-top{background:linear-gradient(135deg,var(--blue),var(--blue-dark));color:#fff;padding:16px 22px;display:flex;align-items:center;justify-content:space-between}
 .cal-top h3{margin:0;font-size:16px;font-weight:800}
@@ -163,7 +164,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .leg-it{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700}
 .leg-dot{width:10px;height:10px;border-radius:3px}
 
-/* â”€â”€ MODAL â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ MODAL ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .mover{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:1000;justify-content:center;align-items:flex-start;padding:48px 20px;overflow-y:auto;backdrop-filter:blur(4px)}
 .mover.o{display:flex}
 .mbox{background:#fff;border-radius:16px;width:100%;max-width:680px;box-shadow:var(--shadow);animation:slideUp .25s ease}
@@ -174,7 +175,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .mclose:hover{background:var(--surface);color:var(--ink)}
 .mbody{padding:22px}
 
-/* â”€â”€ ESTADOS â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ ESTADOS ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .empty{text-align:center;padding:60px 20px;color:var(--muted)}
 .empty-ico{font-size:48px;margin-bottom:12px;opacity:.6}
 .spin-w{display:flex;justify-content:center;padding:60px}
@@ -183,7 +184,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .toast{position:fixed;bottom:28px;right:28px;background:var(--ink);color:#fff;padding:13px 22px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;opacity:0;transform:translateY(16px);transition:.3s;pointer-events:none;max-width:340px}
 .toast.on{opacity:1;transform:translateY(0)}.toast.ok{border-left:4px solid var(--green)}.toast.er{border-left:4px solid var(--red)}
 
-/* â”€â”€ RESPONSIVE â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ RESPONSIVE ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
   @media(max-width:768px){
     body{display:block}
     .sidebar{width:100%;min-height:auto;height:auto;position:relative;top:auto;overflow:visible}
@@ -211,7 +212,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 </head>
 <body>
 
-<!-- â•â• SIDEBAR â•â• -->
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â SIDEBAR ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 <aside class="sidebar">
   <div class="sb-logo">
     <div class="sb-mark"><img src="../assets/institution/pdf_image_2.jpg" alt="Logo Gardner"></div>
@@ -234,7 +235,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <span class="ico"><i class="fa-solid fa-chart-line"></i></span><span>Resumen</span>
   </button>
 
-    <div class="sb-section">Académico</div>
+    <div class="sb-section">AcadÃƒÂ©mico</div>
   <button class="sb-item" onclick="showSection('horario',this)">
         <span class="ico"><i class="fa-regular fa-calendar"></i></span><span>Mi Horario</span>
   </button>
@@ -254,22 +255,22 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <span class="ico"><i class="fa-regular fa-images"></i></span><span>Experiencias</span>
   </button>
   <button class="sb-item" onclick="showSection('boletin',this)">
-        <span class="ico"><i class="fa-regular fa-file-pdf"></i></span><span>Boletín PDF</span>
+        <span class="ico"><i class="fa-regular fa-file-pdf"></i></span><span>BoletÃƒÂ­n PDF</span>
   </button>
 
   <div class="sb-footer">
     <button class="sb-btn" onclick="abrirCambioPass()">Cambiar clave</button>
-    <button class="sb-btn" onclick="salir()">Cerrar sesión</button>
+    <button class="sb-btn" onclick="salir()">Cerrar sesiÃƒÂ³n</button>
   </div>
 </aside>
 
-<!-- â•â• MAIN â•â• -->
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â MAIN ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 <div class="main">
   <div class="topbar">
     <div class="topbar-left">
       <div>
         <div class="topbar-title" id="topTitle">Resumen</div>
-        <div class="topbar-sub" id="topSub">Tus cursos y estado académico</div>
+        <div class="topbar-sub" id="topSub">Tus cursos y estado acadÃƒÂ©mico</div>
       </div>
     </div>
     <div class="topbar-right">
@@ -279,7 +280,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
   <div class="content">
 
-    <!-- â•â•â• RESUMEN â•â•â• -->
+    <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â RESUMEN ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
     <div id="sec-resumen" class="section active">
       <div class="kpis">
         <div class="kpi blue"><div class="kpi-lbl">Cursos</div><div class="kpi-val" id="stC">-</div></div>
@@ -293,7 +294,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       </div>
     </div>
 
-    <!-- â•â•â• HORARIO â•â•â• -->
+    <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â HORARIO ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
     <div id="sec-horario" class="section">
       <div class="pcard">
       <div class="pcard-head"><span class="pcard-title">Mi Horario Semanal</span></div>
@@ -301,7 +302,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       </div>
     </div>
 
-    <!-- â•â•â• NOTAS â•â•â• -->
+    <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â NOTAS ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
     <div id="sec-notas" class="section">
       <div class="pcard">
         <div class="pcard-head" style="flex-wrap:wrap;gap:12px">
@@ -317,7 +318,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       </div>
     </div>
 
-    <!-- â•â•â• ASISTENCIA â•â•â• -->
+    <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â ASISTENCIA ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
     <div id="sec-asistencia" class="section">
       <div class="pcard">
         <div class="pcard-head" style="flex-wrap:wrap;gap:12px">
@@ -333,7 +334,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       </div>
     </div>
 
-    <!-- â•â•â• CRONOGRAMA â•â•â• -->
+    <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â CRONOGRAMA ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
     <div id="sec-cronograma" class="section">
       <div class="cal-wrap">
         <div class="cal-top">
@@ -347,7 +348,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="cal-grid" id="calGrid"></div>
         <div class="leyenda">
           <span class="leg-it"><span class="leg-dot ev-EXAMEN"></span>Examen</span>
-          <span class="leg-it"><span class="leg-dot ev-REUNION"></span>Reunión</span>
+          <span class="leg-it"><span class="leg-dot ev-REUNION"></span>ReuniÃƒÂ³n</span>
           <span class="leg-it"><span class="leg-dot ev-FESTIVO"></span>Festivo</span>
           <span class="leg-it"><span class="leg-dot ev-CULTURAL"></span>Cultural</span>
           <span class="leg-it"><span class="leg-dot ev-OTRO"></span>Otro</span>
@@ -374,12 +375,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
     <div id="sec-boletin" class="section">
       <div class="pcard">
-      <div class="pcard-head"><span class="pcard-title">Boletín de Calificaciones</span></div>
+      <div class="pcard-head"><span class="pcard-title">BoletÃƒÂ­n de Calificaciones</span></div>
         <div class="pcard-body">
           <div class="bcard">
         <div style="font-size:48px;margin-bottom:12px">PDF</div>
-        <h3>Descarga tu Boletín Oficial</h3>
-        <p>El boletín se habilita cuando el administrador cierra el período académico. Solo puedes descargar los períodos que ya han sido cerrados.</p>
+        <h3>Descarga tu BoletÃƒÂ­n Oficial</h3>
+        <p>El boletÃƒÂ­n se habilita cuando el administrador cierra el perÃƒÂ­odo acadÃƒÂ©mico. Solo puedes descargar los perÃƒÂ­odos que ya han sido cerrados.</p>
             <div id="periodosBoletinWrap" style="width:100%;max-width:440px;margin:0 auto 16px"><div class="spin-w" style="padding:20px"><div class="spin"></div></div></div>
         <button class="btn btn-p" id="btnDl" disabled onclick="descargar()" style="margin:0 auto;padding:12px 28px;font-size:14px">Descargar PDF</button>
             <p id="dlMsg" style="margin-top:14px;font-size:13px;font-weight:700"></p>
@@ -398,7 +399,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   </div>
 </div>
 
-<!-- Modal notas rÃ¡pidas -->
+<!-- Modal notas rÃƒÆ’Ã‚Â¡pidas -->
 <div class="mover" id="mNotas" onclick="if(event.target===this)cerrarM()">
   <div class="mbox">
     <div class="mh"><h3 id="mTit">Calificaciones</h3><button class="mclose" onclick="cerrarM()">x</button></div>
@@ -409,14 +410,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 <!-- Modal cambiar contrasena -->
 <div class="mover" id="mPass" onclick="if(event.target===this)cerrarPass()">
   <div class="mbox" style="max-width:420px">
-    <div class="mh"><h3>Cambiar contraseña</h3><button class="mclose" onclick="cerrarPass()">x</button></div>
+    <div class="mh"><h3>Cambiar contraseÃƒÂ±a</h3><button class="mclose" onclick="cerrarPass()">x</button></div>
     <div class="mbody">
       <div style="display:flex;flex-direction:column;gap:14px">
-        <div><label style="font-size:12px;font-weight:800;color:var(--muted)">CONTRASEÑA ACTUAL</label><input type="password" id="passActual" placeholder="Tu contraseña actual" style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none"></div>
-        <div><label style="font-size:12px;font-weight:800;color:var(--muted)">NUEVA CONTRASEÑA</label><input type="password" id="passNueva" placeholder="Mínimo 6 caracteres" style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none"></div>
-        <div><label style="font-size:12px;font-weight:800;color:var(--muted)">CONFIRMAR NUEVA CONTRASEÑA</label><input type="password" id="passConfirm" placeholder="Repite la nueva contraseña" style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none"></div>
+        <div><label style="font-size:12px;font-weight:800;color:var(--muted)">CONTRASEÃƒâ€˜A ACTUAL</label><input type="password" id="passActual" placeholder="Tu contraseÃƒÂ±a actual" style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none"></div>
+        <div><label style="font-size:12px;font-weight:800;color:var(--muted)">NUEVA CONTRASEÃƒâ€˜A</label><input type="password" id="passNueva" placeholder="MÃƒÂ­nimo 6 caracteres" style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none"></div>
+        <div><label style="font-size:12px;font-weight:800;color:var(--muted)">CONFIRMAR NUEVA CONTRASEÃƒâ€˜A</label><input type="password" id="passConfirm" placeholder="Repite la nueva contraseÃƒÂ±a" style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none"></div>
         <div id="passError" style="display:none;background:var(--red-lt);color:#991b1b;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:700"></div>
-        <button class="btn btn-p" id="btnCambiarPass" onclick="guardarNuevaPass()" style="width:100%;justify-content:center;padding:11px">Guardar nueva contraseña</button>
+        <button class="btn btn-p" id="btnCambiarPass" onclick="guardarNuevaPass()" style="width:100%;justify-content:center;padding:11px">Guardar nueva contraseÃƒÂ±a</button>
       </div>
     </div>
   </div>
@@ -426,11 +427,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 <script>
 const API=window.LEARNSCAPE_API;
-const SECTION_LABELS={resumen:['Resumen','Tus cursos y estado académico'],horario:['Mi Horario','Horario semanal de clases'],notas:['Mis Notas','Calificaciones por asignatura'],asistencia:['Mi Asistencia','Registro de asistencia'],cronograma:['Cronograma','Calendario institucional'],actividades:['Calendario de actividades','Actividades asignadas por tus profesores'],experiencias:['Experiencias significativas','Fotos compartidas por tus profesores'],boletin:['Boletín PDF','Descarga tus boletines']};
+const SECTION_LABELS={resumen:['Resumen','Tus cursos y estado acadÃƒÂ©mico'],horario:['Mi Horario','Horario semanal de clases'],notas:['Mis Notas','Calificaciones por asignatura'],asistencia:['Mi Asistencia','Registro de asistencia'],cronograma:['Cronograma','Calendario institucional'],actividades:['Calendario de actividades','Actividades asignadas por tus profesores'],experiencias:['Experiencias significativas','Fotos compartidas por tus profesores'],boletin:['BoletÃƒÂ­n PDF','Descarga tus boletines']};
 const DIAS=['lunes','martes','miercoles','jueves','viernes'];
-const DLAB={lunes:'Lunes',martes:'Martes',miercoles:'Miércoles',jueves:'Jueves',viernes:'Viernes'};
+const DLAB={lunes:'Lunes',martes:'Martes',miercoles:'MiÃƒÂ©rcoles',jueves:'Jueves',viernes:'Viernes'};
 let FRANJAS=[{id:'F1',h:6,l:'6:00'},{id:'F2',h:7,l:'7:00'},{id:'F3',h:8,l:'8:00'},{id:'F4',h:9,l:'9:00'},{id:'F5',h:10,l:'10:00'},{id:'F6',h:11,l:'11:00'},{id:'F7',h:12,l:'12:00'},{id:'F8',h:13,l:'13:00'},{id:'F9',h:14,l:'14:00'},{id:'FA',h:15,l:'15:00'},{id:'FB',h:16,l:'16:00'},{id:'FC',h:17,l:'17:00'}];
-const DIA_MAP={lun:'lunes',lunes:'lunes',mar:'martes',martes:'martes',mie:'miercoles',mié:'miercoles',miercoles:'miercoles',miércoles:'miercoles',jue:'jueves',jueves:'jueves',vie:'viernes',viernes:'viernes'};
+const DIA_MAP={lun:'lunes',lunes:'lunes',mar:'martes',martes:'martes',mie:'miercoles','mié':'miercoles',miercoles:'miercoles','miércoles':'miercoles',jue:'jueves',jueves:'jueves',vie:'viernes',viernes:'viernes'};
 const DCLS={lunes:'lun',martes:'mar',miercoles:'mie',jueves:'jue',viernes:'vie'};
 const G={id:null,email:'',nombre:'',cursos:[],cals:[],asistencias:[],experiencias:[],cargado:false,esPreescolar:false,calMesActual:new Date().getMonth(),calAnioActual:new Date().getFullYear(),calEventos:[],actMesActual:new Date().getMonth(),actAnioActual:new Date().getFullYear(),actEventos:[]};
 
@@ -480,7 +481,7 @@ async function gql(q,v={}){
     const msg=j.errors[0].message;
     if(msg.includes('jwt expired')||msg.includes('invalid token')||msg.includes('No autenticado')){
       sessionStorage.clear();
-alert('Tu sesión ha expirado.');
+alert('Tu sesiÃƒÂ³n ha expirado.');
       window.LEARNSCAPE_GO_HOME();
       return;
     }
@@ -490,6 +491,8 @@ alert('Tu sesión ha expirado.');
 }
 function salir(){sessionStorage.removeItem('token');window.LEARNSCAPE_GO_HOME();}
 function showT(m,t='ok',d=3500){ const el=document.getElementById('toast');el.textContent=m;el.className=`toast on ${t}`;setTimeout(()=>el.className='toast',d); }
+function fechaLocal(v){const f=soloFecha(v);if(!f)return'-';const [y,m,d]=f.split('-').map(Number);if(!y||!m||!d)return'-';return new Date(y,m-1,d,12).toLocaleDateString('es-CO');}
+function fechaClaveCalendario(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 
 async function init(){
   try{
@@ -542,7 +545,7 @@ function renderExperiencias(){
   if(!rows.length){ c.innerHTML='<div class="empty"><div class="empty-ico">IMG</div><p>No hay experiencias significativas publicadas para tu curso.</p></div>'; return; }
   c.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px">${rows.map(x=>{
     const src=`data:${x.mimeType};base64,${x.contenidoBase64}`;
-    const fecha=x.fecha?new Date(x.fecha+'T12:00:00').toLocaleDateString('es-CO'):'-';
+    const fecha=x.fecha?fechaLocal(x.fecha):'-';
     const prof=x.profesor?`${x.profesor.nombre||''} ${x.profesor.primerApellido||''}`.trim():'Profesor';
     return `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;box-shadow:var(--shadow-xs)"><img src="${src}" alt="${escHtml(x.titulo)}" style="width:100%;height:170px;object-fit:cover;display:block"><div style="padding:13px;display:grid;gap:6px"><div style="font-weight:900;color:var(--ink)">${escHtml(x.titulo)}</div><div style="font-size:12px;color:var(--muted)">${escHtml(x.curso?.nombre||'Preescolar')} - ${fecha}</div><div style="font-size:12px;color:var(--muted)">${escHtml(prof)}</div>${x.descripcion?`<div style="font-size:13px;line-height:1.45;color:var(--ink)">${escHtml(x.descripcion)}</div>`:''}</div></div>`;
   }).join('')}</div>`;
@@ -562,7 +565,7 @@ function renderResumen(){
   if(!G.cursos.length){c.innerHTML='<div class="empty"><div class="empty-ico">Cursos</div><p>No estas inscrito en ningun curso aun.</p></div>';return;}
   c.innerHTML=G.cursos.map((cu,i)=>{
     const asigs=cu.asignaturas.map(a=>{ const cals=G.cals.filter(x=>String(x.asignaturaId)===String(a.id)); const p=promAsig(cals); const ps=p!==null?p.toFixed(2):'-'; const pc=p===null?'n':p>=4?'g':p>=3.5?'a':'r';
-      const horTexto=parsearSlots(a.horario).map(p=>p.dia.charAt(0).toUpperCase()+p.dia.slice(1)+' '+(p.rango||FRANJAS.find(f=>f.id===p.fId)?.l||p.hora)).join(', ')||a.horario||'Sin horario'; const acciones=G.esPreescolar?'<span class="pill g">Seguimiento pedagógico</span>':`<span class="pill ${pc}">Nota ${ps}</span><button class="btn btn-o" onclick="abrirModal('${a.id}','${a.nombre.replace(/'/g,"\\'")}')">Ver notas</button>`; return `<div class="arow"><div><div class="anm">${a.nombre}</div><div class="ame">Docente: ${a.prof} &nbsp;|&nbsp; Horario: ${horTexto}</div></div><div class="aacts">${acciones}</div></div>`; }).join('');
+      const horTexto=parsearSlots(a.horario).map(p=>p.dia.charAt(0).toUpperCase()+p.dia.slice(1)+' '+(p.rango||FRANJAS.find(f=>f.id===p.fId)?.l||p.hora)).join(', ')||a.horario||'Sin horario'; const acciones=G.esPreescolar?'<span class="pill g">Seguimiento pedagÃƒÂ³gico</span>':`<span class="pill ${pc}">Nota ${ps}</span><button class="btn btn-o" onclick="abrirModal('${a.id}','${a.nombre.replace(/'/g,"\\'")}')">Ver notas</button>`; return `<div class="arow"><div><div class="anm">${a.nombre}</div><div class="ame">Docente: ${a.prof} &nbsp;|&nbsp; Horario: ${horTexto}</div></div><div class="aacts">${acciones}</div></div>`; }).join('');
     return `<div class="cc"><div class="ch" onclick="togCurso('cb${i}','ct${i}')"><div><h3>${cu.nombre}</h3><div class="ch-meta">Periodo: ${periodoLabel(cu.periodo)} &nbsp;|&nbsp; ${cu.asignaturas.length} asignatura(s)</div></div><span class="ctog" id="ct${i}">v</span></div><div class="cbody" id="cb${i}">${asigs||'<p style="padding:14px;color:var(--muted)">Sin asignaturas.</p>'}</div></div>`;
   }).join('');
 }
@@ -693,13 +696,13 @@ function renderHorario(todas){
 function renderNotas(){
   const c=document.getElementById('notasC');
   if(G.esPreescolar){
-    c.innerHTML='<div class="empty"><div class="empty-ico">Seguimiento</div><p>Preescolar no maneja notas numéricas. El avance se consulta en el boletín pedagógico.</p></div>';
+    c.innerHTML='<div class="empty"><div class="empty-ico">Seguimiento</div><p>Preescolar no maneja notas numÃƒÂ©ricas. El avance se consulta en el boletÃƒÂ­n pedagÃƒÂ³gico.</p></div>';
     return;
   }
   const sel=document.getElementById('notasPeriodoSel');
   const periodos=[...new Set([...G.cursos.map(c=>c.periodo),...G.cals.map(c=>c.periodo)])].filter(Boolean).sort().reverse();
   const selVal=sel.value;
-  sel.innerHTML='<option value="">Todos los períodos</option>'+periodos.map(p=>`<option value="${p}" ${p===selVal?'selected':''}>${periodoLabel(p)}</option>`).join('');
+  sel.innerHTML='<option value="">Todos los perÃƒÂ­odos</option>'+periodos.map(p=>`<option value="${p}" ${p===selVal?'selected':''}>${periodoLabel(p)}</option>`).join('');
   const filtroPeriodo=sel.value;
   const asigLookup=getAsignaturaLookup();
   const agrupadas={};
@@ -760,7 +763,7 @@ function bloqueAsig(a,cals){
       const avg=acts.length?acts.reduce((s,c)=>s+Number(c.nota),0)/acts.length:null;
       h+=`<div style="padding:8px 14px 4px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:700;color:#475569">Periodo: ${plbl(per)}</span>${rp(avg)}</div>`;
       h+=`<table class="ntbl"><thead><tr><th>Actividad</th><th>Tipo</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>`;
-      acts.forEach(c=>{const n=Number(c.nota);const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'-'; h+=`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.tipoActividad||'-'}</span></td><td><span class="pill ${n>=4?'g':n>=3.5?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`;});
+      acts.forEach(c=>{const n=Number(c.nota);const f=c.fecha?fechaLocal(c.fecha):'-'; h+=`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.tipoActividad||'-'}</span></td><td><span class="pill ${n>=4?'g':n>=3.5?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`;});
       h+=`</tbody></table>`;
     });
   }
@@ -790,7 +793,7 @@ function renderAsistencia(){
   for(const[asigId,rs] of Object.entries(asigMap)){ const nombre=nombreAsig(asigId); const total=rs.length; const pres=rs.filter(r=>r.estado==='PRESENTE').length; const aus=rs.filter(r=>r.estado==='AUSENTE').length; const tard=rs.filter(r=>r.estado==='TARDE').length; const exc=rs.filter(r=>r.estado==='EXCUSA').length; const pct=total>0?Math.round(((pres+exc)/total)*1000)/10:0; const pctColor=pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--red)';
     h+=`<div class="asig-blk" style="margin-bottom:18px"><div class="asig-blk-h" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>${nombre}</span><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="pill n">${total} clases</span><span class="pill g">Presente ${pres}</span>${tard?`<span class="pill a">Tarde ${tard}</span>`:''} ${exc?`<span class="pill n">Excusa ${exc}</span>`:''} ${aus?`<span class="pill r">Ausente ${aus}</span>`:''}<span style="font-size:13px;font-weight:800;color:${pctColor}">${pct}% asistencia</span></div></div><div style="overflow-x:auto"><table class="ntbl"><thead><tr><th>Fecha</th><th>Estado</th><th>Periodo</th><th>Observacion</th></tr></thead><tbody>`;
     const sorted=[...rs].sort((a,b)=>new Date(b.fecha).getTime()-new Date(a.fecha).getTime());
-    for(const r of sorted){ const f=r.fecha?new Date(r.fecha).toLocaleDateString('es-CO'):'-'; h+=`<tr><td style="font-weight:700">${f}</td><td><span class="pill ${estadoClase[r.estado]||'n'}">${estadoEmoji[r.estado]||r.estado}</span></td><td style="font-size:12px;color:var(--muted)">${periodoLabel(r.periodo)}</td><td style="font-size:12px;color:var(--muted)">${r.observaciones||'-'}</td></tr>`; }
+    for(const r of sorted){ const f=r.fecha?fechaLocal(r.fecha):'-'; h+=`<tr><td style="font-weight:700">${f}</td><td><span class="pill ${estadoClase[r.estado]||'n'}">${estadoEmoji[r.estado]||r.estado}</span></td><td style="font-size:12px;color:var(--muted)">${periodoLabel(r.periodo)}</td><td style="font-size:12px;color:var(--muted)">${r.observaciones||'-'}</td></tr>`; }
     h+=`</tbody></table></div></div>`;
   }
   c.innerHTML=h;
@@ -818,15 +821,15 @@ function calMes(delta){ G.calMesActual+=delta; if(G.calMesActual>11){G.calMesAct
 function renderCalendario(){
   const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   document.getElementById('calMesTxt').textContent=`${meses[G.calMesActual]} ${G.calAnioActual}`;
-  const grid=document.getElementById('calGrid'); const dias=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const grid=document.getElementById('calGrid'); const dias=['Lun','Mar','MiÃƒÂ©','Jue','Vie','SÃƒÂ¡b','Dom'];
   let html=dias.map(d=>`<div class="cal-dh">${d}</div>`).join('');
   const hoy=new Date(); const primero=new Date(G.calAnioActual,G.calMesActual,1); let inicioSem=primero.getDay(); inicioSem=inicioSem===0?6:inicioSem-1;
   const ultimoDia=new Date(G.calAnioActual,G.calMesActual+1,0).getDate(); const mesPrev=new Date(G.calAnioActual,G.calMesActual,0).getDate();
   for(let i=inicioSem-1;i>=0;i--) html+=`<div class="cal-cel otro-mes"><div class="cal-num">${mesPrev-i}</div></div>`;
   for(let d=1;d<=ultimoDia;d++){
-    const fecha=new Date(G.calAnioActual,G.calMesActual,d); const esHoy=fecha.toDateString()===hoy.toDateString(); const fechaStr=fecha.toISOString().split('T')[0];
+    const fecha=new Date(G.calAnioActual,G.calMesActual,d); const esHoy=fecha.toDateString()===hoy.toDateString(); const fechaStr=fechaClaveCalendario(G.calAnioActual,G.calMesActual,d);
     const evs=G.calEventos.filter(e=>{const fi=soloFecha(e.fechaInicio);const ff=e.fechaFin?soloFecha(e.fechaFin):fi;return fechaStr>=fi&&fechaStr<=ff;});
-    html+=`<div class="cal-cel${esHoy?' hoy':''}"><div class="cal-num">${d}</div>${evs.slice(0,3).map(e=>`<div class="cal-ev ev-${e.tipo}" title="${e.titulo}">${e.titulo}</div>`).join('')}${evs.length>3?`<div style="font-size:9px;color:var(--muted)">+${evs.length-3} más</div>`:''}</div>`;
+    html+=`<div class="cal-cel${esHoy?' hoy':''}"><div class="cal-num">${d}</div>${evs.slice(0,3).map(e=>`<div class="cal-ev ev-${e.tipo}" title="${e.titulo}">${e.titulo}</div>`).join('')}${evs.length>3?`<div style="font-size:9px;color:var(--muted)">+${evs.length-3} mÃƒÂ¡s</div>`:''}</div>`;
   }
   const total=inicioSem+ultimoDia; const resto=total%7===0?0:7-(total%7);
   for(let i=1;i<=resto;i++) html+=`<div class="cal-cel otro-mes"><div class="cal-num">${i}</div></div>`;
@@ -864,15 +867,15 @@ function actMes(delta){ G.actMesActual+=delta; if(G.actMesActual>11){G.actMesAct
 function renderCalendarioActividades(){
   const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   document.getElementById('actMesTxt').textContent=`${meses[G.actMesActual]} ${G.actAnioActual}`;
-  const grid=document.getElementById('actCalGrid'); const dias=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const grid=document.getElementById('actCalGrid'); const dias=['Lun','Mar','MiÃƒÂ©','Jue','Vie','SÃƒÂ¡b','Dom'];
   let html=dias.map(d=>`<div class="cal-dh">${d}</div>`).join('');
   const hoy=new Date(); const primero=new Date(G.actAnioActual,G.actMesActual,1); let inicioSem=primero.getDay(); inicioSem=inicioSem===0?6:inicioSem-1;
   const ultimoDia=new Date(G.actAnioActual,G.actMesActual+1,0).getDate(); const mesPrev=new Date(G.actAnioActual,G.actMesActual,0).getDate();
   for(let i=inicioSem-1;i>=0;i--) html+=`<div class="cal-cel otro-mes"><div class="cal-num">${mesPrev-i}</div></div>`;
   for(let d=1;d<=ultimoDia;d++){
-    const fecha=new Date(G.actAnioActual,G.actMesActual,d); const esHoy=fecha.toDateString()===hoy.toDateString(); const fechaStr=fecha.toISOString().split('T')[0];
+    const fecha=new Date(G.actAnioActual,G.actMesActual,d); const esHoy=fecha.toDateString()===hoy.toDateString(); const fechaStr=fechaClaveCalendario(G.actAnioActual,G.actMesActual,d);
     const evs=G.actEventos.filter(e=>fechaStr>=e.fechaInicio&&fechaStr<=e.fechaFin);
-    html+=`<div class="cal-cel${esHoy?' hoy':''}"><div class="cal-num">${d}</div>${evs.slice(0,3).map(e=>`<div class="cal-ev ev-${e.tipo}" title="${e.titulo}${e.descripcion ? ' - ' + e.descripcion : ''}">${e.titulo}</div>`).join('')}${evs.length>3?`<div style="font-size:9px;color:var(--muted)">+${evs.length-3} más</div>`:''}</div>`;
+    html+=`<div class="cal-cel${esHoy?' hoy':''}"><div class="cal-num">${d}</div>${evs.slice(0,3).map(e=>`<div class="cal-ev ev-${e.tipo}" title="${e.titulo}${e.descripcion ? ' - ' + e.descripcion : ''}">${e.titulo}</div>`).join('')}${evs.length>3?`<div style="font-size:9px;color:var(--muted)">+${evs.length-3} mÃƒÂ¡s</div>`:''}</div>`;
   }
   const total=inicioSem+ultimoDia; const resto=total%7===0?0:7-(total%7);
   for(let i=1;i<=resto;i++) html+=`<div class="cal-cel otro-mes"><div class="cal-num">${i}</div></div>`;
@@ -887,10 +890,10 @@ async function renderBoletin(){
     const dp=await gql(`query{periodosConfig(anio:${anio}){numeroPeriodo abierto fechaCierre}}`);
     const configs=(dp.periodosConfig||[]);
     const periodosConNotas=[...new Set(G.cals.map(c=>c.periodo))].filter(Boolean);
-    const tarjetas=[1,2,3].map(n=>{ const valor=`${anio}-${n}`; const cfg=configs.find(c=>c.numeroPeriodo===n); const abierto=cfg?cfg.abierto:true; const tieneNotas=periodosConNotas.includes(valor); const labels={1:'1er Período',2:'2do Período',3:'3er Período'}; const fc=cfg?.fechaCierre?new Date(cfg.fechaCierre).toLocaleDateString('es-CO'):null;
-      if(!abierto) return `<div style="border:2px solid #bbf7d0;border-radius:10px;padding:14px 18px;background:#f0fdf4;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px"><div><div style="font-weight:800;font-size:14px;color:#166534">Cerrado · ${labels[n]} <span style="font-size:12px;background:var(--green-lt);color:var(--green);padding:2px 8px;border-radius:12px;margin-left:6px">CERRADO</span></div>${fc?`<div style="font-size:11px;color:#4ade80;margin-top:3px">Cerrado el ${fc}</div>`:''}</div><button class="btn" style="background:var(--green);color:#fff;padding:8px 16px;font-size:12px;white-space:nowrap" onclick="seleccionarPeriodoBoletin('${valor}',this)">Descargar</button></div>`;
-      else if(tieneNotas) return `<div style="border:2px solid #fde68a;border-radius:10px;padding:14px 18px;background:#fffbeb;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px"><div><div style="font-weight:800;font-size:14px;color:#92400e">En curso · ${labels[n]} <span style="font-size:12px;background:var(--amber-lt);color:#92400e;padding:2px 8px;border-radius:12px;margin-left:6px">EN CURSO</span></div><div style="font-size:11px;color:#b45309;margin-top:3px">Disponible cuando el período sea cerrado por el administrador</div></div><button class="btn" disabled style="background:var(--border);color:var(--muted);padding:8px 16px;font-size:12px;cursor:not-allowed;white-space:nowrap">No disponible</button></div>`;
-      else return `<div style="border:2px solid var(--border);border-radius:10px;padding:14px 18px;background:var(--surface);display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;opacity:.6"><div><div style="font-weight:800;font-size:14px;color:var(--muted)">Sin datos · ${labels[n]} <span style="font-size:12px;background:var(--surface);color:var(--muted);padding:2px 8px;border-radius:12px;margin-left:6px">SIN DATOS</span></div></div><button class="btn" disabled style="background:var(--border);color:var(--muted);padding:8px 16px;font-size:12px;cursor:not-allowed;white-space:nowrap">No disponible</button></div>`;
+    const tarjetas=[1,2,3].map(n=>{ const valor=`${anio}-${n}`; const cfg=configs.find(c=>c.numeroPeriodo===n); const abierto=cfg?cfg.abierto:true; const tieneNotas=periodosConNotas.includes(valor); const labels={1:'1er PerÃƒÂ­odo',2:'2do PerÃƒÂ­odo',3:'3er PerÃƒÂ­odo'}; const fc=cfg?.fechaCierre?fechaLocal(cfg.fechaCierre):null;
+      if(!abierto) return `<div style="border:2px solid #bbf7d0;border-radius:10px;padding:14px 18px;background:#f0fdf4;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px"><div><div style="font-weight:800;font-size:14px;color:#166534">Cerrado Ã‚Â· ${labels[n]} <span style="font-size:12px;background:var(--green-lt);color:var(--green);padding:2px 8px;border-radius:12px;margin-left:6px">CERRADO</span></div>${fc?`<div style="font-size:11px;color:#4ade80;margin-top:3px">Cerrado el ${fc}</div>`:''}</div><button class="btn" style="background:var(--green);color:#fff;padding:8px 16px;font-size:12px;white-space:nowrap" onclick="seleccionarPeriodoBoletin('${valor}',this)">Descargar</button></div>`;
+      else if(tieneNotas) return `<div style="border:2px solid #fde68a;border-radius:10px;padding:14px 18px;background:#fffbeb;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px"><div><div style="font-weight:800;font-size:14px;color:#92400e">En curso Ã‚Â· ${labels[n]} <span style="font-size:12px;background:var(--amber-lt);color:#92400e;padding:2px 8px;border-radius:12px;margin-left:6px">EN CURSO</span></div><div style="font-size:11px;color:#b45309;margin-top:3px">Disponible cuando el perÃƒÂ­odo sea cerrado por el administrador</div></div><button class="btn" disabled style="background:var(--border);color:var(--muted);padding:8px 16px;font-size:12px;cursor:not-allowed;white-space:nowrap">No disponible</button></div>`;
+      else return `<div style="border:2px solid var(--border);border-radius:10px;padding:14px 18px;background:var(--surface);display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;opacity:.6"><div><div style="font-weight:800;font-size:14px;color:var(--muted)">Sin datos Ã‚Â· ${labels[n]} <span style="font-size:12px;background:var(--surface);color:var(--muted);padding:2px 8px;border-radius:12px;margin-left:6px">SIN DATOS</span></div></div><button class="btn" disabled style="background:var(--border);color:var(--muted);padding:8px 16px;font-size:12px;cursor:not-allowed;white-space:nowrap">No disponible</button></div>`;
     }).join('');
     wrap.innerHTML=tarjetas; btnDl.style.display='none';
   }catch(err){ wrap.innerHTML=`<p style="color:var(--red);font-size:13px">Error: ${err.message}</p>`; }
@@ -908,7 +911,7 @@ async function descargar(btnOrigen){
     const b64=d.exportarBoletinEstudiante;if(!b64)throw new Error('Sin datos');
     const bytes=new Uint8Array(atob(b64).split('').map(c=>c.charCodeAt(0))); const blob=new Blob([bytes],{type:'application/pdf'}); const url=URL.createObjectURL(blob);
     const a=document.createElement('a');a.href=url;a.download=`Boletin_${G.nombre.replace(/\s+/g,'_')}_${per}.pdf`;a.click(); URL.revokeObjectURL(url);
-msg.textContent=`Boletín ${per} descargado correctamente`;msg.style.color='var(--green)'; showT('Boletín descargado');
+msg.textContent=`BoletÃƒÂ­n ${per} descargado correctamente`;msg.style.color='var(--green)'; showT('BoletÃƒÂ­n descargado');
   }catch(err){ msg.textContent=`Error: ${err.message}`;msg.style.color='var(--red)'; showT(err.message,'er'); }
   finally{ if(btnOrigen){btnOrigen.disabled=false;btnOrigen.textContent='Descargar';} }
 }
@@ -938,7 +941,7 @@ function abrirModal(id,nombre){
           <div style="text-align:right">${rp(avg)}<div style="font-size:11px;font-weight:700;color:${ap?'var(--green)':'var(--red)'};margin-top:3px">${avg!==null?(ap?'Aprobado':'Reprobado'):'-'}</div></div>
         </div>
         <table class="ntbl"><thead><tr><th>Actividad</th><th>Tipo</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>
-        ${acts.map(c=>{ const n=Number(c.nota);const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'-'; return`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);font-weight:700">${c.tipoActividad||'-'}</span></td><td><span class="pill ${n>=4?'g':n>=3.5?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`; }).join('')}
+        ${acts.map(c=>{ const n=Number(c.nota);const f=c.fecha?fechaLocal(c.fecha):'-'; return`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);font-weight:700">${c.tipoActividad||'-'}</span></td><td><span class="pill ${n>=4?'g':n>=3.5?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`; }).join('')}
         </tbody></table>
       </div>`;
     });
@@ -970,14 +973,13 @@ async function guardarNuevaPass(){
   const actual=document.getElementById('passActual').value; const nueva=document.getElementById('passNueva').value; const confirma=document.getElementById('passConfirm').value;
   const errDiv=document.getElementById('passError'); const btn=document.getElementById('btnCambiarPass'); errDiv.style.display='none';
   if(!actual||!nueva||!confirma){errDiv.textContent='Completa todos los campos.';errDiv.style.display='block';return;}
-if(nueva!==confirma){errDiv.textContent='Las contraseñas no coinciden.';errDiv.style.display='block';return;}
-if(nueva.length<6){errDiv.textContent='La contraseña debe tener al menos 6 caracteres.';errDiv.style.display='block';return;}
+if(nueva!==confirma){errDiv.textContent='Las contraseÃƒÂ±as no coinciden.';errDiv.style.display='block';return;}
+if(nueva.length<6){errDiv.textContent='La contraseÃƒÂ±a debe tener al menos 6 caracteres.';errDiv.style.display='block';return;}
   btn.disabled=true;btn.textContent='Guardando...';
-try{ await gql(`mutation CP($u:String!,$o:String!,$n:String!){cambiarPassword(username:$u,oldPassword:$o,newPassword:$n)}`,{u:sessionStorage.getItem('currentUsername')||G.id,o:actual,n:nueva}); cerrarPass(); showT('Contraseña actualizada correctamente'); }catch(e){ errDiv.textContent=e.message||'Error al cambiar la contraseña.'; errDiv.style.display='block'; }finally{btn.disabled=false;btn.textContent='Guardar nueva contraseña';}
+try{ await gql(`mutation CP($u:String!,$o:String!,$n:String!){cambiarPassword(username:$u,oldPassword:$o,newPassword:$n)}`,{u:sessionStorage.getItem('currentUsername')||G.id,o:actual,n:nueva}); cerrarPass(); showT('ContraseÃƒÂ±a actualizada correctamente'); }catch(e){ errDiv.textContent=e.message||'Error al cambiar la contraseÃƒÂ±a.'; errDiv.style.display='block'; }finally{btn.disabled=false;btn.textContent='Guardar nueva contraseÃƒÂ±a';}
 }
 
 document.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
 </html>
-

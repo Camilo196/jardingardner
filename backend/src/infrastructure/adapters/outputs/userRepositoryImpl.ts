@@ -108,6 +108,7 @@ export class UserRepositoryImpl implements UserRepository {
         const hashedPassword = await bcrypt.hash(userData.password, salt);
         
         existingUser.password = hashedPassword;
+        existingUser.role = normalizarRol(userData.role);
         // Actualizar email si se proporciona y no existe
         if (userData.email && !existingUser.email) {
           existingUser.email = userData.email;
