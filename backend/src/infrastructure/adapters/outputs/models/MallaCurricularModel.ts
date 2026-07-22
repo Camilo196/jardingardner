@@ -26,6 +26,10 @@ const MallaCurricularSchema: Schema = new Schema({
   timestamps: true,
 });
 
+MallaCurricularSchema.index({ updatedAt: -1 });
+MallaCurricularSchema.index({ profesorId: 1, updatedAt: -1 });
+MallaCurricularSchema.index({ tipo: 1, cursoId: 1, updatedAt: -1 });
+
 export const MallaCurricularModel = mongoose.model<MallaCurricularDocument>(
   'MallaCurricular',
   MallaCurricularSchema,
