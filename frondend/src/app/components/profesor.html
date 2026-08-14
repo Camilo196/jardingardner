@@ -1832,11 +1832,11 @@ function metaIndicadores(){
     return {
       title:'Seguimiento pedagógico de preescolar',
       sub:'Estas secciones se reflejan en la carta informativa del período.',
-      saber:'RESUMEN DEL AVANCE',
+      saber:'AVANCE',
       hacer:'OBJETIVO',
       ser:'ACTIVIDADES',
       placeholders:{
-        saber:'Ej: Los niños han avanzado en la expresión de palabras, sonidos y gestos para comunicarse.',
+        saber:'Ej: Avanza en la expresion de palabras, sonidos y gestos para comunicarse.',
         hacer:'Ej: Desarrollar habilidades de comunicacion y lenguaje.',
         ser:'Ej: Leer libros con imagenes; cantar canciones; jugar con palabras y sonidos.'
       }
@@ -1881,11 +1881,13 @@ function actualizarIndicadoresUI(){
   setTxt('indLabel-ser',meta.ser);
   const esPre=esCursoPreescolarNombre(W.cursoNombre);
   const labelEst=document.querySelector('#ind-estudiantes')?.parentElement?.querySelector('strong');
-  if(labelEst) labelEst.innerHTML=esPre?'<i class="fas fa-users"></i> Estudiantes y observaciones por materia':'<i class="fas fa-users"></i> Estudiantes que reciben estos indicadores';
+  if(labelEst) labelEst.innerHTML=esPre?'<i class="fas fa-users"></i> Observaciones por estudiante':'<i class="fas fa-users"></i> Estudiantes que reciben estos indicadores';
   const btns=document.querySelector('#ind-estudiantes')?.parentElement?.querySelector('div[style*="display:flex;gap:8px"]');
   if(btns) btns.style.display='flex';
+  const hacerBox=document.getElementById('ind-hacer')?.parentElement;
   const serBox=document.getElementById('ind-ser')?.parentElement;
-  if(serBox) serBox.style.display='block';
+  if(hacerBox) hacerBox.style.display=esPre?'none':'block';
+  if(serBox) serBox.style.display=esPre?'none':'block';
   const dirWrap=document.getElementById('dirBoletinWrap');
   const dirTitle=document.getElementById('dirBoletinTitle');
   const dirSub=document.getElementById('dirBoletinSub');
@@ -1923,7 +1925,7 @@ function renderIndEstudiantes(){
           <input type="checkbox" value="${ced}" ${checked} onchange="toggleIndEstudiante('${ced}',this.checked)" style="width:16px;height:16px;margin-top:2px;flex:0 0 auto">
           <span style="min-width:0"><strong style="display:block;color:var(--ink);line-height:1.25;overflow-wrap:anywhere">${nombre}</strong><small style="color:var(--muted)">${ced}</small></span>
         </label>
-        <textarea id="indObs-${ced}" rows="3" ${disabled} placeholder="Observación individual para este estudiante..." oninput="setIndObs('${ced}',this.value)" style="box-sizing:border-box;width:100%;max-width:100%;padding:9px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;line-height:1.35;resize:vertical;min-height:78px;overflow:auto">${val.replace(/</g,'&lt;')}</textarea>
+        <textarea id="indObs-${ced}" rows="3" ${disabled} placeholder="Observaciones del estudiante..." oninput="setIndObs('${ced}',this.value)" style="box-sizing:border-box;width:100%;max-width:100%;padding:9px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;line-height:1.35;resize:vertical;min-height:78px;overflow:auto">${val.replace(/</g,'&lt;')}</textarea>
       </div>`;
     }).join('');
     return;
@@ -2032,7 +2034,7 @@ async function cargarIndicadores(periodoForzado){
     const ind=d.indicadoresPorAsignatura;
     IND.intro=String(ind?.intro||'');
     IND.saber=normalizarListaIndicadores(ind?.saber);
-    IND.hacer=normalizarListaIndicadores(ind?.hacer);
+    IND.hacer=esPre?[]:normalizarListaIndicadores(ind?.hacer);
     IND.ser=esPre?[]:normalizarListaIndicadores(ind?.ser);
     if(esPre){
       W.indSeleccionados=new Set();
@@ -2045,10 +2047,10 @@ async function cargarIndicadores(periodoForzado){
           const item=r.indicadoresPorAsignatura;
           if(item && ((item.saber||[]).length || (item.hacer||[]).length || (item.ser||[]).length)){
             W.indSeleccionados.add(ced);
-            if(!comunCargado && ((item.saber||[]).length || (item.hacer||[]).length)){
+            if(!comunCargado && (item.saber||[]).length){
               IND.intro=String(item.intro||IND.intro||'');
               IND.saber=normalizarListaIndicadores(item.saber);
-              IND.hacer=normalizarListaIndicadores(item.hacer);
+              IND.hacer=[];
               comunCargado=true;
             }
           }
@@ -2077,7 +2079,7 @@ function renderIndLista(tipo){
   if(esCursoPreescolarNombre(W.cursoNombre)){
     if(tipo==='saber'){
       const val=(IND.saber||[]).join('\n');
-      ul.innerHTML=`<textarea rows="4" placeholder="Resumen del avance que va en la franja azul del boletín..." oninput="setPreResumen(this.value)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical">${val.replace(/</g,'&lt;')}</textarea>`;
+      ul.innerHTML=`<textarea rows="5" placeholder="Escribe el avance que aparecera en el boletin..." oninput="setPreResumen(this.value)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical">${val.replace(/</g,'&lt;')}</textarea>`;
       return;
     }
     if(tipo==='hacer'){
@@ -2151,10 +2153,10 @@ async function guardarIndicadores(){
       await gql(`mutation{eliminarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}")}`);
       for(const ced of estudianteIds){
         const obs=(W.indObservaciones[ced]||'').split('\n').map(x=>x.trim()).filter(Boolean);
-        await gql(`mutation{guardarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}",saber:${JSON.stringify(saber)},hacer:${JSON.stringify(hacer)},ser:${JSON.stringify(obs)},intro:${JSON.stringify(intro)},estudianteIds:["${ced}"]){id}}`);
+        await gql(`mutation{guardarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}",saber:${JSON.stringify(saber)},hacer:[],ser:${JSON.stringify(obs)},intro:${JSON.stringify(intro)},estudianteIds:["${ced}"]){id}}`);
       }
       const el=document.getElementById('indEstado');
-      if(el){ const total=saber.length+hacer.length; el.textContent=`Guardado para ${estudianteIds.length} estudiante(s) - ${periodo} (${total} textos y observaciones)`; el.style.background='var(--green-lt)'; el.style.color='var(--green)'; }
+      if(el){ const total=saber.length; el.textContent=`Guardado para ${estudianteIds.length} estudiante(s) - ${periodo} (${total} avance(s) y observaciones)`; el.style.background='var(--green-lt)'; el.style.color='var(--green)'; }
       toast('Seguimiento de preescolar guardado');
     }catch(err){ toast('Error: '+err.message,'er'); }
     return;

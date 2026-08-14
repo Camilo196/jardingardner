@@ -415,21 +415,11 @@ export class PDFService {
 
       // ── Bloques de materias ──────────────────────────────────────────────────
       for (const mat of data.calificaciones) {
-        const saber = itemsArr(mat.indicadores?.saber, 'Sin seguimiento registrado.');
-        const hacer = itemsArr(mat.indicadores?.hacer, 'Sin seguimiento registrado.');
-        const ser   = itemsArr(mat.indicadores?.ser,   'Sin seguimiento registrado.');
+        const saber = itemsArr(mat.indicadores?.saber, 'Sin avance registrado.');
+        const ser   = itemsArr(mat.indicadores?.ser,   'Sin observaciones registradas.');
 
-        // Resumen de desempeño con viñeta simple compatible con PDFKit.
+        // Avance con viñeta simple compatible con PDFKit.
         const resumenTexto = saber.map((s) => `- ${s}`).join('\n');
-
-        // Objetivo: primer ítem de hacer
-        const objetivo = hacer[0] || 'Fortalecer el desarrollo integral del estudiante.';
-
-        // Actividades: resto de hacer o fallback
-        const actividadesItems = hacer.length > 1
-          ? hacer.slice(1)
-          : ['Acompanamiento pedagogico en aula.'];
-        const actividadesTexto = actividadesItems.map((a) => `- ${a}`).join('\n');
 
         // Observaciones: en preescolar solo van indicadores/observaciones pedagógicas.
         const obsLines = [
@@ -438,22 +428,15 @@ export class PDFService {
         ];
         if (!obsLines.length) obsLines.push('- Sin observaciones adicionales.');
         // Calcular alturas
-        const resumenH = Math.max(36,
-          doc.heightOfString(resumenTexto, { width: innerW, lineGap: 1 }) + 18);
-
-        // Objetivo + Actividades en una sola sección blanca
-        const objActTexto =
-          `-Objetivo: ${objetivo}\n\nActividades:\n` +
-          actividadesTexto;
-        const objActH = Math.max(56,
-          doc.heightOfString(objActTexto, { width: innerW, lineGap: 1 }) + 18);
+        const resumenH = Math.max(38,
+          doc.heightOfString(resumenTexto, { width: innerW, lineGap: 1 }) + 24);
 
         // Observaciones: label fijo + texto (fondo blanco liso)
         const obsText = obsLines.join('\n');
         const observacionesH = Math.max(30,
           doc.heightOfString(obsText, { width: innerW, lineGap: 1 }) + 22);
 
-        const bloqueTotalH = 24 + resumenH + objActH + observacionesH + 6;
+        const bloqueTotalH = 24 + resumenH + observacionesH + 6;
 
         if (y + bloqueTotalH > doc.page.height - 60) {
           this.dibujarPie(doc, data, footerLabel);
@@ -483,19 +466,13 @@ export class PDFService {
 
         let bY = top + 24;
 
-        // ── Resumen de desempeño — fondo azul brillante, texto blanco negrita (fiel imagen) ─
-        doc.rect(sX, bY, sW, resumenH).fill('#1d6fce').stroke(C.azulOscuro);
-        // Texto con ✓ en blanco negrita, lineHeight más apretado como en la imagen
-        doc.fillColor(C.blanco).font('Helvetica-Bold').fontSize(8.7)
-           .text(resumenTexto, sX + padX, bY + 8, { width: innerW, lineGap: 1 });
+        // Avance con fondo blanco normal.
+        doc.rect(sX, bY, sW, resumenH).fill(C.blanco).stroke(C.azulOscuro);
+        doc.fillColor(C.tinta).font('Helvetica-Bold').fontSize(9)
+           .text('Avance:', sX + padX, bY + 7);
+        doc.font('Helvetica').fontSize(8.7)
+           .text(resumenTexto, sX + padX, bY + 20, { width: innerW, lineGap: 1 });
         bY += resumenH;
-
-        // ── Objetivo + Actividades — sección blanca unificada (fiel imagen) ──────
-        doc.rect(sX, bY, sW, objActH).fill(C.blanco).stroke(C.azulOscuro);
-        let tyOA = bY + 7;
-        doc.fillColor(C.tinta).font('Helvetica').fontSize(9)
-           .text(objActTexto, sX + padX, tyOA, { width: innerW, lineGap: 1 });
-        bY += objActH;
 
         // ── Observaciones — borde gris fino, solo label bold (fiel imagen) ───────
         doc.rect(sX, bY, sW, observacionesH).fill(C.blanco).stroke(C.gris);
