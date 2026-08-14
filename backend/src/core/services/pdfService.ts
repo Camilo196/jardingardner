@@ -418,15 +418,15 @@ export class PDFService {
         const saber = itemsArr(mat.indicadores?.saber, 'Sin avance registrado.');
         const ser   = itemsArr(mat.indicadores?.ser,   'Sin observaciones registradas.');
 
-        // Avance con viñeta simple compatible con PDFKit.
-        const resumenTexto = saber.map((s) => `- ${s}`).join('\n');
+        // Avance sin viñetas - texto continuo tal como lo escriba el usuario.
+        const resumenTexto = saber.join(' ');
 
         // Observaciones: en preescolar solo van indicadores/observaciones pedagógicas.
         const obsLines = [
-          ...ser.map((s) => `- ${s}`),
-          ...(mat.observacion ? [`- ${mat.observacion}`] : []),
+          ...ser,
+          ...(mat.observacion ? [mat.observacion] : []),
         ];
-        if (!obsLines.length) obsLines.push('- Sin observaciones adicionales.');
+        if (!obsLines.length) obsLines.push('Sin observaciones adicionales.');
         // Calcular alturas
         const resumenH = Math.max(38,
           doc.heightOfString(resumenTexto, { width: innerW, lineGap: 1 }) + 24);
@@ -544,7 +544,7 @@ export class PDFService {
 
         // Alturas de filas de indicadores
         const bulletH = (items: string[]) => {
-          const txt = items.map((s) => `\u2022 ${s}`).join('\n');
+          const txt = items.join(' ');
           return Math.max(34, doc.heightOfString(txt, { width: sW - 80 }) + 14);
         };
         const saberH  = bulletH(saber);
@@ -650,7 +650,7 @@ export class PDFService {
         ) => {
           const etW = 64;
           const txW = sW - etW;
-          const txt = items.map((s) => `\u2022 ${s}`).join('\n');
+          const txt = items.join(' ');
 
           doc.rect(sX, iY, etW, alto).fill(fondo).stroke(C.azulOscuro);
           doc.fillColor(C.blanco).font('Helvetica-Bold').fontSize(9)
