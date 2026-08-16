@@ -414,81 +414,121 @@ export class PDFService {
       let y = paginaBase(true);
 
       // ── Bloques de materias ──────────────────────────────────────────────────
+      const pageBottom = doc.page.height - 60;
+      const ensurePageSpace = (minHeight = 42) => {
+        if (y + minHeight <= pageBottom) return;
+        this.dibujarPie(doc, data, footerLabel);
+        doc.addPage();
+        y = paginaBase(false);
+      };
+
+      const splitTextToFit = (value: string, maxHeight: number, width: number, fontSize: number) => {
+        const clean = String(value || '').trim();
+        if (!clean) return { chunk: '', rest: '' };
+        doc.font('Helvetica').fontSize(fontSize);
+        if (doc.heightOfString(clean, { width, lineGap: 1 }) <= maxHeight) {
+          return { chunk: clean, rest: '' };
+        }
+
+        const words = clean.split(/\s+/);
+        let lo = 1;
+        let hi = words.length;
+        let best = 1;
+        while (lo <= hi) {
+          const mid = Math.floor((lo + hi) / 2);
+          const candidate = words.slice(0, mid).join(' ');
+          const h = doc.heightOfString(candidate, { width, lineGap: 1 });
+          if (h <= maxHeight) {
+            best = mid;
+            lo = mid + 1;
+          } else {
+            hi = mid - 1;
+          }
+        }
+
+        return {
+          chunk: words.slice(0, best).join(' '),
+          rest: words.slice(best).join(' '),
+        };
+      };
+
+      const drawMateriaHeader = (mat: any, continuacion = false) => {
+        ensurePageSpace(68);
+        const top = y;
+        const mW  = 165;
+        const dW  = Math.floor((sW - mW) * 0.62);
+        const pW  = sW - mW - dW;
+        const nombre = continuacion ? String(mat.asignaturaNombre || '') + ' (cont.)' : mat.asignaturaNombre;
+
+        doc.lineWidth(1.2);
+        doc.rect(sX, top, mW, 24).fill(C.rojo).stroke(C.azulOscuro);
+        doc.fillColor(C.blanco).font('Helvetica-Bold').fontSize(9.5)
+           .text(nombre, sX + 6, top + 7, { width: mW - 12, align: 'center' });
+
+        doc.rect(sX + mW, top, dW, 24).fill(C.azulMedio).stroke(C.azulOscuro);
+        doc.fillColor(C.blanco).font('Helvetica-Bold').fontSize(8.3)
+           .text('Docente: ' + mat.docenteNombre, sX + mW + 8, top + 7, { width: dW - 16 });
+
+        doc.rect(sX + mW + dW, top, pW, 24).fill(C.amarillo).stroke(C.azulOscuro);
+        doc.fillColor(C.tinta).font('Helvetica-Bold').fontSize(8.5)
+           .text(labelPeriodo(pNum), sX + mW + dW, top + 7, { width: pW, align: 'center' });
+        y += 24;
+      };
+
+      const drawTextSection = (mat: any, titulo: string, value: string, stroke: string, fontSize: number) => {
+        let rest = String(value || '').trim();
+        let continuacion = false;
+        while (rest) {
+          if (y + 52 > pageBottom) {
+            this.dibujarPie(doc, data, footerLabel);
+            doc.addPage();
+            y = paginaBase(false);
+            drawMateriaHeader(mat, true);
+            continuacion = true;
+          }
+          const available = pageBottom - y;
+          const textMaxH = Math.max(20, available - 24);
+          const split = splitTextToFit(rest, textMaxH, innerW, fontSize);
+          const chunk = split.chunk || rest.split(/\s+/)[0] || '';
+          const nextRest = split.chunk ? split.rest : rest.slice(chunk.length);
+
+          doc.font('Helvetica').fontSize(fontSize);
+          const textH = doc.heightOfString(chunk, { width: innerW, lineGap: 1 });
+          const boxH = Math.max(32, textH + 24);
+
+          doc.rect(sX, y, sW, boxH).fill(C.blanco).stroke(stroke);
+          doc.fillColor(C.tinta).font('Helvetica-Bold').fontSize(9)
+             .text(continuacion ? titulo + ' (continuacion):' : titulo + ':', sX + padX, y + 7);
+          doc.font('Helvetica').fontSize(fontSize)
+             .text(chunk, sX + padX, y + 20, { width: innerW, lineGap: 1 });
+          y += boxH;
+
+          rest = String(nextRest || '').trim();
+          if (rest) {
+            this.dibujarPie(doc, data, footerLabel);
+            doc.addPage();
+            y = paginaBase(false);
+            drawMateriaHeader(mat, true);
+            continuacion = true;
+          }
+        }
+      };
+
       for (const mat of data.calificaciones) {
         const saber = itemsArr(mat.indicadores?.saber, 'Sin avance registrado.');
         const ser   = itemsArr(mat.indicadores?.ser,   'Sin observaciones registradas.');
-
-        // Avance sin viñetas - texto continuo tal como lo escriba el usuario.
         const resumenTexto = saber.join(' ');
-
-        // Observaciones: en preescolar solo van indicadores/observaciones pedagógicas.
         const obsLines = [
           ...ser,
           ...(mat.observacion ? [mat.observacion] : []),
         ];
         if (!obsLines.length) obsLines.push('Sin observaciones adicionales.');
-        // Calcular alturas
-        const resumenH = Math.max(38,
-          doc.heightOfString(resumenTexto, { width: innerW, lineGap: 1 }) + 24);
-
-        // Observaciones: label fijo + texto (fondo blanco liso)
         const obsText = obsLines.join('\n');
-        const observacionesH = Math.max(30,
-          doc.heightOfString(obsText, { width: innerW, lineGap: 1 }) + 22);
 
-        const bloqueTotalH = 24 + resumenH + observacionesH + 6;
-
-        if (y + bloqueTotalH > doc.page.height - 60) {
-          this.dibujarPie(doc, data, footerLabel);
-          doc.addPage();
-          y = paginaBase(false);
-        }
-
-        const top = y;
-
-        // ── Encabezado de materia (3 celdas) ──────────────────────────────────
-        const mW  = 165;
-        const dW  = Math.floor((sW - mW) * 0.62);
-        const pW  = sW - mW - dW;
-
-        doc.lineWidth(1.2);
-        doc.rect(sX, top, mW, 24).fill(C.rojo).stroke(C.azulOscuro);
-        doc.fillColor(C.blanco).font('Helvetica-Bold').fontSize(9.5)
-           .text(mat.asignaturaNombre, sX + 6, top + 7, { width: mW - 12, align: 'center' });
-
-        doc.rect(sX + mW, top, dW, 24).fill(C.azulMedio).stroke(C.azulOscuro);
-        doc.fillColor(C.blanco).font('Helvetica-Bold').fontSize(8.3)
-           .text(`Docente: ${mat.docenteNombre}`, sX + mW + 8, top + 7, { width: dW - 16 });
-
-        doc.rect(sX + mW + dW, top, pW, 24).fill(C.amarillo).stroke(C.azulOscuro);
-        doc.fillColor(C.tinta).font('Helvetica-Bold').fontSize(8.5)
-           .text(labelPeriodo(pNum), sX + mW + dW, top + 7, { width: pW, align: 'center' });
-
-        let bY = top + 24;
-
-        // Avance con fondo blanco normal.
-        doc.rect(sX, bY, sW, resumenH).fill(C.blanco).stroke(C.azulOscuro);
-        doc.fillColor(C.tinta).font('Helvetica-Bold').fontSize(9)
-           .text('Avance:', sX + padX, bY + 7);
-        doc.font('Helvetica').fontSize(8.7)
-           .text(resumenTexto, sX + padX, bY + 20, { width: innerW, lineGap: 1 });
-        bY += resumenH;
-
-        // ── Observaciones — borde gris fino, solo label bold (fiel imagen) ───────
-        doc.rect(sX, bY, sW, observacionesH).fill(C.blanco).stroke(C.gris);
-        doc.fillColor(C.tinta).font('Helvetica-Bold').fontSize(9)
-           .text('Observaciones:', sX + padX, bY + 7);
-        // Texto de observaciones si existe
-        if (obsText.replace(/- \n?/g, '').trim()) {
-          doc.font('Helvetica').fontSize(8.5)
-             .text(obsText, sX + padX, bY + 20, { width: innerW, lineGap: 1 });
-        }
-
-        // Borde exterior del bloque completo
-        doc.lineWidth(1.4);
-        doc.rect(sX - 1, top - 1, sW + 2, bloqueTotalH + 2).stroke(C.azulOscuro);
-
-        y = top + bloqueTotalH + 14;
+        drawMateriaHeader(mat);
+        drawTextSection(mat, 'Avance', resumenTexto, C.azulOscuro, 8.7);
+        drawTextSection(mat, 'Observaciones', obsText, C.gris, 8.5);
+        y += 14;
       }
 
       // ── Firmas ─────────────────────────────────────────────────────────────
@@ -534,6 +574,37 @@ export class PDFService {
       };
 
       let y = paginaBase();
+
+      const pageBottom = doc.page.height - 60;
+      const splitTextToFit = (value: string, maxHeight: number, width: number, fontSize: number) => {
+        const clean = String(value || '').trim();
+        if (!clean) return { chunk: '', rest: '' };
+        doc.font('Helvetica').fontSize(fontSize);
+        if (doc.heightOfString(clean, { width, lineGap: 1 }) <= maxHeight) {
+          return { chunk: clean, rest: '' };
+        }
+
+        const words = clean.split(/\s+/);
+        let lo = 1;
+        let hi = words.length;
+        let best = 1;
+        while (lo <= hi) {
+          const mid = Math.floor((lo + hi) / 2);
+          const candidate = words.slice(0, mid).join(' ');
+          const h = doc.heightOfString(candidate, { width, lineGap: 1 });
+          if (h <= maxHeight) {
+            best = mid;
+            lo = mid + 1;
+          } else {
+            hi = mid - 1;
+          }
+        }
+
+        return {
+          chunk: words.slice(0, best).join(' '),
+          rest: words.slice(best).join(' '),
+        };
+      };
 
       // ── Bloques de materias ──────────────────────────────────────────────────
       for (const mat of data.calificaciones) {
@@ -639,6 +710,7 @@ export class PDFService {
            .text('INDICADORES DE DESEMPENO', sX, indHeaderY + 6, { width: sW, align: 'center' });
 
         let iY = indHeaderY + 20;
+        let bloqueContinuado = false;
 
         // ── Filas SABER / HACER / SER ─────────────────────────────────────────
         const dibujarFila = (
@@ -650,34 +722,63 @@ export class PDFService {
         ) => {
           const etW = 64;
           const txW = sW - etW;
-          const txt = items.join(' ');
+          const textW = txW - 16;
+          const fontSize = etiqueta === 'Obs.' ? 8 : 8.2;
+          const minAlto = etiqueta === 'Obs.' ? 26 : 34;
+          let rest = items.join(' ').trim() || '-';
+          let continuacion = false;
 
-          doc.rect(sX, iY, etW, alto).fill(fondo).stroke(C.azulOscuro);
-          doc.fillColor(C.blanco).font('Helvetica-Bold').fontSize(9)
-             .text(etiqueta, sX, iY + alto / 2 - 6, { width: etW, align: 'center' });
+          const dibujarContinuacion = () => {
+            this.dibujarPie(doc, data, footerLabel);
+            doc.addPage();
+            y = paginaBase();
+            iY = y;
+            bloqueContinuado = true;
+            doc.rect(sX, iY, sW, 20).fill(C.rojo).stroke(C.azulOscuro);
+            doc.fillColor(C.blanco).font('Helvetica-Bold').fontSize(9)
+               .text(String(mat.asignaturaNombre || '') + ' (cont.)', sX + 8, iY + 6, { width: sW - 16, align: 'center' });
+            iY += 20;
+          };
 
-          doc.rect(sX + etW, iY, txW, alto).fill(fondoTexto).stroke(C.azulOscuro);
-          doc.fillColor(C.tinta).font('Helvetica').fontSize(8.2)
-             .text(txt, sX + etW + 8, iY + 7, { width: txW - 16 });
+          while (rest) {
+            if (iY + minAlto > pageBottom) {
+              dibujarContinuacion();
+              continuacion = true;
+            }
 
-          iY += alto;
+            const available = pageBottom - iY;
+            const split = splitTextToFit(rest, Math.max(18, available - 14), textW, fontSize);
+            const chunk = split.chunk || rest.split(/\s+/)[0] || '-';
+            doc.font('Helvetica').fontSize(fontSize);
+            const textH = doc.heightOfString(chunk, { width: textW, lineGap: 1 });
+            const altoFila = Math.max(minAlto, textH + 14);
+
+            doc.rect(sX, iY, etW, altoFila).fill(fondo).stroke(C.azulOscuro);
+            doc.fillColor(C.blanco).font('Helvetica-Bold').fontSize(9)
+               .text(continuacion ? etiqueta + ' (cont.)' : etiqueta, sX, iY + altoFila / 2 - 6, { width: etW, align: 'center' });
+
+            doc.rect(sX + etW, iY, txW, altoFila).fill(fondoTexto).stroke(C.azulOscuro);
+            doc.fillColor(C.tinta).font('Helvetica').fontSize(fontSize)
+               .text(chunk, sX + etW + 8, iY + 7, { width: textW, lineGap: 1 });
+
+            iY += altoFila;
+            rest = String(split.rest || '').trim();
+            if (rest) continuacion = true;
+          }
         };
 
         dibujarFila('SABER', saber, C.cianClaro, C.blanco, saberH);
         dibujarFila('HACER', hacer, C.amarillo,  C.blanco, hacerH);
         dibujarFila('SER',   ser,   C.verde,     C.blanco, serH);
+        dibujarFila('Obs.', [obsText], C.blanco, C.blanco, obsH);
 
         // ── Observación (opcional) ────────────────────────────────────────────
-        doc.rect(sX, iY, sW, obsH).fill(C.blanco).stroke(C.azulOscuro);
-        doc.fillColor(C.tintaSuave).font('Helvetica-Bold').fontSize(8)
-           .text('Observacion:', sX + 10, iY + 8);
-        doc.fillColor(C.tinta).font('Helvetica').fontSize(8)
-           .text(obsText, sX + 88, iY + 7, { width: sW - 98 });
-        iY += obsH;
 
         // Borde exterior bloque
-        doc.lineWidth(1.6);
-        doc.rect(sX - 1, top - 1, sW + 2, iY - top + 2).stroke(C.azulOscuro);
+        if (!bloqueContinuado) {
+          doc.lineWidth(1.6);
+          doc.rect(sX - 1, top - 1, sW + 2, iY - top + 2).stroke(C.azulOscuro);
+        }
 
         y = iY + 14;
       }

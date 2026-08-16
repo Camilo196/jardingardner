@@ -267,33 +267,22 @@ async function calcularPuestoCurso(
         nombreActividad: { $ne: '__boletin__' },
     }).lean().catch(() => []);
 
-    const periodoObjetivo = parsePeriodo(periodo).numeroPeriodo;
-    const estudianteMap: Record<string, Record<string, Record<number, number[]>>> = {};
+    const estudianteMap: Record<string, Record<string, number[]>> = {};
 
     for (const cal of calificaciones as any[]) {
-        if (!mismoAnioYPrevios(periodo, cal.periodo)) continue;
+        if (String(cal.periodo) !== String(periodo)) continue;
         const estId = String(cal.estudianteId);
         const asigId = String(cal.asignaturaId);
-        const numeroPeriodo = parsePeriodo(String(cal.periodo || periodo)).numeroPeriodo;
         estudianteMap[estId] ||= {};
-        estudianteMap[estId][asigId] ||= {};
-        estudianteMap[estId][asigId][numeroPeriodo] ||= [];
-        estudianteMap[estId][asigId][numeroPeriodo].push(Number(cal.nota));
+        estudianteMap[estId][asigId] ||= [];
+        estudianteMap[estId][asigId].push(Number(cal.nota));
     }
 
     const promedios = estudiantesCurso
         .map((estId) => {
             const asignaturas = estudianteMap[estId] || {};
             const promediosMaterias = Object.values(asignaturas)
-                .map((notasPorPeriodo: any) => {
-                    const promediosPeriodos: Array<number | null> = [1, 2, 3].map((numeroPeriodo) =>
-                        promedioNumeros(notasPorPeriodo[numeroPeriodo] ?? []),
-                    );
-                    const acumulados = promediosPeriodos
-                        .slice(0, periodoObjetivo)
-                        .filter((nota): nota is number => nota !== null);
-                    return promedioNumeros(acumulados);
-                })
+                .map((notas: number[]) => promedioNumeros(notas))
                 .filter((nota): nota is number => nota !== null);
 
             const promedio = promedioNumeros(promediosMaterias);
