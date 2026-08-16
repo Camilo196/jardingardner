@@ -710,7 +710,12 @@ export class PDFService {
            .text('INDICADORES DE DESEMPENO', sX, indHeaderY + 6, { width: sW, align: 'center' });
 
         let iY = indHeaderY + 20;
-        let bloqueContinuado = false;
+        let segmentoTop = top;
+        const dibujarBordeSegmento = () => {
+          if (iY <= segmentoTop) return;
+          doc.lineWidth(1.6);
+          doc.rect(sX - 1, segmentoTop - 1, sW + 2, iY - segmentoTop + 2).stroke(C.azulOscuro);
+        };
 
         // ── Filas SABER / HACER / SER ─────────────────────────────────────────
         const dibujarFila = (
@@ -729,11 +734,12 @@ export class PDFService {
           let continuacion = false;
 
           const dibujarContinuacion = () => {
+            dibujarBordeSegmento();
             this.dibujarPie(doc, data, footerLabel);
             doc.addPage();
             y = paginaBase();
             iY = y;
-            bloqueContinuado = true;
+            segmentoTop = iY;
             doc.rect(sX, iY, sW, 20).fill(C.rojo).stroke(C.azulOscuro);
             doc.fillColor(C.blanco).font('Helvetica-Bold').fontSize(9)
                .text(String(mat.asignaturaNombre || '') + ' (cont.)', sX + 8, iY + 6, { width: sW - 16, align: 'center' });
@@ -775,10 +781,7 @@ export class PDFService {
         // ── Observación (opcional) ────────────────────────────────────────────
 
         // Borde exterior bloque
-        if (!bloqueContinuado) {
-          doc.lineWidth(1.6);
-          doc.rect(sX - 1, top - 1, sW + 2, iY - top + 2).stroke(C.azulOscuro);
-        }
+        dibujarBordeSegmento();
 
         y = iY + 14;
       }
