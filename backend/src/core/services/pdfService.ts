@@ -416,10 +416,11 @@ export class PDFService {
       // ── Bloques de materias ──────────────────────────────────────────────────
       const pageBottom = doc.page.height - 60;
       const ensurePageSpace = (minHeight = 42) => {
-        if (y + minHeight <= pageBottom) return;
+        if (y + minHeight <= pageBottom) return false;
         this.dibujarPie(doc, data, footerLabel);
         doc.addPage();
         y = paginaBase(false);
+        return true;
       };
 
       const splitTextToFit = (value: string, maxHeight: number, width: number, fontSize: number) => {
@@ -453,7 +454,7 @@ export class PDFService {
       };
 
       const drawMateriaHeader = (mat: any, continuacion = false) => {
-        ensurePageSpace(68);
+        if (ensurePageSpace(68)) segmentoTopPreescolar = y;
         const top = y;
         const mW  = 165;
         const dW  = Math.floor((sW - mW) * 0.62);
@@ -525,6 +526,18 @@ export class PDFService {
         }
       };
 
+      const textSectionHeight = (value: string, width: number, fontSize: number) => {
+        const txt = String(value || '').trim();
+        if (!txt) return 32;
+        doc.font('Helvetica').fontSize(fontSize);
+        return Math.max(32, doc.heightOfString(txt, { width, lineGap: 1 }) + 24);
+      };
+
+      const alturaBloquePreescolar = (avance: string, observaciones: string) =>
+        24 +
+        textSectionHeight(avance, innerW, 8.7) +
+        textSectionHeight(observaciones, innerW, 8.5);
+
       for (const mat of data.calificaciones) {
         const saber = itemsArr(mat.indicadores?.saber, 'Sin avance registrado.');
         const ser   = itemsArr(mat.indicadores?.ser,   'Sin observaciones registradas.');
@@ -535,6 +548,13 @@ export class PDFService {
         ];
         if (!obsLines.length) obsLines.push('Sin observaciones adicionales.');
         const obsText = obsLines.join('\n');
+
+        const bloqueH = alturaBloquePreescolar(resumenTexto, obsText);
+        if (y + bloqueH > pageBottom && bloqueH <= 500) {
+          this.dibujarPie(doc, data, footerLabel);
+          doc.addPage();
+          y = paginaBase(false);
+        }
 
         segmentoTopPreescolar = y;
         drawMateriaHeader(mat);
