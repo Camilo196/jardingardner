@@ -609,6 +609,7 @@ export class PDFService {
       let y = paginaBase();
 
       const pageBottom = doc.page.height - 60;
+      const pageContentTop = y;
       const splitTextToFit = (value: string, maxHeight: number, width: number, fontSize: number) => {
         const clean = String(value || '').trim();
         if (!clean) return { chunk: '', rest: '' };
@@ -663,7 +664,7 @@ export class PDFService {
         // fila1H(20) + fila2H(18) + encabezado indicadores(20) + saber + hacer + ser + obs + margen
         const bloqueTotalH = 20 + 18 + 20 + saberH + hacerH + serH + obsH + 8;
 
-        if (y + bloqueTotalH > doc.page.height - 60) {
+        if (y + bloqueTotalH > pageBottom && bloqueTotalH <= pageBottom - pageContentTop) {
           this.dibujarPie(doc, data, footerLabel);
           doc.addPage();
           y = paginaBase();
