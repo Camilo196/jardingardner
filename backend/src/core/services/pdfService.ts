@@ -475,14 +475,23 @@ export class PDFService {
         y += 24;
       };
 
+      let segmentoTopPreescolar = y;
+      const dibujarBordeSegmentoPreescolar = () => {
+        if (y <= segmentoTopPreescolar) return;
+        doc.lineWidth(1.4);
+        doc.rect(sX - 1, segmentoTopPreescolar - 1, sW + 2, y - segmentoTopPreescolar + 2).stroke(C.azulOscuro);
+      };
+
       const drawTextSection = (mat: any, titulo: string, value: string, stroke: string, fontSize: number) => {
         let rest = String(value || '').trim();
         let continuacion = false;
         while (rest) {
           if (y + 52 > pageBottom) {
+            dibujarBordeSegmentoPreescolar();
             this.dibujarPie(doc, data, footerLabel);
             doc.addPage();
             y = paginaBase(false);
+            segmentoTopPreescolar = y;
             drawMateriaHeader(mat, true);
             continuacion = true;
           }
@@ -505,9 +514,11 @@ export class PDFService {
 
           rest = String(nextRest || '').trim();
           if (rest) {
+            dibujarBordeSegmentoPreescolar();
             this.dibujarPie(doc, data, footerLabel);
             doc.addPage();
             y = paginaBase(false);
+            segmentoTopPreescolar = y;
             drawMateriaHeader(mat, true);
             continuacion = true;
           }
@@ -525,9 +536,11 @@ export class PDFService {
         if (!obsLines.length) obsLines.push('Sin observaciones adicionales.');
         const obsText = obsLines.join('\n');
 
+        segmentoTopPreescolar = y;
         drawMateriaHeader(mat);
         drawTextSection(mat, 'Avance', resumenTexto, C.azulOscuro, 8.7);
         drawTextSection(mat, 'Observaciones', obsText, C.gris, 8.5);
+        dibujarBordeSegmentoPreescolar();
         y += 14;
       }
 
