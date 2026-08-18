@@ -349,7 +349,7 @@ async function generarBoletinAcumuladoBase64(
     const calsCursoPeriodo = calsAcumuladasBase.filter((c: any) =>
         asigIdsCurso.has(String(c.asignaturaId)) && String(c.periodo) === String(periodo),
     );
-    if (asigIdsCurso.size && calsCursoPeriodo.length) {
+    if (asigIdsCurso.size && calsCursoPeriodo.length && !esPrimaria) {
         calsAcumuladas = calsAcumuladasBase.filter((c: any) => asigIdsCurso.has(String(c.asignaturaId)));
     }
 
@@ -358,8 +358,7 @@ async function generarBoletinAcumuladoBase64(
 
     const asigIdsUnicos = [...new Set([
         ...calsAcumuladas.map((c: any) => String(c.asignaturaId)),
-        ...(esPrimaria ? calsAcumuladasBase.map((c: any) => String(c.asignaturaId)) : []),
-        ...(esPreescolar ? [...asigIdsCurso] : []),
+        ...(esPreescolar || esPrimaria ? [...asigIdsCurso] : []),
     ])];
     const asigsBatch: any[] = await repositories.asignaturaRepository.findByIds(asigIdsUnicos).catch(() => []);
     const asigById: Record<string, any> = {};
@@ -374,31 +373,19 @@ async function generarBoletinAcumuladoBase64(
 
     const asigMap: Record<string, { asig: any; notasPorPeriodo: Record<number, number[]> }> = {};
     for (const cal of calsAcumuladas) {
-        const k = String(cal.asignaturaId);
+        const originalId = String(cal.asignaturaId);
+        const asigOriginal = asigById[originalId] ?? null;
+        const asigCursoEquivalente = esPrimaria
+            ? asigCursoPorNombre[normalizarTextoBase(asigOriginal?.nombre)]
+            : null;
+        if (esPrimaria && !asigIdsCurso.has(originalId) && !asigCursoEquivalente) continue;
+        const k = String(asigCursoEquivalente ? (asigCursoEquivalente.id ?? asigCursoEquivalente._id) : originalId);
         if (!asigMap[k]) {
-            asigMap[k] = { asig: asigById[k] ?? null, notasPorPeriodo: {} };
+            asigMap[k] = { asig: asigById[k] ?? asigCursoEquivalente ?? asigOriginal, notasPorPeriodo: {} };
         }
         const numeroPeriodo = parsePeriodo(String(cal.periodo || periodo)).numeroPeriodo;
         if (!asigMap[k].notasPorPeriodo[numeroPeriodo]) asigMap[k].notasPorPeriodo[numeroPeriodo] = [];
         asigMap[k].notasPorPeriodo[numeroPeriodo].push(Number(cal.nota));
-    }
-
-    if (esPrimaria) {
-        for (const cal of calsAcumuladasBase) {
-            const originalId = String(cal.asignaturaId);
-            if (asigIdsCurso.has(originalId)) continue;
-            const asigOriginal = asigById[originalId];
-            const asigCurso = asigCursoPorNombre[normalizarTextoBase(asigOriginal?.nombre)];
-            if (!asigCurso) continue;
-
-            const k = String(asigCurso.id ?? asigCurso._id);
-            const numeroPeriodo = parsePeriodo(String(cal.periodo || periodo)).numeroPeriodo;
-            const notasActuales = asigMap[k]?.notasPorPeriodo[numeroPeriodo] ?? [];
-            if (notasActuales.length) continue;
-
-            if (!asigMap[k]) asigMap[k] = { asig: asigById[k] ?? asigCurso, notasPorPeriodo: {} };
-            asigMap[k].notasPorPeriodo[numeroPeriodo] = [Number(cal.nota)];
-        }
     }
 
     if (esPreescolar) {
