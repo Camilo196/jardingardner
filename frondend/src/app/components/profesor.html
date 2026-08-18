@@ -2150,7 +2150,6 @@ async function guardarIndicadores(){
     const estudianteIds=[...W.indSeleccionados];
     if(!estudianteIds.length){ toast('Selecciona al menos un estudiante','er'); return; }
     try{
-      await gql(`mutation{eliminarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}")}`);
       for(const ced of estudianteIds){
         const obs=(W.indObservaciones[ced]||'').split('\n').map(x=>x.trim()).filter(Boolean);
         await gql(`mutation{guardarIndicadores(asignaturaId:"${W.asigId}",periodo:"${periodo}",saber:${JSON.stringify(saber)},hacer:[],ser:${JSON.stringify(obs)},intro:${JSON.stringify(intro)},estudianteIds:["${ced}"]){id}}`);
