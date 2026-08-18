@@ -358,11 +358,19 @@ async function generarBoletinAcumuladoBase64(
 
     const asigIdsUnicos = [...new Set([
         ...calsAcumuladas.map((c: any) => String(c.asignaturaId)),
+        ...(esPrimaria ? calsAcumuladasBase.map((c: any) => String(c.asignaturaId)) : []),
         ...(esPreescolar ? [...asigIdsCurso] : []),
     ])];
     const asigsBatch: any[] = await repositories.asignaturaRepository.findByIds(asigIdsUnicos).catch(() => []);
     const asigById: Record<string, any> = {};
     for (const a of asigsBatch) asigById[String(a.id ?? a._id)] = a;
+    const asigCursoPorNombre: Record<string, any> = {};
+    if (esPrimaria) {
+        for (const a of asignaturasCurso || []) {
+            const clave = normalizarTextoBase(a?.nombre);
+            if (clave) asigCursoPorNombre[clave] = a;
+        }
+    }
 
     const asigMap: Record<string, { asig: any; notasPorPeriodo: Record<number, number[]> }> = {};
     for (const cal of calsAcumuladas) {
@@ -373,6 +381,24 @@ async function generarBoletinAcumuladoBase64(
         const numeroPeriodo = parsePeriodo(String(cal.periodo || periodo)).numeroPeriodo;
         if (!asigMap[k].notasPorPeriodo[numeroPeriodo]) asigMap[k].notasPorPeriodo[numeroPeriodo] = [];
         asigMap[k].notasPorPeriodo[numeroPeriodo].push(Number(cal.nota));
+    }
+
+    if (esPrimaria) {
+        for (const cal of calsAcumuladasBase) {
+            const originalId = String(cal.asignaturaId);
+            if (asigIdsCurso.has(originalId)) continue;
+            const asigOriginal = asigById[originalId];
+            const asigCurso = asigCursoPorNombre[normalizarTextoBase(asigOriginal?.nombre)];
+            if (!asigCurso) continue;
+
+            const k = String(asigCurso.id ?? asigCurso._id);
+            const numeroPeriodo = parsePeriodo(String(cal.periodo || periodo)).numeroPeriodo;
+            const notasActuales = asigMap[k]?.notasPorPeriodo[numeroPeriodo] ?? [];
+            if (notasActuales.length) continue;
+
+            if (!asigMap[k]) asigMap[k] = { asig: asigById[k] ?? asigCurso, notasPorPeriodo: {} };
+            asigMap[k].notasPorPeriodo[numeroPeriodo] = [Number(cal.nota)];
+        }
     }
 
     if (esPreescolar) {
