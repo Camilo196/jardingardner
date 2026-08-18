@@ -1534,6 +1534,9 @@ export const resolvers = {
             if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado: se requiere rol ADMIN o PROFESOR');
             const actual = await repositories.calificacionRepository.findById(id);
             if (!actual) throw new Error('Calificación no encontrada');
+            if (String(input.estudianteId) !== String(actual.estudianteId) || String(input.asignaturaId) !== String(actual.asignaturaId)) {
+                throw new Error('No se puede cambiar el estudiante o la asignatura de una calificación existente. Crea una nota nueva.');
+            }
             if (String(input.periodo) !== String(actual.periodo)) {
                 throw new Error('No se puede cambiar el período de una calificación existente. Crea una nota nueva para otro período.');
             }
