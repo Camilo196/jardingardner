@@ -30,6 +30,35 @@ function fechaCalificacionSinDesfase(fecha: any): Date {
 }
 
 export class CalificacionRepositoryImpl implements CalificacionRepository {
+  private async estudianteIdVariants(estudianteId: string): Promise<any[]> {
+    const ids = new Map<string, any>();
+    const add = (value: any) => {
+      if (value === undefined || value === null || value === '') return;
+      ids.set(String(value), value);
+    };
+
+    add(estudianteId);
+    if (mongoose.Types.ObjectId.isValid(estudianteId)) {
+      add(new mongoose.Types.ObjectId(estudianteId));
+    }
+
+    try {
+      const EstudianteModel = mongoose.model('Estudiante');
+      const or: any[] = [{ cedula: estudianteId }, { _id: estudianteId }];
+      if (mongoose.Types.ObjectId.isValid(estudianteId)) {
+        or.push({ _id: new mongoose.Types.ObjectId(estudianteId) });
+      }
+      const est = await EstudianteModel.findOne({ $or: or }).lean().exec() as any;
+      add(est?.cedula);
+      add(est?._id);
+      if (est?._id?.toString) add(est._id.toString());
+    } catch {
+      // Si no se puede resolver el estudiante, se mantiene la busqueda por el id recibido.
+    }
+
+    return Array.from(ids.values());
+  }
+
   async findByCursoId(cursoId: string): Promise<Calificacion[]> {
     try {
       const asignaturas = await AsignaturaModel.find({ cursoId }).exec();
@@ -63,14 +92,8 @@ export class CalificacionRepositoryImpl implements CalificacionRepository {
 
   async findByEstudianteId(estudianteId: string): Promise<Calificacion[]> {
     try {
-      // Busca tanto por cedula directa como por ObjectId para cubrir ambos casos de almacenamiento
-      let queries: any[] = [{ estudianteId }];
-      if (!mongoose.Types.ObjectId.isValid(estudianteId)) {
-        const EstudianteModel = mongoose.model('Estudiante');
-        const est = await EstudianteModel.findOne({ cedula: estudianteId }).exec();
-        if (est) queries.push({ estudianteId: est._id });
-      }
-      const docs = await CalificacionModel.find({ $or: queries }).exec();
+      const ids = await this.estudianteIdVariants(estudianteId);
+      const docs = await CalificacionModel.find({ estudianteId: { $in: ids } }).exec();
       return docs.map(doc => this.mapToEntity(doc));
     } catch (error) {
       console.error("Error en findByEstudianteId:", error);
@@ -90,14 +113,8 @@ export class CalificacionRepositoryImpl implements CalificacionRepository {
 
   async findByEstudianteIdAndPeriodo(estudianteId: string, periodo: string): Promise<Calificacion[]> {
     try {
-      // También cubre búsqueda por cédula para boletines
-      let queries: any[] = [{ estudianteId, periodo }];
-      if (!mongoose.Types.ObjectId.isValid(estudianteId)) {
-        const EstudianteModel = mongoose.model('Estudiante');
-        const est = await EstudianteModel.findOne({ cedula: estudianteId }).exec();
-        if (est) queries.push({ estudianteId: est._id, periodo });
-      }
-      const docs = await CalificacionModel.find({ $or: queries }).exec();
+      const ids = await this.estudianteIdVariants(estudianteId);
+      const docs = await CalificacionModel.find({ estudianteId: { $in: ids }, periodo }).exec();
       return docs.map(doc => this.mapToEntity(doc));
     } catch (error) {
       console.error("Error en findByEstudianteIdAndPeriodo:", error);

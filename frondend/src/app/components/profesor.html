@@ -1038,8 +1038,8 @@ async function recargarCals(){
     const de=await gql(`query{estudiantes{id cedula}}`);
     const est=(de.estudiantes||[]).find(e=>e.cedula===W.estId);
     if(!est)throw new Error('Estudiante no encontrado');
-    const dc=await gql(`query{calificaciones{id estudianteId asignaturaId nota periodo observaciones fecha tipoActividad nombreActividad corte}}`);
-    W.cals=(dc.calificaciones||[]).filter(c=>String(c.estudianteId)===String(est.id)&&String(c.asignaturaId)===String(W.asigId));
+    const dc=await gql(`query{calificacionesPorEstudiante(estudianteId:"${W.estId}"){id estudianteId asignaturaId nota periodo observaciones fecha tipoActividad nombreActividad corte}}`);
+    W.cals=(dc.calificacionesPorEstudiante||[]).filter(c=>String(c.asignaturaId)===String(W.asigId));
     renderActiv(W.cals); if(W.calTab==='cCortes')renderCortes(W.cals);
   }catch(err){ document.getElementById('tbActiv').innerHTML=`<tr><td colspan="7" style="color:var(--red);text-align:center;padding:20px">Error: ${err.message}</td></tr>`; }
 }
