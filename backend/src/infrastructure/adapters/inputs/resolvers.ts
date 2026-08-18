@@ -344,6 +344,10 @@ async function generarBoletinAcumuladoBase64(
         ? await repositories.asignaturaRepository.findByCursoId(String(curso.id ?? curso._id)).catch(() => [])
         : [];
     const asigIdsCurso = new Set<string>((asignaturasCurso || []).map((a: any) => String(a.id ?? a._id)));
+    const asigOrdenCurso: Record<string, number> = {};
+    (asignaturasCurso || []).forEach((a: any, index: number) => {
+        asigOrdenCurso[String(a.id ?? a._id)] = index;
+    });
 
     let calsAcumuladas = calsAcumuladasBase;
     const calsCursoPeriodo = calsAcumuladasBase.filter((c: any) =>
@@ -487,6 +491,11 @@ async function generarBoletinAcumuladoBase64(
             },
             comportamiento: comp ? { nota: comp.nota, nivel: comp.nivel, descripcion: comp.descripcion } : undefined,
         };
+    }).sort((a, b) => {
+        const ordenA = asigOrdenCurso[String(a.asignaturaId)] ?? Number.MAX_SAFE_INTEGER;
+        const ordenB = asigOrdenCurso[String(b.asignaturaId)] ?? Number.MAX_SAFE_INTEGER;
+        if (ordenA !== ordenB) return ordenA - ordenB;
+        return String(a.asignaturaNombre || '').localeCompare(String(b.asignaturaNombre || ''), 'es', { sensitivity: 'base' });
     });
 
     const textoDirectorBoletin = curso
@@ -1523,6 +1532,11 @@ export const resolvers = {
         actualizarCalificacion: async (_: any, { id, input }: any, { user, repositories }: any) => {
             input = { ...input, nota: redondearNota(input.nota) };
             if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado: se requiere rol ADMIN o PROFESOR');
+            const actual = await repositories.calificacionRepository.findById(id);
+            if (!actual) throw new Error('Calificación no encontrada');
+            if (String(input.periodo) !== String(actual.periodo)) {
+                throw new Error('No se puede cambiar el período de una calificación existente. Crea una nota nueva para otro período.');
+            }
             await verificarPeriodoAbierto(input.periodo);
             await validarCalificacionNoPreescolar(input.asignaturaId, repositories);
             return await repositories.calificacionRepository.update(id, input);

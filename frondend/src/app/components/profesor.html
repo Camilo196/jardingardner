@@ -1085,7 +1085,7 @@ function periodoAbiertoParaNota(cfg){
   return true;
 }
 
-async function cargarPeriodosCalificacion(preferido){
+async function cargarPeriodosCalificacion(preferido, permitirCerradoPreferido=false){
   const sel=document.getElementById('actPeriodo'); if(!sel) return;
   const ay=anioActual(); const labels={1:'1er Período',2:'2do Período',3:'3er Período'};
   let configs=[];
@@ -1099,7 +1099,7 @@ async function cargarPeriodosCalificacion(preferido){
     const val=`${ay}-${n}`;
     return {numero:n,val,label:labels[n],abierto};
   });
-  const elegido=preferido&&W.periodosCalificacion.some(p=>p.val===preferido&&p.abierto)
+  const elegido=preferido&&W.periodosCalificacion.some(p=>p.val===preferido&&(p.abierto||permitirCerradoPreferido))
     ? preferido
     : (W.periodosCalificacion.find(p=>p.abierto)?.val || preferido || periodoLabel());
   sel.innerHTML='';
@@ -1107,7 +1107,7 @@ async function cargarPeriodosCalificacion(preferido){
     const opt=document.createElement('option');
     opt.value=p.val;
     opt.textContent=`${p.label} (${p.val})${p.abierto?'':' - cerrado'}`;
-    opt.disabled=!p.abierto;
+    opt.disabled=!p.abierto && !(permitirCerradoPreferido && p.val===preferido);
     if(p.val===elegido) opt.selected=true;
     sel.appendChild(opt);
   });
@@ -1120,11 +1120,11 @@ function periodoNotaHabilitado(){
   return !!sel.value && (!opt || !opt.disabled);
 }
 
-function setPeriodoSelect(val){ setPeriodoSelectById('actPeriodo',val); }
-function setPeriodoSelectById(id,val){
+function setPeriodoSelect(val, permitirCerrado=false){ setPeriodoSelectById('actPeriodo',val, permitirCerrado); }
+function setPeriodoSelectById(id,val, permitirCerrado=false){
   const sel=document.getElementById(id); if(!sel)return;
   let target=null;
-  for(const opt of sel.options){ if(opt.value===val && !opt.disabled){ target=opt; break; } }
+  for(const opt of sel.options){ if(opt.value===val && (!opt.disabled||permitirCerrado)){ target=opt; break; } }
   if(!target) target=[...sel.options].find(opt=>!opt.disabled)||null;
   if(target) target.selected=true;
 }
@@ -1233,7 +1233,7 @@ async function guardarActividadCurso(){
   }
 }
 async function abrirNuevaAct(){ if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; } document.getElementById('actId').value=''; document.getElementById('actTit').textContent='Nueva Actividad'; document.getElementById('actNombre').value=''; document.getElementById('actNota').value=''; document.getElementById('actObs').value=''; document.getElementById('actFecha').value=hoyIsoLocal(); await cargarPeriodosCalificacion(W.periodo||periodoLabel()); document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); document.querySelector('.tchip.TRABAJO').classList.add('sel'); document.getElementById('actTipo').value='TRABAJO'; document.getElementById('mAct').classList.add('o'); }
-async function editarAct(id){ const cal=W.cals.find(c=>c.id===id);if(!cal)return; document.getElementById('actId').value=id; document.getElementById('actTit').textContent='Editar Actividad'; document.getElementById('actNombre').value=cal.nombreActividad||''; document.getElementById('actNota').value=cal.nota; document.getElementById('actObs').value=cal.observaciones||''; document.getElementById('actFecha').value=fechaInputValue(cal.fecha); await cargarPeriodosCalificacion(cal.periodo||W.periodo||periodoLabel()); setPeriodoSelect(cal.periodo||W.periodo||periodoLabel()); document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); const chip=document.querySelector(`.tchip.${cal.tipoActividad||'EXAMEN'}`); if(chip)chip.classList.add('sel'); document.getElementById('actTipo').value=cal.tipoActividad||'EXAMEN'; document.getElementById('mAct').classList.add('o'); }
+async function editarAct(id){ const cal=W.cals.find(c=>c.id===id);if(!cal)return; document.getElementById('actId').value=id; document.getElementById('actTit').textContent='Editar Actividad'; document.getElementById('actNombre').value=cal.nombreActividad||''; document.getElementById('actNota').value=cal.nota; document.getElementById('actObs').value=cal.observaciones||''; document.getElementById('actFecha').value=fechaInputValue(cal.fecha); await cargarPeriodosCalificacion(cal.periodo||W.periodo||periodoLabel(), true); setPeriodoSelect(cal.periodo||W.periodo||periodoLabel(), true); document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); const chip=document.querySelector(`.tchip.${cal.tipoActividad||'EXAMEN'}`); if(chip)chip.classList.add('sel'); document.getElementById('actTipo').value=cal.tipoActividad||'EXAMEN'; document.getElementById('mAct').classList.add('o'); }
 function selTipo(chip){ document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); chip.classList.add('sel'); document.getElementById('actTipo').value=chip.dataset.t; }
 function notaDosDecimales(valor){ const n=parseFloat(valor); return Number.isFinite(n)?Math.round((n+Number.EPSILON)*100)/100:NaN; }
 async function guardarActividad(){
