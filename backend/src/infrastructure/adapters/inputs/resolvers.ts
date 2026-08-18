@@ -370,13 +370,23 @@ async function generarBoletinAcumuladoBase64(
     }
 
     const asigMap: Record<string, { asig: any; notasPorPeriodo: Record<number, number[]> }> = {};
+    const calsPrimariaSinMateria: any[] = [];
+    if (esPreescolar || esPrimaria) {
+        for (const a of asignaturasCurso || []) {
+            const k = String(a.id ?? a._id);
+            if (!asigMap[k]) asigMap[k] = { asig: asigById[k] ?? a, notasPorPeriodo: {} };
+        }
+    }
     for (const cal of calsAcumuladas) {
         const originalId = String(cal.asignaturaId);
         const asigOriginal = asigById[originalId] ?? null;
         const asigCursoEquivalente = esPrimaria
             ? asigCursoPorNombre[normalizarTextoBase(asigOriginal?.nombre)]
             : null;
-        if (esPrimaria && !asigIdsCurso.has(originalId) && !asigCursoEquivalente) continue;
+        if (esPrimaria && !asigIdsCurso.has(originalId) && !asigCursoEquivalente) {
+            calsPrimariaSinMateria.push(cal);
+            continue;
+        }
         const k = String(asigCursoEquivalente ? (asigCursoEquivalente.id ?? asigCursoEquivalente._id) : originalId);
         if (!asigMap[k]) {
             asigMap[k] = { asig: asigById[k] ?? asigCursoEquivalente ?? asigOriginal, notasPorPeriodo: {} };
@@ -386,10 +396,24 @@ async function generarBoletinAcumuladoBase64(
         asigMap[k].notasPorPeriodo[numeroPeriodo].push(Number(cal.nota));
     }
 
-    if (esPreescolar || esPrimaria) {
-        for (const a of asignaturasCurso || []) {
-            const k = String(a.id ?? a._id);
-            if (!asigMap[k]) asigMap[k] = { asig: asigById[k] ?? a, notasPorPeriodo: {} };
+    if (esPrimaria && calsPrimariaSinMateria.length) {
+        const calsPorPeriodo: Record<number, any[]> = {};
+        for (const cal of calsPrimariaSinMateria) {
+            const numeroPeriodo = parsePeriodo(String(cal.periodo || periodo)).numeroPeriodo;
+            calsPorPeriodo[numeroPeriodo] ||= [];
+            calsPorPeriodo[numeroPeriodo].push(cal);
+        }
+        for (const [periodoKey, calsPeriodo] of Object.entries(calsPorPeriodo)) {
+            const numeroPeriodo = Number(periodoKey);
+            const materiasSinNota = (asignaturasCurso || [])
+                .map((a: any) => String(a.id ?? a._id))
+                .filter((asigId: string) => !(asigMap[asigId]?.notasPorPeriodo[numeroPeriodo]?.length));
+            if (materiasSinNota.length !== 1) continue;
+            const asigId = materiasSinNota[0];
+            asigMap[asigId].notasPorPeriodo[numeroPeriodo] ||= [];
+            for (const cal of calsPeriodo) {
+                asigMap[asigId].notasPorPeriodo[numeroPeriodo].push(Number(cal.nota));
+            }
         }
     }
 
