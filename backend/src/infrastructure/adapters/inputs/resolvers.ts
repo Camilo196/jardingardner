@@ -349,7 +349,7 @@ async function generarBoletinAcumuladoBase64(
     const calsCursoPeriodo = calsAcumuladasBase.filter((c: any) =>
         asigIdsCurso.has(String(c.asignaturaId)) && String(c.periodo) === String(periodo),
     );
-    if (asigIdsCurso.size && calsCursoPeriodo.length) {
+    if (asigIdsCurso.size && calsCursoPeriodo.length && !esPrimaria) {
         calsAcumuladas = calsAcumuladasBase.filter((c: any) => asigIdsCurso.has(String(c.asignaturaId)));
     }
 
@@ -363,12 +363,23 @@ async function generarBoletinAcumuladoBase64(
     const asigsBatch: any[] = await repositories.asignaturaRepository.findByIds(asigIdsUnicos).catch(() => []);
     const asigById: Record<string, any> = {};
     for (const a of asigsBatch) asigById[String(a.id ?? a._id)] = a;
+    const asigCursoPorNombre: Record<string, any> = {};
+    for (const a of asignaturasCurso || []) {
+        const clave = normalizarTextoBase(a?.nombre);
+        if (clave) asigCursoPorNombre[clave] = a;
+    }
 
     const asigMap: Record<string, { asig: any; notasPorPeriodo: Record<number, number[]> }> = {};
     for (const cal of calsAcumuladas) {
-        const k = String(cal.asignaturaId);
+        const originalId = String(cal.asignaturaId);
+        const asigOriginal = asigById[originalId] ?? null;
+        const asigCursoEquivalente = esPrimaria
+            ? asigCursoPorNombre[normalizarTextoBase(asigOriginal?.nombre)]
+            : null;
+        if (esPrimaria && !asigIdsCurso.has(originalId) && !asigCursoEquivalente) continue;
+        const k = String(asigCursoEquivalente ? (asigCursoEquivalente.id ?? asigCursoEquivalente._id) : originalId);
         if (!asigMap[k]) {
-            asigMap[k] = { asig: asigById[k] ?? null, notasPorPeriodo: {} };
+            asigMap[k] = { asig: asigById[k] ?? asigCursoEquivalente ?? asigOriginal, notasPorPeriodo: {} };
         }
         const numeroPeriodo = parsePeriodo(String(cal.periodo || periodo)).numeroPeriodo;
         if (!asigMap[k].notasPorPeriodo[numeroPeriodo]) asigMap[k].notasPorPeriodo[numeroPeriodo] = [];
