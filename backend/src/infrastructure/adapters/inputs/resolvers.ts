@@ -358,7 +358,7 @@ async function generarBoletinAcumuladoBase64(
 
     const asigIdsUnicos = [...new Set([
         ...calsAcumuladas.map((c: any) => String(c.asignaturaId)),
-        ...(esPreescolar ? [...asigIdsCurso] : []),
+        ...(esPreescolar || esPrimaria ? [...asigIdsCurso] : []),
     ])];
     const asigsBatch: any[] = await repositories.asignaturaRepository.findByIds(asigIdsUnicos).catch(() => []);
     const asigById: Record<string, any> = {};
@@ -375,7 +375,7 @@ async function generarBoletinAcumuladoBase64(
         asigMap[k].notasPorPeriodo[numeroPeriodo].push(Number(cal.nota));
     }
 
-    if (esPreescolar) {
+    if (esPreescolar || esPrimaria) {
         for (const a of asignaturasCurso || []) {
             const k = String(a.id ?? a._id);
             if (!asigMap[k]) asigMap[k] = { asig: asigById[k] ?? a, notasPorPeriodo: {} };

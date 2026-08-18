@@ -78,11 +78,16 @@ function esCursoPrimaria(nombreCurso: string): boolean {
   return c.includes('primaria') || CURSOS_PRIMARIA.some((k) => c.includes(k)) || /\b(1|2|3|4|5)(ro|do|to)?\b/.test(c);
 }
 
-function obtenerTamanoPdf(): 'A4' | 'LETTER' | 'LEGAL' {
+const TAMANO_OFICIO_GARDNER: [number, number] = [612, 936]; // 21.59 cm x 33.02 cm
+
+function obtenerTamanoPdf(): 'A4' | 'LETTER' | 'LEGAL' | [number, number] {
   const valor = normalizarTexto(
-    process.env.BOLETIN_PAPER_SIZE || process.env.PDF_PAPER_SIZE || 'A4',
+    process.env.BOLETIN_PAPER_SIZE || process.env.PDF_PAPER_SIZE || 'oficio-gardner',
   );
 
+  if (['oficio-gardner', 'oficio gardner', 'oficio-13', 'oficio 13', 'folio'].includes(valor)) {
+    return TAMANO_OFICIO_GARDNER;
+  }
   if (['carta', 'letter'].includes(valor)) return 'LETTER';
   if (['oficio', 'legal'].includes(valor)) return 'LEGAL';
   return 'A4';
