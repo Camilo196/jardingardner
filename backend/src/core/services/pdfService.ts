@@ -542,6 +542,7 @@ export class PDFService {
         24 +
         textSectionHeight(avance, innerW, 8.7) +
         textSectionHeight(observaciones, innerW, 8.5);
+      const espacioBloqueEnPaginaNueva = pageBottom - 194;
 
       for (const mat of data.calificaciones) {
         const saber = itemsArr(mat.indicadores?.saber, 'Sin avance registrado.');
@@ -555,7 +556,7 @@ export class PDFService {
         const obsText = obsLines.join('\n');
 
         const bloqueH = alturaBloquePreescolar(resumenTexto, obsText);
-        if (y + bloqueH > pageBottom && bloqueH <= 500) {
+        if (y + bloqueH > pageBottom && bloqueH <= espacioBloqueEnPaginaNueva) {
           this.dibujarPie(doc, data, footerLabel);
           doc.addPage();
           y = paginaBase(false);

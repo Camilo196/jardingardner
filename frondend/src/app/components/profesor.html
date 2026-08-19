@@ -2057,7 +2057,7 @@ async function cargarIndicadores(periodoForzado){
           W.indObservaciones[ced]=normalizarListaIndicadores(item?.ser).join('\n');
         }catch{}
       }
-      if(!W.indSeleccionados.size) W.indSeleccionados=new Set((W.indEstudiantes||[]).map(e=>String(e.cedula)));
+      W.indSeleccionados=new Set(W.estId?[String(W.estId)]:[]);
     }else{
       W.indSeleccionados=new Set((ind?.estudianteIds?.length?ind.estudianteIds:[W.estId]).map(String));
     }
