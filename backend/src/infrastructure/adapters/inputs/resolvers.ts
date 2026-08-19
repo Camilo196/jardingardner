@@ -141,6 +141,20 @@ function valoracionDesdeNota(nota: number | null): string {
     if (nota >= 3.5) return 'B�sico';
     return 'Bajo';
 }
+
+function fechaInicioDiaColombia(valor: any): Date {
+    const raw = String(valor || '').trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(`${raw}T00:00:00.000-05:00`);
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?$/.test(raw)) return new Date(`${raw}-05:00`);
+    return new Date(raw);
+}
+
+function fechaFinDiaColombia(valor: any): Date {
+    const raw = String(valor || '').trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(`${raw}T23:59:59.999-05:00`);
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?$/.test(raw)) return new Date(`${raw}-05:00`);
+    return new Date(raw);
+}
 function normalizarCursoNombre(nombre = ''): string {
     return String(nombre)
         .normalize('NFD')
@@ -1944,8 +1958,8 @@ export const resolvers = {
                 {
                     numCortes: input.numCortes,
                     abierto: true,
-                    ...(input.fechaApertura ? { fechaApertura: new Date(input.fechaApertura) } : {}),
-                    ...(input.fechaCierre   ? { fechaCierre:   new Date(input.fechaCierre)   } : {}),
+                    ...(input.fechaApertura ? { fechaApertura: fechaInicioDiaColombia(input.fechaApertura) } : {}),
+                    ...(input.fechaCierre   ? { fechaCierre:   fechaFinDiaColombia(input.fechaCierre)   } : {}),
                 },
                 { upsert: true, new: true }
             ).lean();
@@ -1956,7 +1970,7 @@ export const resolvers = {
             if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
             const doc = await PeriodoConfigModel.findOneAndUpdate(
                 { anio, numeroPeriodo },
-                { abierto: false, fechaCierre: fechaCierre ? new Date(fechaCierre) : new Date() },
+                { abierto: false, fechaCierre: fechaCierre ? fechaFinDiaColombia(fechaCierre) : new Date() },
                 { upsert: true, new: true }
             ).lean();
             return { ...(doc as any), id: (doc as any)._id?.toString(), pesoPorCorte: 100 / (doc as any).numCortes };

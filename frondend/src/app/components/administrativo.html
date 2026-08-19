@@ -8852,11 +8852,14 @@ function safeDateStr(val){
 }
 function safeFmt(val){
   const d = safeDateStr(val);
-  return d ? d.toLocaleDateString('es-CO') : '-';
+  return d ? d.toLocaleDateString('es-CO',{timeZone:'America/Bogota'}) : '-';
 }
 function safeIso(val){
   const d = safeDateStr(val);
-  return d ? d.toISOString().split('T')[0] : '';
+  if(!d) return '';
+  const parts = new Intl.DateTimeFormat('en-CA',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d);
+  const get = type => parts.find(p=>p.type===type)?.value || '';
+  return `${get('year')}-${get('month')}-${get('day')}`;
 }
 
 async function cargarPeriodos(){
