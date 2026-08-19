@@ -286,10 +286,10 @@ async function calcularPuestoCurso(
                 .filter((nota): nota is number => nota !== null);
 
             const promedio = promedioNumeros(promediosMaterias);
-            return promedio === null ? null : { estId, promedio };
+            return promedio === null ? null : { estId, promedio: redondearNota(promedio) };
         })
         .filter((item): item is { estId: string; promedio: number } => item !== null)
-        .sort((a, b) => b.promedio - a.promedio);
+        .sort((a, b) => b.promedio - a.promedio || a.estId.localeCompare(b.estId, 'es', { sensitivity: 'base' }));
 
     if (!promedios.length) return null;
 
@@ -357,8 +357,7 @@ async function generarBoletinAcumuladoBase64(
         calsAcumuladas = calsAcumuladasBase.filter((c: any) => asigIdsCurso.has(String(c.asignaturaId)));
     }
 
-    const calsDelPeriodo = calsAcumuladas.filter((c: any) => String(c.periodo) === String(periodo));
-    if (!calsDelPeriodo.length && !esPreescolar) throw new Error('No hay calificaciones para este per�odo');
+    if (!calsAcumuladas.length && !esPreescolar) throw new Error('No hay calificaciones para este per�odo');
 
     const asigIdsUnicos = [...new Set([
         ...calsAcumuladas.map((c: any) => String(c.asignaturaId)),
