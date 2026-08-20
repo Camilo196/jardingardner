@@ -39,7 +39,7 @@
   },
   "scripts": {
     "dev:raw": "nodemon --exec node -r ts-node/register src/index.ts",
-    "start": "npm run build && node dist/index.js",
+    "start": "node dist/index.js",
     "dev": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev-clean.ps1",
     "build": "tsc",
     "postbuild": "node scripts/copy-graphql.js",
