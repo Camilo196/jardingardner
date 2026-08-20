@@ -458,7 +458,9 @@ async function generarBoletinAcumuladoBase64(
     }
 
     const periodoObjetivo = parsePeriodo(periodo).numeroPeriodo;
-    const calificacionesBoletin = Object.entries(asigMap).map(([asignaturaId, { asig, notasPorPeriodo }]) => {
+    const calificacionesBoletin = Object.entries(asigMap)
+    .filter(([, { notasPorPeriodo }]) => (notasPorPeriodo[periodoObjetivo] ?? []).length > 0)
+    .map(([asignaturaId, { asig, notasPorPeriodo }]) => {
         const promediosPeriodos: Array<number | null> = [1, 2, 3].map((numeroPeriodo) =>
             promedioNumeros(notasPorPeriodo[numeroPeriodo] ?? []),
         );
