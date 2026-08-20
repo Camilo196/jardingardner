@@ -312,7 +312,7 @@ async function calcularPuestoCurso(
     for (let i = 0; i < promedios.length; i++) {
         const actual = promedios[i];
         if (anterior !== null && Math.abs(actual.promedio - anterior) > 0.0001) {
-            puesto = i + 1;
+            puesto += 1;
         }
         if (actual.estId === String(estudianteObjetivoId)) return puesto;
         anterior = actual.promedio;
@@ -459,14 +459,17 @@ async function generarBoletinAcumuladoBase64(
             promedioNumeros(notasPorPeriodo[numeroPeriodo] ?? []),
         );
         const promPeriodoActual = promediosPeriodos[periodoObjetivo - 1] ?? 0;
+        const promGeneralMateria = promedioNumeros(
+            promediosPeriodos.slice(0, periodoObjetivo).filter((nota): nota is number => nota !== null),
+        ) ?? promPeriodoActual;
         const prom = promPeriodoActual;
         const valoracion = valoracionDesdeNota(prom);
         const resumenNotas =
             periodoObjetivo === 1
                 ? `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '�'}`
                 : periodoObjetivo === 2
-                    ? `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '�'} � P2: ${promediosPeriodos[1] !== null ? promediosPeriodos[1]!.toFixed(2) : '�'} � Promedio: ${prom.toFixed(2)}`
-                    : `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '�'} � P2: ${promediosPeriodos[1] !== null ? promediosPeriodos[1]!.toFixed(2) : '�'} � P3: ${promediosPeriodos[2] !== null ? promediosPeriodos[2]!.toFixed(2) : '�'} � Nota final: ${prom.toFixed(2)}`;
+                    ? `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '�'} � P2: ${promediosPeriodos[1] !== null ? promediosPeriodos[1]!.toFixed(2) : '�'} � Promedio: ${promGeneralMateria.toFixed(2)}`
+                    : `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '�'} � P2: ${promediosPeriodos[1] !== null ? promediosPeriodos[1]!.toFixed(2) : '�'} � P3: ${promediosPeriodos[2] !== null ? promediosPeriodos[2]!.toFixed(2) : '�'} � Nota final: ${promGeneralMateria.toFixed(2)}`;
 
         let docenteNombre = 'Docente';
         if (asig?.profesorId) {

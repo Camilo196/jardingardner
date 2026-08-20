@@ -1955,7 +1955,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       .sort((a, b) => b[campoPuesto] - a[campoPuesto] || String(a.Estudiante).localeCompare(String(b.Estudiante), 'es', { sensitivity: 'base' }))
       .forEach((item, index) => {
         if (notaAnterior !== null && Math.abs(item[campoPuesto] - notaAnterior) > 0.0001) {
-          puestoActual = index + 1;
+          puestoActual += 1;
         }
         puestoMap[item.Cedula] = puestoActual;
         notaAnterior = item[campoPuesto];
