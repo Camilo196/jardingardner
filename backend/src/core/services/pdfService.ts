@@ -867,7 +867,13 @@ export class PDFService {
       }
 
       // ── Resumen general ─────────────────────────────────────────────────────
-      const notasMats = data.calificaciones.map((m) => Number(m.nota)).filter(Number.isFinite);
+      const notasMats = data.calificaciones
+        .map((m) => {
+          const notas = extraerNotas(m.resumenNotas, m.nota);
+          const valorPeriodo = pNum === 1 ? notas.p1 : pNum === 2 ? notas.p2 : notas.p3;
+          return Number(valorPeriodo);
+        })
+        .filter(Number.isFinite);
       const promMats  = promedioSimple(notasMats);
       const notasComp = data.calificaciones
         .map((m) => notaComportamiento(m.comportamiento))
