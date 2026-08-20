@@ -381,7 +381,7 @@ export class PDFService {
           const imagenAncho = 1600 * escala;
           const imagenAlto = 900 * escala;
           const areaX = fx + (fw - ancho) / 2;
-          const areaY = y - alto + 1;
+          const areaY = y + 28 - alto;
           doc.save();
           doc.rect(areaX, areaY, ancho, alto).clip();
           doc.image(
