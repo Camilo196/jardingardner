@@ -43,7 +43,7 @@
     "dev": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev-clean.ps1",
     "build": "tsc",
     "postbuild": "node scripts/copy-graphql.js",
-    "serve": "node dist/index.js",
+    "serve": "npm run build && node dist/index.js",
     "test-db": "node -r ts-node/register src/testDatabaseConnection.ts"
   }
 }
