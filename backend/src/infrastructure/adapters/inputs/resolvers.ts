@@ -458,10 +458,8 @@ async function generarBoletinAcumuladoBase64(
         const promediosPeriodos: Array<number | null> = [1, 2, 3].map((numeroPeriodo) =>
             promedioNumeros(notasPorPeriodo[numeroPeriodo] ?? []),
         );
-        const promediosAcumulados = promediosPeriodos
-            .slice(0, periodoObjetivo)
-            .filter((nota): nota is number => nota !== null);
-        const prom = promedioNumeros(promediosAcumulados) ?? 0;
+        const promPeriodoActual = promediosPeriodos[periodoObjetivo - 1] ?? 0;
+        const prom = promPeriodoActual;
         const valoracion = valoracionDesdeNota(prom);
         const resumenNotas =
             periodoObjetivo === 1
