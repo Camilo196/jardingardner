@@ -611,7 +611,7 @@ export class PDFService {
       if (y + 55 > doc.page.height - 60) {
         this.dibujarPie(doc, data, footerLabel);
         doc.addPage();
-        y = 30;
+        y = 100;
       }
       y += 6;
       this.dibujarFirmas(doc, ml, cw, y, [
@@ -939,7 +939,7 @@ export class PDFService {
       if (y + 55 > doc.page.height - 60) {
         this.dibujarPie(doc, data, footerLabel);
         doc.addPage();
-        y = 30;
+        y = 100;
       }
       this.dibujarFirmas(doc, ml, cw, y, [
         { cargo: 'Coordinadora', nombre: 'Martha Mejía', ruta: this.firmaCoordinadoraPath, ancho: 240, recorte: { x: 430, y: 280, ancho: 770, alto: 490 } },
