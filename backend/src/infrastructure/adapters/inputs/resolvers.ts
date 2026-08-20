@@ -342,7 +342,7 @@ async function generarBoletinAcumuladoBase64(
 
     const todasLasCalificaciones = await repositories.calificacionRepository.findByEstudianteId(estIdBoletin).catch(() => []);
     const calsAcumuladasBase = (todasLasCalificaciones || []).filter((c: any) =>
-        c.nombreActividad !== '__boletin__' && mismoAnioYPrevios(periodo, c.periodo),
+        c.nombreActividad !== '__boletin__' && String(c.periodo) === String(periodo),
     );
     const observacionesBoletin = (todasLasCalificaciones || []).filter((c: any) =>
         c.nombreActividad === '__boletin__' && String(c.periodo) === String(periodo),
@@ -363,13 +363,9 @@ async function generarBoletinAcumuladoBase64(
         asigOrdenCurso[String(a.id ?? a._id)] = index;
     });
 
-    let calsAcumuladas = calsAcumuladasBase;
-    const calsCursoPeriodo = calsAcumuladasBase.filter((c: any) =>
-        asigIdsCurso.has(String(c.asignaturaId)) && String(c.periodo) === String(periodo),
-    );
-    if (asigIdsCurso.size && calsCursoPeriodo.length && !esPrimaria) {
-        calsAcumuladas = calsAcumuladasBase.filter((c: any) => asigIdsCurso.has(String(c.asignaturaId)));
-    }
+    const calsAcumuladas = asigIdsCurso.size && !esPrimaria
+        ? calsAcumuladasBase.filter((c: any) => asigIdsCurso.has(String(c.asignaturaId)))
+        : calsAcumuladasBase;
 
     if (!calsAcumuladas.length && !esPreescolar) throw new Error('No hay calificaciones para este per�odo');
 
@@ -1582,9 +1578,11 @@ export const resolvers = {
             const estIdBoletin = estudiante.cedula ?? input.estudianteId;
             const todasLasCalificaciones = await repositories.calificacionRepository.findByEstudianteId(estIdBoletin).catch(() => []);
             const calsAcumuladas = (todasLasCalificaciones || []).filter((c: any) =>
-                mismoAnioYPrevios(input.periodo, c.periodo) && asigIdsCurso.has(String(c.asignaturaId)),
+                String(c.periodo) === String(input.periodo) &&
+                c.nombreActividad !== '__boletin__' &&
+                asigIdsCurso.has(String(c.asignaturaId)),
             );
-            if (!calsAcumuladas.length) throw new Error('No se pudo calcular el promedio acumulado');
+            if (!calsAcumuladas.length) throw new Error('No se pudo calcular el promedio del periodo');
 
             const asigMap: Record<string, Record<number, number[]>> = {};
             for (const cal of calsAcumuladas) {
@@ -1598,11 +1596,7 @@ export const resolvers = {
             const periodoObjetivo = parsePeriodo(input.periodo).numeroPeriodo;
             const promediosMaterias = Object.values(asigMap)
                 .map((notasPorPeriodo: Record<number, number[]>) => {
-                    const promediosAcumulados = [1, 2, 3]
-                        .slice(0, periodoObjetivo)
-                        .map((numeroPeriodo) => promedioNumeros(notasPorPeriodo[numeroPeriodo] ?? []))
-                        .filter((nota): nota is number => nota !== null);
-                    return promedioNumeros(promediosAcumulados);
+                    return promedioNumeros(notasPorPeriodo[periodoObjetivo] ?? []);
                 })
                 .filter((nota): nota is number => nota !== null);
 
@@ -1630,9 +1624,11 @@ export const resolvers = {
             const estIdBoletin = estudiante.cedula ?? input.estudianteId;
             const todasLasCalificaciones = await repositories.calificacionRepository.findByEstudianteId(estIdBoletin).catch(() => []);
             const calsAcumuladas = (todasLasCalificaciones || []).filter((c: any) =>
-                mismoAnioYPrevios(input.periodo, c.periodo) && asigIdsCurso.has(String(c.asignaturaId)),
+                String(c.periodo) === String(input.periodo) &&
+                c.nombreActividad !== '__boletin__' &&
+                asigIdsCurso.has(String(c.asignaturaId)),
             );
-            if (!calsAcumuladas.length) throw new Error('No se pudo calcular el promedio acumulado');
+            if (!calsAcumuladas.length) throw new Error('No se pudo calcular el promedio del periodo');
 
             const asigMap: Record<string, Record<number, number[]>> = {};
             for (const cal of calsAcumuladas) {
@@ -1646,11 +1642,7 @@ export const resolvers = {
             const periodoObjetivo = parsePeriodo(input.periodo).numeroPeriodo;
             const promediosMaterias = Object.values(asigMap)
                 .map((notasPorPeriodo: Record<number, number[]>) => {
-                    const promediosAcumulados = [1, 2, 3]
-                        .slice(0, periodoObjetivo)
-                        .map((numeroPeriodo) => promedioNumeros(notasPorPeriodo[numeroPeriodo] ?? []))
-                        .filter((nota): nota is number => nota !== null);
-                    return promedioNumeros(promediosAcumulados);
+                    return promedioNumeros(notasPorPeriodo[periodoObjetivo] ?? []);
                 })
                 .filter((nota): nota is number => nota !== null);
 
