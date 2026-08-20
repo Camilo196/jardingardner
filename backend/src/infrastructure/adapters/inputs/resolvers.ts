@@ -312,7 +312,7 @@ async function calcularPuestoCurso(
     for (let i = 0; i < promedios.length; i++) {
         const actual = promedios[i];
         if (anterior !== null && Math.abs(actual.promedio - anterior) > 0.0001) {
-            puesto = i + 1;
+            puesto += 1;
         }
         if (actual.estId === String(estudianteObjetivoId)) return puesto;
         anterior = actual.promedio;
