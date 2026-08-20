@@ -361,16 +361,36 @@ export class PDFService {
   private dibujarFirmas(
     doc: PDFKit.PDFDocument,
     ml: number, cw: number, y: number,
-    firmas: Array<{ cargo: string; nombre: string; ruta: string | null; ancho: number }>,
+    firmas: Array<{
+      cargo: string;
+      nombre: string;
+      ruta: string | null;
+      ancho: number;
+      recorte: { x: number; y: number; ancho: number; alto: number };
+    }>,
   ): void {
     const fw = cw / firmas.length;
-    firmas.forEach(({ cargo, nombre, ruta, ancho }, i) => {
+    firmas.forEach(({ cargo, nombre, ruta, ancho, recorte }, i) => {
       const fx = ml + i * fw;
       const lineX1 = fx + fw * 0.1;
       const lineX2 = fx + fw * 0.9;
       if (ruta) {
         try {
-          doc.image(ruta, fx + (fw - ancho) / 2, y - 10, { width: ancho, height: 38, fit: [ancho, 38] });
+          const alto = 70;
+          const escala = Math.min(ancho / recorte.ancho, alto / recorte.alto);
+          const imagenAncho = 1600 * escala;
+          const imagenAlto = 900 * escala;
+          const areaX = fx + (fw - ancho) / 2;
+          const areaY = y - alto + 1;
+          doc.save();
+          doc.rect(areaX, areaY, ancho, alto).clip();
+          doc.image(
+            ruta,
+            areaX - recorte.x * escala + (ancho - recorte.ancho * escala) / 2,
+            areaY - recorte.y * escala + (alto - recorte.alto * escala) / 2,
+            { width: imagenAncho, height: imagenAlto },
+          );
+          doc.restore();
         } catch { /* fallback to the signature line */ }
       }
       doc.moveTo(lineX1, y + 28).lineTo(lineX2, y + 28)
@@ -595,8 +615,8 @@ export class PDFService {
       }
       y += 6;
       this.dibujarFirmas(doc, ml, cw, y, [
-        { cargo: 'Coordinadora', nombre: 'Martha Mejía', ruta: this.firmaCoordinadoraPath, ancho: 210 },
-        { cargo: 'Directora', nombre: 'Sandra Muñoz', ruta: this.firmaDirectoraPath, ancho: 160 },
+        { cargo: 'Coordinadora', nombre: 'Martha Mejía', ruta: this.firmaCoordinadoraPath, ancho: 240, recorte: { x: 430, y: 280, ancho: 770, alto: 490 } },
+        { cargo: 'Directora', nombre: 'Sandra Muñoz', ruta: this.firmaDirectoraPath, ancho: 240, recorte: { x: 40, y: 50, ancho: 890, alto: 520 } },
       ]);
       this.dibujarPie(doc, data, footerLabel);
     });
@@ -922,8 +942,8 @@ export class PDFService {
         y = 30;
       }
       this.dibujarFirmas(doc, ml, cw, y, [
-        { cargo: 'Coordinadora', nombre: 'Martha Mejía', ruta: this.firmaCoordinadoraPath, ancho: 210 },
-        { cargo: 'Directora', nombre: 'Sandra Muñoz', ruta: this.firmaDirectoraPath, ancho: 160 },
+        { cargo: 'Coordinadora', nombre: 'Martha Mejía', ruta: this.firmaCoordinadoraPath, ancho: 240, recorte: { x: 430, y: 280, ancho: 770, alto: 490 } },
+        { cargo: 'Directora', nombre: 'Sandra Muñoz', ruta: this.firmaDirectoraPath, ancho: 240, recorte: { x: 40, y: 50, ancho: 890, alto: 520 } },
       ]);
       this.dibujarPie(doc, data, footerLabel);
     });
