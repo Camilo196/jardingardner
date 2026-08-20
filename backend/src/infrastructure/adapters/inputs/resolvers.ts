@@ -1,0 +1,2241 @@
+import bcrypt from 'bcryptjs';
+import { Matricula, CrearMatriculaInput, ActualizarMatriculaInput } from '../../../core/domain/matricula.js';
+import { EmpleadoModel } from '../outputs/models/EmpleadoModel';
+import mongoose from 'mongoose';
+import { EstudianteModel } from '../outputs/models/EstudianteModel.js';
+import { UserModel } from '../outputs/models/UserModel.js';
+import { MatriculaModel } from '../outputs/models/MatriculaModel.js';
+import { CalificacionModel } from '../outputs/models/CalificacionModel.js';
+import { IndicadoresModel } from '../outputs/models/Indicadoresmodel.js';
+import { TextoDirectorBoletinModel } from '../outputs/models/TextoDirectorBoletinModel.js';
+import { PeriodoConfigModel } from '../outputs/models/PeriodoConfigModel.js';
+import { ComportamientoModel } from '../outputs/models/ComportamientoModel.js';
+import { AsistenciaModel } from '../outputs/models/AsistenciaModel.js';
+import { CronogramaModel } from '../outputs/models/CronogramaModel.js';
+import { MallaCurricularModel } from '../outputs/models/MallaCurricularModel.js';
+import { ExperienciaSignificativaModel } from '../outputs/models/ExperienciaSignificativaModel.js';
+import { AsignaturaModel } from '../outputs/models/AsignaturaModel.js';
+import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+import { AuthService } from '../../../core/services/AuthService';
+import {
+    enviarCredenciales,
+    enviarPasswordRecuperacion,
+    enviarConfirmacionMatricula,
+    notificarNuevaCalificacion,
+} from '../../../core/services/Emailservice.js';
+import { Asignatura } from '../../../core/domain/asignatura.js';
+import { pdfService } from '../../../core/services/pdfService.js';
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function generarClaveAleatoria(longitud = 8): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const bytes = crypto.randomBytes(longitud);
+    return Array.from(bytes).map(b => chars[b % chars.length]).join('');
+}
+
+function normalizarRol(rol: string): 'ADMIN' | 'PROFESOR' | 'ESTUDIANTE' {
+    const map: Record<string, 'ADMIN' | 'PROFESOR' | 'ESTUDIANTE'> = {
+        admin: 'ADMIN', administrator: 'ADMIN', ADMIN: 'ADMIN', ADMINISTRATOR: 'ADMIN',
+        teacher: 'PROFESOR', profesor: 'PROFESOR', TEACHER: 'PROFESOR', PROFESOR: 'PROFESOR',
+        student: 'ESTUDIANTE', estudiante: 'ESTUDIANTE', STUDENT: 'ESTUDIANTE', ESTUDIANTE: 'ESTUDIANTE',
+    };
+    return map[rol] ?? 'ESTUDIANTE';
+}
+
+const ESTADOS_MATRICULA_BLOQUEADOS = new Set(['CANCELADA', 'FINALIZADA', 'SIN_PAGAR']);
+const LABEL_ESTADO_MATRICULA: Record<string, string> = {
+    ACTIVA: 'activa',
+    CANCELADA: 'cancelada',
+    FINALIZADA: 'finalizada',
+    SIN_PAGAR: 'sin pagar',
+};
+
+function periodoSortKey(periodo?: string): number {
+    if (!periodo) return 0;
+    const raw = String(periodo).trim();
+    if (/^\d{4}-\d+$/.test(raw)) {
+        const [anio, numeroPeriodo] = raw.split('-').map(Number);
+        return anio * 10 + numeroPeriodo;
+    }
+    if (/^\d+$/.test(raw)) {
+        return new Date().getFullYear() * 10 + Number(raw);
+    }
+    return 0;
+}
+
+async function validarAccesoEstudiantePorMatricula(username: string): Promise<void> {
+    const matriculas = await MatriculaModel.find({ estudianteId: username }).lean();
+    if (!matriculas.length) return;
+
+    const ultimaMatricula = [...matriculas].sort((a: any, b: any) => {
+        const periodoDiff = periodoSortKey(b.periodo) - periodoSortKey(a.periodo);
+        if (periodoDiff !== 0) return periodoDiff;
+        return new Date(b.fechaMatricula ?? 0).getTime() - new Date(a.fechaMatricula ?? 0).getTime();
+    })[0];
+
+    const estado = String(ultimaMatricula?.estado ?? '').toUpperCase();
+    if (estado === 'ACTIVA') return;
+    if (!ESTADOS_MATRICULA_BLOQUEADOS.has(estado)) return;
+
+    const estadoLabel = LABEL_ESTADO_MATRICULA[estado] ?? estado.toLowerCase();
+    throw new Error(`Acceso bloqueado: tu matr�cula est� ${estadoLabel}. Contacta a la instituci�n.`);
+}
+
+// ─── Helper: verificar que el periodo no esté cerrado ────────────────────────
+
+// Parsear periodo con formato "YYYY-N" o "N"
+function parsePeriodo(periodo: string): { anio: number; numeroPeriodo: number } {
+    if (periodo.includes('-')) {
+        const parts = periodo.split('-');
+        // Formato "2026-1": primer segmento es año, segundo es número de periodo
+        const anio = parseInt(parts[0]);
+        const numeroPeriodo = parseInt(parts[1]);
+        if (!isNaN(anio) && !isNaN(numeroPeriodo) && anio > 2000) {
+            return { anio, numeroPeriodo };
+        }
+    }
+    // Formato "1", "2", "3" — usar año actual
+    return { anio: new Date().getFullYear(), numeroPeriodo: parseInt(periodo) };
+}
+
+function mismoAnioYPrevios(periodoBase: string, periodoComparado?: string | null): boolean {
+    if (!periodoComparado) return false;
+    const base = parsePeriodo(periodoBase);
+    const actual = parsePeriodo(String(periodoComparado));
+    return actual.anio === base.anio && actual.numeroPeriodo <= base.numeroPeriodo;
+}
+
+function promedioNumeros(numeros: number[]): number | null {
+    if (!numeros.length) return null;
+    return numeros.reduce((s, n) => s + Number(n), 0) / numeros.length;
+}
+
+function redondearNota(nota: any): number {
+    const n = Number(nota);
+    return Number.isFinite(n) ? Math.round((n + Number.EPSILON) * 100) / 100 : n;
+}
+
+function normalizarTextoBase(valor: any): string {
+    return String(valor || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function claveMallaCurso(cursoId: any): string {
+    return '__curso__:' + String(cursoId || '').trim();
+}
+
+function esClaveMallaCurso(asignaturaId: any): boolean {
+    return String(asignaturaId || '').startsWith('__curso__:');
+}
+
+function valoracionDesdeNota(nota: number | null): string {
+    if (nota === null) return 'Sin nota';
+    if (nota >= 4.6) return 'Superior';
+    if (nota >= 4.0) return 'Alto';
+    if (nota >= 3.5) return 'B�sico';
+    return 'Bajo';
+}
+
+function fechaInicioDiaColombia(valor: any): Date {
+    const raw = String(valor || '').trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(`${raw}T00:00:00.000-05:00`);
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?$/.test(raw)) return new Date(`${raw}-05:00`);
+    return new Date(raw);
+}
+
+function fechaFinDiaColombia(valor: any): Date {
+    const raw = String(valor || '').trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(`${raw}T23:59:59.999-05:00`);
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?$/.test(raw)) return new Date(`${raw}-05:00`);
+    return new Date(raw);
+}
+function normalizarCursoNombre(nombre = ''): string {
+    return String(nombre)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+}
+
+function esCursoPreescolarNombre(nombre = ''): boolean {
+    const n = normalizarCursoNombre(nombre);
+    return ['parvulos', 'parvulo', 'pre jardin', 'prejardin', 'jardin', 'transicion'].some(k => n.includes(k))
+        || ['parv', 'pre jard', 'prejard', 'jard', 'trans'].some(k => n.includes(k));
+}
+
+function esCursoPrimariaNombre(nombre = ''): boolean {
+    const n = normalizarCursoNombre(nombre);
+    return n.includes('primaria') || ['primero', 'segundo', 'tercero', 'cuarto', 'quinto'].some(k => n.includes(k))
+        || /\b(1|2|3|4|5)(ro|do|to)?\b/.test(n);
+}
+
+async function profesorPuedeGestionarCursoPreescolar(cursoId: string, profesorId: string, repositories: any): Promise<boolean> {
+    const curso = await repositories.cursoRepository.findById(cursoId).catch(() => null);
+    if (!curso || !esCursoPreescolarNombre(curso.nombre || '')) return false;
+    if (String(curso.profesorId || '') === String(profesorId)) return true;
+    const asignatura = await AsignaturaModel.findOne({ cursoId, profesorId }).lean().catch(() => null);
+    return !!asignatura;
+}
+function indicadoresParaEstudiante(ind: any, estudianteId?: string | null) {
+    const estId = estudianteId ? String(estudianteId) : '';
+    const porEstudiante = Array.isArray(ind?.porEstudiante) ? ind.porEstudiante : [];
+    const especifico = estId
+        ? porEstudiante.find((item: any) => String(item.estudianteId) === estId)
+        : null;
+    const base = ind ?? {};
+    const fuente = especifico
+        ? {
+            ...especifico,
+            saber: Array.isArray(especifico.saber) && especifico.saber.length ? especifico.saber : base.saber,
+            hacer: Array.isArray(especifico.hacer) && especifico.hacer.length ? especifico.hacer : base.hacer,
+            ser: Array.isArray(especifico.ser) ? especifico.ser : base.ser,
+            intro: typeof especifico.intro === 'string' && especifico.intro.trim() ? especifico.intro : base.intro,
+        }
+        : (estId && porEstudiante.length ? {} : base);
+    const estudianteIds = especifico
+        ? [String(especifico.estudianteId)]
+        : porEstudiante
+            .filter((item: any) =>
+                JSON.stringify(item.saber ?? []) === JSON.stringify(fuente.saber ?? []) &&
+                JSON.stringify(item.hacer ?? []) === JSON.stringify(fuente.hacer ?? []) &&
+                JSON.stringify(item.ser ?? []) === JSON.stringify(fuente.ser ?? []),
+            )
+            .map((item: any) => String(item.estudianteId));
+
+    return {
+        id: ind?._id?.toString?.() ?? ind?.id ?? '',
+        asignaturaId: String(ind?.asignaturaId ?? ''),
+        periodo: String(ind?.periodo ?? ''),
+        saber: Array.isArray(fuente.saber) ? fuente.saber : [],
+        hacer: Array.isArray(fuente.hacer) ? fuente.hacer : [],
+        ser: Array.isArray(fuente.ser) ? fuente.ser : [],
+        intro: typeof fuente.intro === 'string' ? fuente.intro : '',
+        estudianteIds,
+        creadoPor: ind?.creadoPor,
+    };
+}
+
+async function obtenerTextoDirectorBoletin(cursoId: string, estudianteId: string, periodo: string): Promise<any | null> {
+    if (!cursoId || !estudianteId || !periodo) return null;
+    return await TextoDirectorBoletinModel.findOne({
+        cursoId: String(cursoId),
+        estudianteId: String(estudianteId),
+        periodo: String(periodo),
+    }).lean().catch(() => null);
+}
+
+function mapearTextoDirectorBoletin(doc: any): any {
+    if (!doc) return null;
+    return {
+        id: String(doc._id ?? doc.id ?? ''),
+        cursoId: String(doc.cursoId ?? ''),
+        estudianteId: String(doc.estudianteId ?? ''),
+        periodo: String(doc.periodo ?? ''),
+        profesorId: String(doc.profesorId ?? ''),
+        introPreescolar: String(doc.introPreescolar ?? ''),
+        objetivoGeneralPrimaria: String(doc.objetivoGeneralPrimaria ?? ''),
+    };
+}
+
+async function validarDirectorGrupo(cursoId: string, user: any, repositories: any): Promise<any> {
+    if (!user) throw new Error('No autenticado');
+    const curso = await repositories.cursoRepository.findById(String(cursoId)).catch(() => null);
+    if (!curso) throw new Error('Curso no encontrado');
+    if (user.role === 'ADMIN') return curso;
+    if (user.role !== 'PROFESOR') throw new Error('No autorizado');
+    if (String(curso.profesorId || '').trim() !== String(user.username || '').trim()) {
+        throw new Error('Solo el director de grupo puede guardar este texto del boletin');
+    }
+    return curso;
+}
+
+async function calcularPuestoCurso(
+    cursoId: string,
+    periodo: string,
+    estudianteObjetivoId: string,
+    asigIdsCurso: Set<string>,
+): Promise<number | null> {
+    let matriculas = await MatriculaModel.find({
+        cursoId,
+        periodo,
+    }).lean().catch(() => []);
+
+    if (!(matriculas as any[]).length) {
+        matriculas = await MatriculaModel.find({
+            cursoId,
+        }).lean().catch(() => []);
+    }
+
+    const estudiantesCurso = [...new Set((matriculas as any[]).map((m: any) => String(m.estudianteId)).filter(Boolean))];
+    if (!estudiantesCurso.length || !asigIdsCurso.size) return null;
+
+    const calificaciones = await CalificacionModel.find({
+        estudianteId: { $in: estudiantesCurso },
+        asignaturaId: { $in: [...asigIdsCurso] },
+        nombreActividad: { $ne: '__boletin__' },
+    }).lean().catch(() => []);
+
+    const estudianteMap: Record<string, Record<string, number[]>> = {};
+
+    for (const cal of calificaciones as any[]) {
+        if (String(cal.periodo) !== String(periodo)) continue;
+        const estId = String(cal.estudianteId);
+        const asigId = String(cal.asignaturaId);
+        estudianteMap[estId] ||= {};
+        estudianteMap[estId][asigId] ||= [];
+        estudianteMap[estId][asigId].push(Number(cal.nota));
+    }
+
+    const promedios = estudiantesCurso
+        .map((estId) => {
+            const asignaturas = estudianteMap[estId] || {};
+            const promediosMaterias = Object.values(asignaturas)
+                .map((notas: number[]) => promedioNumeros(notas))
+                .filter((nota): nota is number => nota !== null);
+
+            const promedio = promedioNumeros(promediosMaterias);
+            return promedio === null ? null : { estId, promedio: redondearNota(promedio) };
+        })
+        .filter((item): item is { estId: string; promedio: number } => item !== null)
+        .sort((a, b) => b.promedio - a.promedio || a.estId.localeCompare(b.estId, 'es', { sensitivity: 'base' }));
+
+    if (!promedios.length) return null;
+
+    let puesto = 1;
+    let anterior: number | null = null;
+    for (let i = 0; i < promedios.length; i++) {
+        const actual = promedios[i];
+        if (anterior !== null && Math.abs(actual.promedio - anterior) > 0.0001) {
+            puesto = i + 1;
+        }
+        if (actual.estId === String(estudianteObjetivoId)) return puesto;
+        anterior = actual.promedio;
+    }
+
+    return null;
+}
+
+async function generarBoletinAcumuladoBase64(
+    repositories: any,
+    estudianteId: string,
+    periodo: string,
+    observacionGeneral = '',
+): Promise<string> {
+    const estudiantePorCedula = await repositories.estudianteRepository.findByCedula(estudianteId).catch(() => null);
+    const estudiante = estudiantePorCedula ??
+        await repositories.estudianteRepository.findById(estudianteId).catch(() => null);
+    if (!estudiante) throw new Error(`Estudiante ${estudianteId} no encontrado`);
+
+    const estIdBoletin = estudiante.cedula ?? estudianteId;
+    const matriculas = await repositories.matriculaRepository
+        .findByEstudianteId(estudiante.cedula ?? estudianteId).catch(() => []);
+    const mat = matriculas.find((m: any) => m.periodo === periodo) ?? matriculas[0];
+    const curso = mat ? await repositories.cursoRepository.findById(mat.cursoId).catch(() => null) : null;
+    const esPreescolar = esCursoPreescolarNombre(curso?.nombre ?? '');
+    const esPrimaria = esCursoPrimariaNombre(curso?.nombre ?? '');
+
+    const todasLasCalificaciones = await repositories.calificacionRepository.findByEstudianteId(estIdBoletin).catch(() => []);
+    const calsAcumuladasBase = (todasLasCalificaciones || []).filter((c: any) =>
+        c.nombreActividad !== '__boletin__' && mismoAnioYPrevios(periodo, c.periodo),
+    );
+    const observacionesBoletin = (todasLasCalificaciones || []).filter((c: any) =>
+        c.nombreActividad === '__boletin__' && String(c.periodo) === String(periodo),
+    );
+    const observacionBoletinPorAsignatura: Record<string, string> = {};
+    for (const cal of observacionesBoletin) {
+        const asignaturaId = String(cal.asignaturaId);
+        const observacion = String(cal.observaciones ?? '').trim();
+        if (asignaturaId && observacion) observacionBoletinPorAsignatura[asignaturaId] = observacion;
+    }
+
+    const asignaturasCurso = curso
+        ? await repositories.asignaturaRepository.findByCursoId(String(curso.id ?? curso._id)).catch(() => [])
+        : [];
+    const asigIdsCurso = new Set<string>((asignaturasCurso || []).map((a: any) => String(a.id ?? a._id)));
+    const asigOrdenCurso: Record<string, number> = {};
+    (asignaturasCurso || []).forEach((a: any, index: number) => {
+        asigOrdenCurso[String(a.id ?? a._id)] = index;
+    });
+
+    let calsAcumuladas = calsAcumuladasBase;
+    const calsCursoPeriodo = calsAcumuladasBase.filter((c: any) =>
+        asigIdsCurso.has(String(c.asignaturaId)) && String(c.periodo) === String(periodo),
+    );
+    if (asigIdsCurso.size && calsCursoPeriodo.length && !esPrimaria) {
+        calsAcumuladas = calsAcumuladasBase.filter((c: any) => asigIdsCurso.has(String(c.asignaturaId)));
+    }
+
+    if (!calsAcumuladas.length && !esPreescolar) throw new Error('No hay calificaciones para este per�odo');
+
+    const asigIdsUnicos = [...new Set([
+        ...calsAcumuladas.map((c: any) => String(c.asignaturaId)),
+        ...(esPreescolar || esPrimaria ? [...asigIdsCurso] : []),
+    ])];
+    const asigsBatch: any[] = await repositories.asignaturaRepository.findByIds(asigIdsUnicos).catch(() => []);
+    const asigById: Record<string, any> = {};
+    for (const a of asigsBatch) asigById[String(a.id ?? a._id)] = a;
+    const asigCursoPorNombre: Record<string, any> = {};
+    if (esPrimaria) {
+        for (const a of asignaturasCurso || []) {
+            const clave = normalizarTextoBase(a?.nombre);
+            if (clave) asigCursoPorNombre[clave] = a;
+        }
+    }
+
+    const asigMap: Record<string, { asig: any; notasPorPeriodo: Record<number, number[]> }> = {};
+    for (const cal of calsAcumuladas) {
+        const originalId = String(cal.asignaturaId);
+        const asigOriginal = asigById[originalId] ?? null;
+        const asigCursoEquivalente = esPrimaria
+            ? asigCursoPorNombre[normalizarTextoBase(asigOriginal?.nombre)]
+            : null;
+        if (esPrimaria && !asigIdsCurso.has(originalId) && !asigCursoEquivalente) continue;
+        const k = String(asigCursoEquivalente ? (asigCursoEquivalente.id ?? asigCursoEquivalente._id) : originalId);
+        if (!asigMap[k]) {
+            asigMap[k] = { asig: asigById[k] ?? asigCursoEquivalente ?? asigOriginal, notasPorPeriodo: {} };
+        }
+        const numeroPeriodo = parsePeriodo(String(cal.periodo || periodo)).numeroPeriodo;
+        if (!asigMap[k].notasPorPeriodo[numeroPeriodo]) asigMap[k].notasPorPeriodo[numeroPeriodo] = [];
+        asigMap[k].notasPorPeriodo[numeroPeriodo].push(Number(cal.nota));
+    }
+
+    if (esPreescolar || esPrimaria) {
+        for (const a of asignaturasCurso || []) {
+            const k = String(a.id ?? a._id);
+            if (!asigMap[k]) asigMap[k] = { asig: asigById[k] ?? a, notasPorPeriodo: {} };
+        }
+    }
+
+    const profIdSet = new Set<string>();
+    for (const { asig } of Object.values(asigMap)) {
+        if (asig?.profesorId) profIdSet.add(String(asig.profesorId));
+    }
+    const profIds = [...profIdSet];
+    const profsBatch: any[] = profIds.length
+        ? await Promise.all(profIds.map(id => repositories.profesorRepository.findById(id).catch(() => null)))
+        : [];
+    const profById: Record<string, any> = {};
+    profsBatch.forEach(p => { if (p) profById[String(p.id ?? p._id)] = p; });
+
+    const asigIdsList = Object.keys(asigMap);
+    const estIdStr = String(estudiante.cedula ?? estudiante.id);
+    const [indicadoresBatch, comportamientosBatch, asistenciasData] = await Promise.all([
+        IndicadoresModel.find({
+            $or: [
+                { asignaturaId: { $in: asigIdsList } },
+                { asignaturaId: { $in: asigIdsList.map(id => id.toString()) } },
+            ],
+            periodo,
+        }).lean().catch(() => []),
+        ComportamientoModel.find({
+            estudianteId: estIdStr,
+            asignaturaId: { $in: asigIdsList },
+            periodo,
+        }).lean().catch(() => []),
+        AsistenciaModel.aggregate([
+            { $match: { estudianteId: estIdStr, asignaturaId: { $in: asigIdsList }, periodo, estado: { $in: ['AUSENTE', 'EXCUSA'] } } },
+            { $group: { _id: { asignaturaId: '$asignaturaId', estado: '$estado' }, count: { $sum: 1 } } },
+        ]).catch(() => []),
+    ]);
+
+    const indByAsig: Record<string, any> = {};
+    for (const ind of indicadoresBatch as any[]) indByAsig[String(ind.asignaturaId)] = ind;
+    const compByAsig: Record<string, any> = {};
+    for (const comp of comportamientosBatch as any[]) compByAsig[String(comp.asignaturaId)] = comp;
+    const faltasByAsig: Record<string, number> = {};
+    const faltasJustificadasByAsig: Record<string, number> = {};
+    for (const row of asistenciasData as any[]) {
+        const asignaturaId = String(row._id?.asignaturaId ?? row._id);
+        const estado = String(row._id?.estado ?? 'AUSENTE');
+        if (estado === 'EXCUSA') faltasJustificadasByAsig[asignaturaId] = row.count;
+        else faltasByAsig[asignaturaId] = row.count;
+    }
+
+    const periodoObjetivo = parsePeriodo(periodo).numeroPeriodo;
+    const calificacionesBoletin = Object.entries(asigMap).map(([asignaturaId, { asig, notasPorPeriodo }]) => {
+        const promediosPeriodos: Array<number | null> = [1, 2, 3].map((numeroPeriodo) =>
+            promedioNumeros(notasPorPeriodo[numeroPeriodo] ?? []),
+        );
+        const prom = promediosPeriodos[periodoObjetivo - 1] ?? 0;
+        const valoracion = valoracionDesdeNota(prom);
+        const resumenNotas =
+            periodoObjetivo === 1
+                ? `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '�'}`
+                : periodoObjetivo === 2
+                    ? `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '�'} � P2: ${promediosPeriodos[1] !== null ? promediosPeriodos[1]!.toFixed(2) : '�'} � Promedio: ${prom.toFixed(2)}`
+                    : `P1: ${promediosPeriodos[0] !== null ? promediosPeriodos[0]!.toFixed(2) : '�'} � P2: ${promediosPeriodos[1] !== null ? promediosPeriodos[1]!.toFixed(2) : '�'} � P3: ${promediosPeriodos[2] !== null ? promediosPeriodos[2]!.toFixed(2) : '�'} � Nota final: ${prom.toFixed(2)}`;
+
+        let docenteNombre = 'Docente';
+        if (asig?.profesorId) {
+            const doc = profById[String(asig.profesorId)];
+            if (doc) docenteNombre = `${doc.nombre} ${doc.primerApellido}`;
+        }
+
+        const ind = indByAsig[asignaturaId] ? indicadoresParaEstudiante(indByAsig[asignaturaId], estIdStr) : null;
+        const comp = compByAsig[asignaturaId] ?? null;
+        const faltasSinJustificar = faltasByAsig[asignaturaId] ?? 0;
+        const faltasJustificadas = faltasJustificadasByAsig[asignaturaId] ?? 0;
+        const faltasCount = faltasSinJustificar + faltasJustificadas;
+
+        return {
+            asignaturaId,
+            asignaturaNombre: asig?.nombre ?? asignaturaId,
+            docenteNombre,
+            valoracion,
+            nota: prom,
+            resumenNotas,
+            faltas: faltasCount,
+            faltasJustificadas,
+            observacion: observacionBoletinPorAsignatura[asignaturaId] ?? '',
+            indicadores: {
+                saber: ind?.saber ?? [],
+                hacer: ind?.hacer ?? [],
+                ser:   ind?.ser   ?? [],
+                intro: ind?.intro ?? '',
+            },
+            comportamiento: comp ? { nota: comp.nota, nivel: comp.nivel, descripcion: comp.descripcion } : undefined,
+        };
+    }).sort((a, b) => {
+        const ordenA = asigOrdenCurso[String(a.asignaturaId)] ?? Number.MAX_SAFE_INTEGER;
+        const ordenB = asigOrdenCurso[String(b.asignaturaId)] ?? Number.MAX_SAFE_INTEGER;
+        if (ordenA !== ordenB) return ordenA - ordenB;
+        return String(a.asignaturaNombre || '').localeCompare(String(b.asignaturaNombre || ''), 'es', { sensitivity: 'base' });
+    });
+
+    const textoDirectorBoletin = curso
+        ? await obtenerTextoDirectorBoletin(String(curso.id ?? curso._id), String(estIdBoletin), String(periodo))
+        : null;
+    const observacionManual = String(observacionGeneral || '').trim();
+    const introDirector = String(textoDirectorBoletin?.introPreescolar || '').trim();
+    const objetivoDirector = String(textoDirectorBoletin?.objetivoGeneralPrimaria || '').trim();
+    const introPreescolar = esPreescolar
+        ? (observacionManual || introDirector || Object.values(indByAsig)
+            .map((ind: any) => String(indicadoresParaEstudiante(ind, estIdStr)?.intro || '').trim())
+            .find((texto: string) => Boolean(texto)) || '')
+        : observacionManual;
+    const observacionBoletinGeneral = esPreescolar ? introPreescolar : (observacionManual || objetivoDirector);
+
+    let directorNombre = 'Coordinaci�n Acad�mica';
+    if (curso?.profesorId) {
+        const dirProf = await repositories.profesorRepository.findById(curso.profesorId).catch(() => null);
+        if (dirProf) directorNombre = `${dirProf.nombre} ${dirProf.primerApellido}`;
+    }
+
+    const puestoCurso = curso && esPrimaria
+        ? await calcularPuestoCurso(
+            String(curso.id ?? curso._id),
+            String(periodo),
+            String(estIdBoletin),
+            asigIdsCurso.size ? asigIdsCurso : new Set<string>(asigIdsList.map(String)),
+        )
+        : null;
+
+    const buf = await pdfService.generateBoletinGardner({
+        estudiante: {
+            nombre: estudiante.nombre,
+            primerApellido: estudiante.primerApellido,
+            segundoApellido: estudiante.segundoApellido,
+            cedula: estudiante.cedula,
+        },
+        curso: { nombre: curso?.nombre ?? 'Sin curso' },
+        director: directorNombre,
+        periodo,
+        anio: new Date().getFullYear().toString(),
+        calificaciones: calificacionesBoletin,
+        observacionGeneral: observacionBoletinGeneral,
+        puestoCurso,
+    });
+    return Buffer.from(buf).toString('base64');
+}
+
+
+async function validarCalificacionNoPreescolar(asignaturaId: string, repositories: any): Promise<void> {
+    const asignatura = await repositories.asignaturaRepository.findById(asignaturaId).catch(() => null);
+    if (!asignatura?.cursoId) return;
+    const curso = await repositories.cursoRepository.findById(String(asignatura.cursoId)).catch(() => null);
+    if (curso && esCursoPreescolarNombre(curso.nombre)) {
+        throw new Error('En preescolar no se registran notas num�ricas por materia. Usa indicadores pedag�gicos.');
+    }
+}
+
+async function validarComportamientoNoPreescolar(asignaturaId: string, repositories: any): Promise<void> {
+    const asignatura = await repositories.asignaturaRepository.findById(asignaturaId).catch(() => null);
+    if (!asignatura?.cursoId) return;
+    const curso = await repositories.cursoRepository.findById(String(asignatura.cursoId)).catch(() => null);
+    if (curso && esCursoPreescolarNombre(curso.nombre)) {
+        throw new Error('En preescolar no se registra comportamiento. Usa solo indicadores pedag�gicos.');
+    }
+}
+async function verificarPeriodoAbierto(periodo: string): Promise<void> {
+    const { anio, numeroPeriodo } = parsePeriodo(periodo);
+    const config = await PeriodoConfigModel.findOne({ anio, numeroPeriodo });
+    if (!config) {
+        throw new Error(`El periodo ${periodo} no esta configurado. Contacte al administrador.`);
+    }
+    if (!config.abierto) {
+        throw new Error(
+            `El periodo ${periodo} esta cerrado. Contacte al administrador para reactivarlo.`
+        );
+    }
+    const ahora = new Date();
+    if (config.fechaApertura && ahora < config.fechaApertura) {
+        throw new Error(
+            `El periodo ${periodo} aun no esta habilitado para registrar notas.`
+        );
+    }
+    if (config.fechaCierre && ahora > config.fechaCierre) {
+        await PeriodoConfigModel.updateOne({ anio, numeroPeriodo }, { abierto: false });
+        throw new Error(
+            `El periodo ${periodo} cerró el ${config.fechaCierre.toLocaleDateString('es-CO')}. Contacte al administrador.`
+        );
+    }
+}
+
+// ─── Resolvers ────────────────────────────────────────────────────────────────
+
+export const resolvers = {
+
+    // ═══════════════════════════
+    //  QUERIES
+    // ═══════════════════════════
+    Query: {
+
+        me: async (_: any, __: any, { user, repositories }: any) => {
+            if (!user) throw new Error('No autenticado');
+            return repositories.userRepository.findByUsername(user.username);
+        },
+
+        // Estudiantes
+        estudiantes: async (_: any, __: any, { repositories }: any) =>
+            await repositories.estudianteRepository.findAll(),
+
+        estudiante: async (_: any, { id }: any, { repositories }: any) =>
+            await repositories.estudianteRepository.findById(id),
+
+        estudiantesPorIds: async (_: any, { ids }: { ids: string[] }, { repositories }: any) => {
+            if (!ids?.length) return [];
+            return await repositories.estudianteRepository.findByIds(ids);
+        },
+
+        // Profesores
+        profesores: async (_: any, __: any, { repositories }: any) =>
+            await repositories.profesorRepository.findAll(),
+
+        profesor: async (_: any, { id }: any, { repositories }: any) =>
+            await repositories.profesorRepository.findById(id),
+
+        // Cursos
+        cursos: async (_: any, __: any, { repositories }: any) =>
+            await repositories.cursoRepository.findAll(),
+
+        curso: async (_: any, { id }: any, { repositories }: any) =>
+            await repositories.cursoRepository.findById(id),
+
+        // Calificaciones
+        calificaciones: async (_: any, __: any, { repositories }: any) =>
+            await repositories.calificacionRepository.findAll(),
+
+        calificacion: async (_: any, { id }: any, { repositories }: any) =>
+            await repositories.calificacionRepository.findById(id),
+
+        calificacionesPorEstudiante: async (_: any, { estudianteId }: any, { repositories }: any) =>
+            await repositories.calificacionRepository.findByEstudianteId(estudianteId),
+
+        calificacionesPorCurso: async (_: any, { cursoId }: any, { repositories }: any) =>
+            await repositories.calificacionRepository.findByCursoId(cursoId),
+
+        calificacionesPorAsignaturaYPeriodo: async (
+            _: any,
+            { asignaturaId, periodo }: { asignaturaId: string; periodo: string },
+            { repositories }: any,
+        ) => {
+            // Fix N+1: query directa en MongoDB en lugar de findAll() + filter en JS
+            return await repositories.calificacionRepository.findByAsignaturaYPeriodo(asignaturaId, periodo);
+        },
+
+        // Indicadores
+        indicadoresPorAsignatura: async (_: any, { asignaturaId, periodo, estudianteId }: any) => {
+            const doc = await IndicadoresModel.findOne({ asignaturaId, periodo }).lean();
+            return doc ? indicadoresParaEstudiante(doc, estudianteId) : null;
+        },
+
+        indicadoresPorProfesor: async (_: any, { profesorId, periodo }: any, { repositories }: any) => {
+            const asigs = await repositories.asignaturaRepository.findByProfesorId(profesorId);
+            const ids = asigs.map((a: any) => a.id);
+            if (!ids.length) return [];
+            const docs = await IndicadoresModel.find({ asignaturaId: { $in: ids }, periodo }).lean();
+            return docs.map((doc: any) => indicadoresParaEstudiante(doc));
+        },
+
+        textoDirectorBoletin: async (_: any, { cursoId, estudianteId, periodo }: any, { user, repositories }: any) => {
+            await validarDirectorGrupo(String(cursoId), user, repositories);
+            const doc = await obtenerTextoDirectorBoletin(String(cursoId), String(estudianteId), String(periodo));
+            return mapearTextoDirectorBoletin(doc);
+        },
+        // Configuración de periodos
+        periodoConfig: async (_: any, { anio, numeroPeriodo }: any) => {
+            const config = await PeriodoConfigModel.findOne({ anio, numeroPeriodo }).lean();
+            if (!config) return null;
+            return { ...config, id: (config as any)._id?.toString(), pesoPorCorte: 100 / config.numCortes };
+        },
+
+        periodosConfig: async (_: any, { anio }: any) => {
+            const configs = await PeriodoConfigModel.find({ anio }).sort({ numeroPeriodo: 1 }).lean();
+            return configs.map((c: any) => ({
+                ...c,
+                id: c._id?.toString(),
+                pesoPorCorte: 100 / c.numCortes,
+                fechaApertura: c.fechaApertura ? new Date(c.fechaApertura).toISOString() : null,
+                fechaCierre:   c.fechaCierre   ? new Date(c.fechaCierre).toISOString()   : null,
+            }));
+        },
+
+        // Comportamiento
+        comportamientosPorAsignatura: async (_: any, { asignaturaId, periodo }: any) =>
+            await ComportamientoModel.find({ asignaturaId, periodo }).lean(),
+
+        comportamientoEstudiante: async (_: any, { estudianteId, asignaturaId, periodo }: any) =>
+            await ComportamientoModel.findOne({ estudianteId, asignaturaId, periodo }).lean(),
+
+        // Cronograma
+        cronograma: async (_: any, { anio }: any) => {
+            const inicio = new Date(`${anio}-01-01`);
+            const fin    = new Date(`${anio}-12-31`);
+            const docs = await CronogramaModel.find({ fechaInicio: { $gte: inicio, $lte: fin } })
+                .sort({ fechaInicio: 1 }).lean();
+            return docs.map((d: any) => ({
+                ...d,
+                id: d._id?.toString(),
+                fechaInicio: d.fechaInicio instanceof Date ? d.fechaInicio.toISOString().split('T')[0] : d.fechaInicio,
+                fechaFin:    d.fechaFin    instanceof Date ? d.fechaFin.toISOString().split('T')[0]    : d.fechaFin,
+            }));
+        },
+
+        cronogramaPorCurso: async (_: any, { cursoId, anio }: any) => {
+            const inicio = new Date(`${anio}-01-01`);
+            const fin    = new Date(`${anio}-12-31`);
+            const docs = await CronogramaModel.find({
+                $or: [{ cursoId }, { cursoId: null }, { cursoId: { $exists: false } }],
+                fechaInicio: { $gte: inicio, $lte: fin }
+            }).sort({ fechaInicio: 1 }).lean();
+            return docs.map((d: any) => ({
+                ...d,
+                id: d._id?.toString(),
+                fechaInicio: d.fechaInicio instanceof Date ? d.fechaInicio.toISOString().split('T')[0] : d.fechaInicio,
+                fechaFin:    d.fechaFin    instanceof Date ? d.fechaFin.toISOString().split('T')[0]    : d.fechaFin,
+            }));
+        },
+
+        // Boletines
+        boletines: async (_: any, __: any, { repositories }: any) =>
+            await repositories.boletinRepository.findAll(),
+
+        boletin: async (_: any, { id }: any, { repositories }: any) =>
+            await repositories.boletinRepository.findById(id),
+
+        boletinesPorEstudiante: async (_: any, { estudianteId }: any, { repositories }: any) =>
+            await repositories.boletinRepository.findByEstudianteId(estudianteId),
+
+        exportarBoletin: async (_: any, { id }: { id: string }, { repositories }: any) => {
+            const boletin = await repositories.boletinRepository.findById(id);
+            if (!boletin) throw new Error(`Bolet�n ${id} no encontrado`);
+            return await generarBoletinAcumuladoBase64(
+                repositories,
+                String(boletin.estudianteId),
+                String(boletin.periodo),
+                String(boletin.observaciones ?? ''),
+            );
+        },
+
+        exportarBoletinEstudiante: async (
+            _: any,
+            { estudianteId, periodo }: { estudianteId: string; periodo: string },
+            { repositories }: any,
+        ) => {
+            return await generarBoletinAcumuladoBase64(
+                repositories,
+                String(estudianteId),
+                String(periodo),
+                '',
+            );
+        },
+
+        boletinesPorCursoPeriodo: async (_: any, { cursoId, periodo }: any, { repositories }: any) => {
+            // Fix N+1: query directa en lugar de findAll() + filter en JS
+            return await repositories.boletinRepository.findByCursoYPeriodo(cursoId, periodo);
+        },
+
+        // Matrículas
+        matriculas: async (_: any, __: any, { repositories }: any) =>
+            await repositories.matriculaRepository.findAll(),
+
+        matricula: async (_: any, { id }: any, { repositories }: any) =>
+            await repositories.matriculaRepository.findById(id),
+
+        matriculasPorEstudiante: async (_: any, { estudianteId }: any, { repositories }: any) => {
+            const est = await repositories.estudianteRepository.findByCedula(estudianteId);
+            if (!est) return [];
+            return await repositories.matriculaRepository.findByEstudianteId(est.cedula);
+        },
+
+        matriculasPorAsignatura: async (_: any, { asignaturaId }: any) => {
+            const docsPorAsignatura = await MatriculaModel.find({ asignaturas: asignaturaId }).exec();
+            const asignatura = await AsignaturaModel.findById(asignaturaId).lean().catch(() => null);
+            const docsPorCurso = asignatura?.cursoId
+                ? await MatriculaModel.find({
+                    cursoId: String(asignatura.cursoId),
+                }).exec()
+                : [];
+            const docsMap = new Map<string, any>();
+            [...docsPorCurso, ...docsPorAsignatura].forEach((d: any) => docsMap.set(d._id.toString(), d));
+            return [...docsMap.values()]
+                .filter(d => d.estudianteId)
+                .map(d => new Matricula(
+                    d._id.toString(),
+                    String(d.estudianteId).trim(),
+                    d.cursoId,
+                    (d.asignaturas || []).map((a: any) => a.toString()),
+                    d.estado,
+                    d.periodo,
+                    d.fechaMatricula,
+                ));
+        },
+
+        // Asignaturas
+        asignaturas: async (_: any, __: any, { repositories }: any) =>
+            await repositories.asignaturaRepository.findAll(),
+
+        asignatura: async (_: any, { id }: any, { repositories }: any) =>
+            await repositories.asignaturaRepository.findById(id),
+
+        asignaturasPorProfesor: async (_: any, { profesorId }: any, { repositories }: any): Promise<Asignatura[]> => {
+            const prof = await repositories.profesorRepository.findById(profesorId);
+            if (!prof) return [];
+            return await repositories.asignaturaRepository.findByProfesorId(profesorId);
+        },
+
+        asignaturasPorCurso: async (_: any, { cursoId }: any, { repositories }: any) =>
+            await repositories.asignaturaRepository.findByCursoId(cursoId),
+
+        // Malla curricular
+        mallasCurriculares: async (_: any, __: any, { user }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            const docs = await MallaCurricularModel.find().lean();
+            return docs.sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
+        },
+
+        mallasPorProfesor: async (_: any, { profesorId }: any, { user, repositories }: any) => {
+            if (!user || (user.role !== 'ADMIN' && String(user.username) !== String(profesorId))) throw new Error('No autorizado');
+
+            const profesorIdStr = String(profesorId);
+            const [asignaturas, cursos, rawDocs] = await Promise.all([
+                repositories.asignaturaRepository.findByProfesorId(profesorIdStr).catch(() => []),
+                repositories.cursoRepository.findAll().catch(() => []),
+                MallaCurricularModel.find({ profesorId: profesorIdStr }).lean(),
+            ]);
+            const cursosMap = new Map<string, any>((cursos || []).map((curso: any) => [String(curso?.id ?? curso?._id ?? ''), curso] as [string, any]));
+
+            const materias = new Map<string, any>();
+            const docsPorAsignatura = new Map<string, any>();
+            for (const doc of rawDocs) {
+                if (doc?.asignaturaId) docsPorAsignatura.set(String(doc.asignaturaId), doc);
+            }
+
+            for (const asig of asignaturas) {
+                const cursoAsig = cursosMap.get(String(asig?.cursoId || ''));
+                if (esCursoPreescolarNombre(cursoAsig?.nombre || '')) continue;
+                const clave = normalizarTextoBase(asig?.nombre);
+                if (!clave) continue;
+                if (!materias.has(clave)) {
+                    materias.set(clave, {
+                        clave,
+                        nombre: asig?.nombre || '',
+                        asignaturaBase: asig,
+                        asignaturas: [],
+                        cursoNombres: new Set<string>(),
+                    });
+                }
+                const grupo = materias.get(clave);
+                grupo.asignaturas.push(asig);
+                if (cursoAsig?.nombre) grupo.cursoNombres.add(cursoAsig.nombre);
+            }
+
+            const resultado: any[] = [];
+            for (const grupo of materias.values()) {
+                const asignaturaIds = grupo.asignaturas.map((a: any) => String(a.id ?? a._id ?? ''));
+                const existente = rawDocs.find((doc: any) =>
+                    String(doc.tipo || 'MATERIA') !== 'CURSO_GENERAL' && (
+                        normalizarTextoBase(doc.nombreReferencia) === grupo.clave ||
+                        asignaturaIds.includes(String(doc.asignaturaId || ''))
+                    )
+                );
+                if (existente) {
+                    resultado.push({
+                        ...existente,
+                        tipo: existente.tipo || 'MATERIA',
+                        nombreReferencia: existente.nombreReferencia || grupo.nombre,
+                        asignatura: grupo.asignaturaBase,
+                        cursoResumen: (Array.from(grupo.cursoNombres) as string[]).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' })).join(', '),
+                    });
+                    continue;
+                }
+                const legacy = grupo.asignaturas
+                    .map((a: any) => docsPorAsignatura.get(String(a.id ?? a._id ?? '')))
+                    .filter(Boolean)
+                    .sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())[0];
+                if (legacy) {
+                    resultado.push({
+                        ...legacy,
+                        tipo: legacy.tipo || 'MATERIA',
+                        nombreReferencia: legacy.nombreReferencia || grupo.nombre,
+                        asignatura: grupo.asignaturaBase,
+                        cursoResumen: (Array.from(grupo.cursoNombres) as string[]).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' })).join(', '),
+                    });
+                }
+            }
+
+            const cursosDirector = (cursos || []).filter((curso: any) => String(curso?.profesorId || '') === profesorIdStr && esCursoPreescolarNombre(curso?.nombre || ''));
+            for (const curso of cursosDirector) {
+                const cursoId = String(curso?.id ?? curso?._id ?? '');
+                if (!cursoId) continue;
+                const doc = rawDocs.find((item: any) => String(item.tipo || '') === 'CURSO_GENERAL' && String(item.cursoId || '') === cursoId)
+                    || rawDocs.find((item: any) => String(item.asignaturaId || '') === claveMallaCurso(cursoId));
+                if (!doc) continue;
+                resultado.push({
+                    ...doc,
+                    tipo: 'CURSO_GENERAL',
+                    cursoId,
+                    nombreReferencia: doc.nombreReferencia || curso.nombre,
+                    curso,
+                });
+            }
+
+            return resultado.sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
+        },
+
+        mallaPorAsignatura: async (_: any, { asignaturaId }: any, { user, repositories }: any) => {
+            const asignaturaIdStr = String(asignaturaId || '');
+            let malla = await MallaCurricularModel.findOne({ asignaturaId: asignaturaIdStr }).lean();
+            const asig = esClaveMallaCurso(asignaturaIdStr)
+                ? null
+                : await repositories.asignaturaRepository.findById(asignaturaIdStr).catch(() => null);
+
+            if (!malla && asig) {
+                const asignaturasProfesor = await repositories.asignaturaRepository.findByProfesorId(String(asig.profesorId)).catch(() => []);
+                const nombres = asignaturasProfesor
+                    .filter((item: any) => normalizarTextoBase(item?.nombre) === normalizarTextoBase(asig.nombre))
+                    .map((item: any) => String(item.id ?? item._id ?? ''));
+
+                const candidatas = await MallaCurricularModel.find({
+                    profesorId: String(asig.profesorId),
+                    $or: [
+                        { nombreReferencia: asig.nombre },
+                        { asignaturaId: { $in: nombres } },
+                    ],
+                }).lean();
+                malla = (candidatas || []).sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())[0] || null;
+            }
+
+            if (!malla) return null;
+            if (user?.role === 'ADMIN') return malla;
+            if (user?.role === 'PROFESOR' && String(asig?.profesorId) === String(user.username)) return malla;
+            throw new Error('No autorizado');
+        },
+
+
+        // Experiencias significativas
+        experienciasSignificativas: async (_: any, __: any, { user }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            return await ExperienciaSignificativaModel.find().sort({ fecha: -1, createdAt: -1 }).lean();
+        },
+
+        experienciasPorProfesor: async (_: any, { profesorId }: any, { user }: any) => {
+            if (!user || (user.role !== 'ADMIN' && String(user.username) !== String(profesorId))) throw new Error('No autorizado');
+            return await ExperienciaSignificativaModel.find({ profesorId: String(profesorId) }).sort({ fecha: -1, createdAt: -1 }).lean();
+        },
+
+        experienciasPorEstudiante: async (_: any, { estudianteId }: any, { user, repositories }: any) => {
+            if (!user) throw new Error('No autorizado');
+            if (!['ADMIN', 'PROFESOR'].includes(String(user.role || ''))) throw new Error('No autorizado');
+            const estudianteIdStr = String(estudianteId || '').trim();
+            const est = await repositories.estudianteRepository.findByCedula(estudianteIdStr).catch(() => null)
+                || await repositories.estudianteRepository.findById(estudianteIdStr).catch(() => null);
+            if (!est) return [];
+            const matriculas = await MatriculaModel.find({ estudianteId: String(est.cedula || est.id || estudianteIdStr) }).lean().catch(() => []);
+            const cursos = await Promise.all(matriculas.map((m: any) => repositories.cursoRepository.findById(String(m.cursoId || '')).catch(() => null)));
+            const cursoIds = cursos
+                .filter((curso: any) => curso && esCursoPreescolarNombre(curso.nombre || ''))
+                .map((curso: any) => String(curso.id ?? curso._id ?? ''))
+                .filter(Boolean);
+            if (!cursoIds.length) return [];
+            return await ExperienciaSignificativaModel.find({ cursoId: { $in: [...new Set(cursoIds)] } }).sort({ fecha: -1, createdAt: -1 }).lean();
+        },
+        // Asistencias
+        asistencias: async (_: any, __: any, { repositories }: any) =>
+            await repositories.asistenciaRepository.findAll(),
+
+        asistencia: async (_: any, { id }: any, { repositories }: any) =>
+            await repositories.asistenciaRepository.findById(id),
+
+        asistenciasPorAsignatura: async (_: any, { asignaturaId }: any, { repositories }: any) =>
+            await repositories.asistenciaRepository.findByAsignaturaId(asignaturaId),
+
+        asistenciasPorFecha: async (_: any, { asignaturaId, fecha }: any, { repositories }: any) =>
+            await repositories.asistenciaRepository.findByAsignaturaFecha(asignaturaId, fecha),
+
+        asistenciasPorPeriodo: async (_: any, { asignaturaId, periodo }: any, { repositories }: any) =>
+            await repositories.asistenciaRepository.findByAsignaturaPeriodo(asignaturaId, periodo),
+
+        resumenAsistencia: async (_: any, { asignaturaId, periodo }: any, { repositories }: any) => {
+            const regs = await repositories.asistenciaRepository.findByAsignaturaPeriodo(asignaturaId, periodo);
+            const map: Record<string, any[]> = {};
+            for (const r of regs) {
+                if (!map[r.estudianteId]) map[r.estudianteId] = [];
+                map[r.estudianteId].push(r);
+            }
+            return Object.entries(map).map(([estudianteId, rs]) => {
+                const total = rs.length;
+                const pres = rs.filter(r => r.estado === 'PRESENTE').length;
+                const aus  = rs.filter(r => r.estado === 'AUSENTE').length;
+                const tard = rs.filter(r => r.estado === 'TARDE').length;
+                const exc  = rs.filter(r => r.estado === 'EXCUSA').length;
+                return {
+                    estudianteId, totalClases: total, presentes: pres,
+                    ausentes: aus, tardes: tard, excusas: exc,
+                    porcentajeAsistencia: total > 0 ? Math.round(((pres + exc) / total) * 1000) / 10 : 0,
+                };
+            });
+        },
+
+        asistenciasPorEstudiante: async (_: any, { estudianteId, periodo }: any, { repositories }: any) => {
+            const todas = await repositories.asistenciaRepository.findByEstudianteId(estudianteId);
+            return periodo ? todas.filter((a: any) => a.periodo === periodo) : todas;
+        },
+
+        resumenAsistenciaEstudiante: async (_: any, { estudianteId, periodo }: any, { repositories }: any) => {
+            const todas = await repositories.asistenciaRepository.findByEstudianteId(estudianteId);
+            const regs = periodo ? todas.filter((a: any) => a.periodo === periodo) : todas;
+            const map: Record<string, any[]> = {};
+            for (const r of regs) {
+                const k = String(r.asignaturaId);
+                if (!map[k]) map[k] = [];
+                map[k].push(r);
+            }
+            return Object.entries(map).map(([asignaturaId, rs]) => {
+                const total = rs.length;
+                const pres = rs.filter(r => r.estado === 'PRESENTE').length;
+                const aus  = rs.filter(r => r.estado === 'AUSENTE').length;
+                const tard = rs.filter(r => r.estado === 'TARDE').length;
+                const exc  = rs.filter(r => r.estado === 'EXCUSA').length;
+                return {
+                    estudianteId,
+                    asignaturaId,
+                    totalClases: total, presentes: pres,
+                    ausentes: aus, tardes: tard, excusas: exc,
+                    porcentajeAsistencia: total > 0 ? Math.round(((pres + exc) / total) * 1000) / 10 : 0,
+                };
+            });
+        },
+    },
+
+    // ═══════════════════════════
+    //  MUTATIONS
+    // ═══════════════════════════
+    Mutation: {
+
+        // ── Auth ──────────────────────────────────────────────
+        login: async (_: any, { identifier, password }: any, { repositories }: any) => {
+            const authService = new AuthService(repositories.userRepository);
+            let result: any;
+            try {
+                result = await authService.authenticate(identifier, password);
+            } catch (error: any) {
+                const identificador = String(identifier ?? '').trim();
+                const clave = String(password ?? '').trim();
+                const intentoAutoProvision =
+                    identificador &&
+                    clave &&
+                    identificador === clave &&
+                    /^\d+$/.test(identificador);
+
+                if (!intentoAutoProvision) throw error;
+
+                const estudiante = await repositories.estudianteRepository.findByCedula(identificador).catch(() => null);
+                if (!estudiante) throw error;
+
+                await authService.createUserCredentials(identificador, 'ESTUDIANTE');
+                result = await authService.authenticate(identificador, clave);
+            }
+            if (!result?.user) throw new Error('Credenciales inv�lidas');
+
+            const user = result.user;
+            const role = normalizarRol(user.role);
+            let email = user.email ?? user.username;
+
+            // Enriquecer email para estudiantes
+            const isEstudiante = ['student','estudiante','STUDENT','ESTUDIANTE'].includes(user.role);
+            if (isEstudiante) {
+                await validarAccesoEstudiantePorMatricula(user.username);
+                const est = await repositories.estudianteRepository.findByCedula(user.username).catch(() => null);
+                if (est?.email) email = est.email;
+            }
+
+            const expiresIn = '24h';
+            const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+            const token = jwt.sign(
+                { id: user.id, username: user.username, role, email },
+                process.env.JWT_SECRET!,
+                { expiresIn },
+            );
+
+            return {
+                token,
+                user: { id: user.id, username: user.username, role, email },
+                isFirstLogin: result.isFirstLogin ?? false,
+                expiresAt,
+            };
+        },
+
+        register: async (_: any, { email, password, role }: any, { user, repositories }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            const authService = new AuthService(repositories.userRepository);
+            const result = await authService.register(email, password, role);
+            return { token: result.token, user: { id: result.user.id, username: email, email, role: normalizarRol(result.user.role) } };
+        },
+
+        crearAdmin: async (_: any, { email, password }: any, { user, repositories }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            const authService = new AuthService(repositories.userRepository);
+            const result = await authService.register(email, password, 'ADMIN');
+            return { token: result.token, user: { id: result.user.id, email, role: 'ADMIN' } };
+        },
+
+        cambiarPassword: async (_: any, { username, oldPassword, newPassword }: any, { repositories }: any): Promise<boolean> => {
+            const user = await repositories.userRepository.findByUsername(username);
+            if (!user) throw new Error('Usuario no encontrado');
+            const authService = new AuthService(repositories.userRepository);
+            try { await authService.authenticate(username, oldPassword); }
+            catch { throw new Error('La contrase�a actual es incorrecta'); }
+            if (!newPassword || newPassword.length < 6) throw new Error('M�nimo 6 caracteres');
+            const hashed = await bcrypt.hash(newPassword, 10);
+            const ok = await repositories.userRepository.updatePassword(username, hashed);
+            if (!ok) throw new Error('No se pudo actualizar la contrase�a');
+            return true;
+        },
+
+        cambiarPasswordPrimerLogin: async (_: any, { username, newPassword }: any, { user, repositories }: any): Promise<boolean> => {
+            // Requiere token válido y que el usuario solo pueda cambiar su propia contraseña
+            if (!user) throw new Error('No autenticado');
+            if (user.username !== username) throw new Error('No autorizado: solo puedes cambiar tu propia contrase�a');
+            const dbUser = await repositories.userRepository.findByUsername(username);
+            if (!dbUser) throw new Error('Credenciales inv�lidas');
+            if (!newPassword || newPassword.length < 6) throw new Error('M�nimo 6 caracteres');
+            const hashed = await bcrypt.hash(newPassword, 10);
+            const ok = await repositories.userRepository.updatePassword(username, hashed);
+            if (!ok) throw new Error('No se pudo actualizar la contrase�a');
+            return true;
+        },
+
+        olvidarPassword: async (_: any, { identifier }: any, { repositories }: any): Promise<boolean> => {
+            let email = '', nombre = '', cedula = identifier, rolUsuario = '';
+
+            // Fix N+1: buscar primero por cedula, luego por email directo en DB (sin findAll)
+            const est = await repositories.estudianteRepository.findByCedula(identifier).catch(() => null)
+                ?? await repositories.estudianteRepository.findByEmail(identifier).catch(() => null);
+
+            if (est) {
+                email = est.email; nombre = est.nombre; cedula = est.cedula; rolUsuario = 'ESTUDIANTE';
+            } else {
+                const prof = await repositories.profesorRepository.findByCedula(identifier).catch(() => null)
+                    ?? await repositories.profesorRepository.findByEmail(identifier).catch(() => null);
+                if (prof) { email = prof.email; nombre = prof.nombre; cedula = prof.cedula; rolUsuario = 'PROFESOR'; }
+            }
+
+            if (!email) throw new Error('No se encontr� usuario con ese identificador');
+            const clave = generarClaveAleatoria();
+            let passwordReset = await repositories.userRepository.resetPassword(cedula, clave);
+            if (!passwordReset && email) {
+                passwordReset = await repositories.userRepository.resetPassword(email, clave);
+            }
+            if (!passwordReset) {
+                await repositories.userRepository.create({
+                    username: cedula,
+                    password: clave,
+                    role: rolUsuario || 'ESTUDIANTE',
+                    email,
+                    isFirstLogin: true,
+                });
+                passwordReset = true;
+            }
+            if (!passwordReset) throw new Error('No se pudo restablecer la contrase�a');
+            const emailSent = await enviarPasswordRecuperacion({ email, nombre, cedula, passwordTemporal: clave });
+            if (!emailSent) throw new Error('La contrase�a se restableci�, pero no se pudo enviar el correo');
+            return true;
+        },
+
+        // ── Credenciales ──────────────────────────────────────
+        enviarCrearCredenciales: async (
+            _: any,
+            { estudianteId, profesorId }: { estudianteId?: string; profesorId?: string },
+            { user, repositories }: any,
+        ): Promise<boolean> => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            if (!estudianteId && !profesorId) throw new Error('Proporciona estudianteId o profesorId');
+            let cedula: string, email: string, nombre: string, apellido: string, role: string;
+
+            if (profesorId) {
+                const prof = await repositories.profesorRepository.findByCedula(profesorId);
+                if (!prof) throw new Error('Profesor no encontrado');
+                cedula = profesorId; email = prof.email; nombre = prof.nombre; apellido = prof.primerApellido; role = 'PROFESOR';
+            } else {
+                const est = await repositories.estudianteRepository.findByCedula(estudianteId!);
+                if (!est) throw new Error('Estudiante no encontrado');
+                cedula = estudianteId!; email = est.email; nombre = est.nombre; apellido = est.primerApellido; role = 'ESTUDIANTE';
+            }
+
+            const yaExiste = await repositories.userRepository.findByUsername(cedula);
+            if (yaExiste) return true; // ya tiene credenciales, no generar duplicado
+
+            const authService = new AuthService(repositories.userRepository);
+            const password = await authService.createUserCredentials(cedula, role);
+            if (email) {
+                const emailSent = await enviarCredenciales({ email, nombre, apellido, cedula, password, rol: role });
+                if (!emailSent) throw new Error('Las credenciales se crearon, pero no se pudo enviar el correo');
+            } else {
+                console.warn(`No se pudo enviar credenciales por email a ${cedula}: email no registrado`);
+            }
+            return true;
+        },
+
+        generarClaveProvisional: async (
+            _: any,
+            { estudianteId, profesorId }: { estudianteId?: string; profesorId?: string },
+            { user, repositories }: any,
+        ): Promise<boolean> => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            const esProfesor = !!profesorId && !estudianteId;
+            let cedula: string, email: string, nombre: string, rolUsuario: string;
+
+            if (esProfesor) {
+                const prof = await repositories.profesorRepository.findByCedula(profesorId!);
+                if (!prof) throw new Error('Profesor no encontrado');
+                cedula = profesorId!; email = prof.email ?? ''; nombre = `${prof.nombre} ${prof.primerApellido}`; rolUsuario = 'PROFESOR';
+            } else {
+                const est = await repositories.estudianteRepository.findByCedula(estudianteId!);
+                if (!est) throw new Error('Estudiante no encontrado');
+                cedula = estudianteId!; email = est.email ?? ''; nombre = `${est.nombre} ${est.primerApellido}`; rolUsuario = 'ESTUDIANTE';
+            }
+
+            const clave = generarClaveAleatoria();
+            const userExists = await repositories.userRepository.findByUsername(cedula);
+            if (userExists) {
+                await repositories.userRepository.resetPassword(cedula, clave);
+            } else {
+                await repositories.userRepository.create({ username: cedula, password: clave, role: rolUsuario, email: email || undefined });
+            }
+            if (email) {
+                const emailSent = await enviarPasswordRecuperacion({ email, nombre: nombre.split(' ')[0], cedula, passwordTemporal: clave });
+                if (!emailSent) throw new Error('La clave provisional se gener�, pero no se pudo enviar el correo');
+            } else {
+                console.warn(`No se pudo enviar la clave provisional por email a ${cedula}: email no registrado`);
+            }
+            return true;
+        },
+
+        // ── Limpieza ──────────────────────────────────────────
+        limpiarRegistrosProblematicos: async (_: any, __: any, { user }: any): Promise<boolean> => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            await MatriculaModel.deleteMany({ $or: [{ estudianteId: null }, { estudianteId: '' }] }).exec();
+            return true;
+        },
+
+        // -- Indicadores ---------------------------------------
+        guardarTextoDirectorBoletin: async (_: any, { input }: any, { user, repositories }: any) => {
+            await verificarPeriodoAbierto(String(input.periodo));
+            const curso = await validarDirectorGrupo(String(input.cursoId), user, repositories);
+            const payload = {
+                cursoId: String(input.cursoId),
+                estudianteId: String(input.estudianteId),
+                periodo: String(input.periodo),
+                profesorId: String(curso.profesorId ?? user.username ?? ''),
+                introPreescolar: String(input.introPreescolar ?? '').trim(),
+                objetivoGeneralPrimaria: String(input.objetivoGeneralPrimaria ?? '').trim(),
+            };
+            const doc = await TextoDirectorBoletinModel.findOneAndUpdate(
+                { cursoId: payload.cursoId, estudianteId: payload.estudianteId, periodo: payload.periodo },
+                payload,
+                { upsert: true, new: true, setDefaultsOnInsert: true },
+            ).lean();
+            return mapearTextoDirectorBoletin(doc);
+        },
+
+        guardarIndicadores: async (_: any, { asignaturaId, periodo, saber, hacer, ser, intro, estudianteIds }: any, { user }: any) => {
+            await verificarPeriodoAbierto(periodo);
+            const creadoPor = user?.username ?? 'sistema';
+            const seleccionados = Array.isArray(estudianteIds)
+                ? [...new Set(estudianteIds.map((id: any) => String(id).trim()).filter(Boolean))]
+                : [];
+
+            let doc = await IndicadoresModel.findOne({ asignaturaId, periodo }).exec();
+            if (!doc) {
+                doc = new IndicadoresModel({ asignaturaId, periodo, saber: [], hacer: [], ser: [], porEstudiante: [], creadoPor });
+            }
+
+            if (seleccionados.length) {
+                const actuales = Array.isArray((doc as any).porEstudiante) ? (doc as any).porEstudiante : [];
+                for (const estudianteId of seleccionados) {
+                    const idx = actuales.findIndex((item: any) => String(item.estudianteId) === estudianteId);
+                    const item = { estudianteId, saber, hacer, ser, intro: String(intro || '').trim() };
+                    if (idx >= 0) actuales[idx] = item;
+                    else actuales.push(item);
+                }
+                (doc as any).porEstudiante = actuales;
+            } else {
+                doc.saber = saber;
+                doc.hacer = hacer;
+                doc.ser = ser;
+                (doc as any).intro = String(intro || '').trim();
+            }
+
+            doc.creadoPor = creadoPor;
+            await doc.save();
+
+            return {
+                id: doc._id?.toString(),
+                asignaturaId: String(doc.asignaturaId),
+                periodo: doc.periodo,
+                saber: saber || [],
+                hacer: hacer || [],
+                ser: ser || [],
+                intro: String(intro || '').trim(),
+                estudianteIds: seleccionados,
+                creadoPor: doc.creadoPor,
+            };
+        },
+
+        eliminarIndicadores: async (_: any, { asignaturaId, periodo }: any): Promise<boolean> => {
+            await verificarPeriodoAbierto(periodo);
+            const result = await IndicadoresModel.deleteOne({ asignaturaId, periodo }).exec();
+            return result.deletedCount > 0;
+        },
+        // -- Boletín avanzado ──────────────────────────────────
+        guardarCalificacionBoletin: async (
+            _: any,
+            { estudianteId, asignaturaId, periodo, valoracion, nota, faltas, observacion }: any,
+            { repositories }: any,
+        ): Promise<boolean> => {
+            // Fix N+1: buscar directamente sin traer todas las calificaciones a memoria
+            const todasDelEstudiante = await repositories.calificacionRepository.findByEstudianteId(estudianteId);
+            const existente = todasDelEstudiante.find(
+                (c: any) =>
+                    String(c.asignaturaId) === String(asignaturaId) &&
+                    c.periodo === periodo &&
+                    c.nombreActividad === '__boletin__',
+            );
+            const input = {
+                estudianteId, asignaturaId, periodo, nota,
+                observaciones: observacion ?? '',
+                tipoActividad: 'EXAMEN',
+                nombreActividad: '__boletin__',
+                corte: 0,
+            };
+            if (existente) {
+                await repositories.calificacionRepository.update(existente.id, input);
+            } else {
+                await repositories.calificacionRepository.create(input);
+            }
+            return true;
+        },
+
+        exportarBoletinCompleto: async (
+            _: any,
+            { estudianteId, periodo, observacionGeneral }: any,
+            { repositories }: any,
+        ): Promise<string> => {
+            return await generarBoletinAcumuladoBase64(
+                repositories,
+                String(estudianteId),
+                String(periodo),
+                String(observacionGeneral ?? ''),
+            );
+        },
+
+        // ── Estudiantes ───────────────────────────────────────
+        crearEstudiante: async (_: any, { input }: any, { user, repositories }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            const cedula = String(input.cedula ?? '').trim();
+            if (!cedula) throw new Error('La c�dula es obligatoria');
+            if (!input.nombre?.trim() || !input.primerApellido?.trim())
+                throw new Error('Nombre y primer apellido son obligatorios');
+            const existe = await repositories.estudianteRepository.findByCedula(cedula);
+            if (existe) throw new Error(`Ya existe un estudiante con c�dula ${cedula}`);
+            return await repositories.estudianteRepository.create({
+                cedula,
+                nombre: input.nombre.trim(),
+                primerApellido: input.primerApellido.trim(),
+                segundoApellido: (input.segundoApellido ?? '').trim(),
+                email: (input.email ?? '').trim(),
+                telefono: (input.telefono ?? '').trim(),
+                direccion: (input.direccion ?? '').trim(),
+                acudiente: (input.acudiente ?? '').trim(),
+            });
+        },
+
+        actualizarEstudiante: async (_: any, { id, input }: any, { user, repositories }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            if (!input.cedula || !input.nombre || !input.primerApellido)
+                throw new Error('Cedula, nombre y primer apellido son obligatorios');
+            const actualizado = await repositories.estudianteRepository.update(id, {
+                ...input,
+                email: (input.email ?? '').trim(),
+            });
+            if (!actualizado) throw new Error(`No se pudo actualizar el estudiante ${id}`);
+            return actualizado;
+        },
+
+
+        eliminarEstudiante: async (_: any, { id }: any, { user, repositories }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            // Obtener la cédula del estudiante para borrar el usuario asociado
+            const estudiante = await repositories.estudianteRepository.findById(id).catch(() => null)
+                ?? await repositories.estudianteRepository.findByCedula(id).catch(() => null);
+            const ok = await repositories.estudianteRepository.delete(id);
+            if (!ok) throw new Error(`No se pudo eliminar el estudiante ${id}`);
+            // Eliminar el usuario del sistema (username = cédula)
+            if (estudiante?.cedula) {
+                await UserModel.deleteOne({ username: estudiante.cedula }).catch(() => {});
+            }
+            return ok;
+        },
+
+        // ── Profesores ────────────────────────────────────────
+        crearProfesor: async (_: any, { input }: any, { user, repositories }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            const cedula = String(input.cedula ?? '').trim();
+            if (!cedula) throw new Error('La c�dula es obligatoria');
+            if (!input.nombre?.trim() || !input.primerApellido?.trim() || !input.email?.trim())
+                throw new Error('Nombre, primer apellido y email son obligatorios');
+            const existe = await repositories.profesorRepository.findByCedula(cedula);
+            if (existe) throw new Error(`Ya existe un profesor con c�dula ${cedula}`);
+            const profesor = await repositories.profesorRepository.create({
+                cedula,
+                nombre: input.nombre.trim(),
+                primerApellido: input.primerApellido.trim(),
+                segundoApellido: (input.segundoApellido ?? '').trim(),
+                email: input.email.trim(),
+                telefono: (input.telefono ?? '').trim(),
+                direccion: (input.direccion ?? '').trim(),
+            });
+            // Crear credenciales automáticamente — best-effort
+            await resolvers.Mutation.enviarCrearCredenciales(_, { profesorId: cedula }, { user, repositories });
+            return profesor;
+        },
+
+        actualizarProfesor: async (_: any, { id, input }: any, { user, repositories }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            const ok = await repositories.profesorRepository.update(id, input);
+            if (!ok) throw new Error(`No se pudo actualizar el profesor ${id}`);
+            return ok;
+        },
+
+        eliminarProfesor: async (_: any, { id }: any, { user, repositories }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            // Obtener la cédula del profesor para borrar el usuario asociado
+            const profesor = await repositories.profesorRepository.findById(id).catch(() => null)
+                ?? await repositories.profesorRepository.findByCedula(id).catch(() => null);
+            const ok = await repositories.profesorRepository.delete(id);
+            if (!ok) throw new Error(`No se pudo eliminar el profesor ${id}`);
+            // Eliminar el usuario del sistema (username = cédula)
+            if (profesor?.cedula) {
+                await UserModel.deleteOne({ username: profesor.cedula }).catch(() => {});
+            }
+            return ok;
+        },
+
+        // ── Cursos ────────────────────────────────────────────
+        crearCurso: async (_: any, { input }: any, { user, repositories }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            if (!input.id || !input.nombre) throw new Error('El ID y nombre del curso son obligatorios');
+            const existe = await repositories.cursoRepository.findById(input.id);
+            if (existe) throw new Error(`Ya existe un curso con ID ${input.id}`);
+            let profesorCedula = input.profesorId;
+            if (input.profesorId) {
+                const prof = (await repositories.profesorRepository.findById(input.profesorId).catch(() => null))
+                    ?? (await repositories.profesorRepository.findByCedula(input.profesorId).catch(() => null));
+                if (!prof) throw new Error(`Profesor ${input.profesorId} no encontrado`);
+                profesorCedula = prof.cedula;
+            }
+            return await repositories.cursoRepository.create({
+                _id: input.id,
+                nombre: input.nombre,
+                duracion: input.duracion ?? 0,
+                cantidadMax: input.cantidadMax ?? 0,
+                profesorId: profesorCedula,
+            });
+        },
+
+        actualizarCurso: async (_: any, { id, input }: any, { user, repositories }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            return await repositories.cursoRepository.update(id, input);
+        },
+
+        eliminarCurso: async (_: any, { id }: any, { user, repositories }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            return !!(await repositories.cursoRepository.delete(id));
+        },
+
+        // ── Calificaciones ────────────────────────────────────
+        crearCalificacion: async (_: any, { input }: any, { user, repositories }: any) => {
+            input = { ...input, nota: redondearNota(input.nota) };
+            if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado: se requiere rol ADMIN o PROFESOR');
+            if (!input.estudianteId) throw new Error('El estudianteId es requerido');
+            if (!input.asignaturaId) throw new Error('El asignaturaId es requerido');
+
+            // Verificar que el periodo esté abierto
+            await verificarPeriodoAbierto(input.periodo);
+            await validarCalificacionNoPreescolar(input.asignaturaId, repositories);
+
+            const cal = await repositories.calificacionRepository.create(input);
+
+            // Notificación email — best-effort, en background
+            (async () => {
+                try {
+                    const estudiante = await repositories.estudianteRepository.findById(input.estudianteId);
+                    const asignatura = await repositories.asignaturaRepository.findById(input.asignaturaId);
+                    if (estudiante?.email && asignatura) {
+                        await notificarNuevaCalificacion({
+                            email: estudiante.email,
+                            nombre: estudiante.nombre,
+                            apellido: estudiante.primerApellido,
+                            asignaturaNombre: asignatura.nombre,
+                            cursoNombre: asignatura.curso?.nombre ?? asignatura.cursoId ?? '',
+                            tipoActividad: input.tipoActividad ?? 'EXAMEN',
+                            nombreActividad: input.nombreActividad ?? 'Actividad',
+                            nota: Number(input.nota),
+                            periodo: input.periodo,
+                            corte: input.corte ?? 1,
+                            observaciones: input.observaciones,
+                        });
+                    }
+                } catch { /* silencioso */ }
+            })();
+
+            return {
+                id: cal.id,
+                estudianteId: cal.estudianteId,
+                asignaturaId: cal.asignaturaId,
+                nota: cal.nota,
+                periodo: cal.periodo,
+                observaciones: cal.observaciones,
+                tipoActividad: cal.tipoActividad,
+                nombreActividad: cal.nombreActividad,
+                corte: cal.corte,
+            };
+        },
+
+        actualizarCalificacion: async (_: any, { id, input }: any, { user, repositories }: any) => {
+            input = { ...input, nota: redondearNota(input.nota) };
+            if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado: se requiere rol ADMIN o PROFESOR');
+            const actual = await repositories.calificacionRepository.findById(id);
+            if (!actual) throw new Error('Calificación no encontrada');
+            if (String(input.estudianteId) !== String(actual.estudianteId) || String(input.asignaturaId) !== String(actual.asignaturaId)) {
+                throw new Error('No se puede cambiar el estudiante o la asignatura de una calificación existente. Crea una nota nueva.');
+            }
+            if (String(input.periodo) !== String(actual.periodo)) {
+                throw new Error('No se puede cambiar el período de una calificación existente. Crea una nota nueva para otro período.');
+            }
+            await verificarPeriodoAbierto(input.periodo);
+            await validarCalificacionNoPreescolar(input.asignaturaId, repositories);
+            return await repositories.calificacionRepository.update(id, input);
+        },
+
+        eliminarCalificacion: async (_: any, { id }: any, { user, repositories }: any) => {
+            if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado: se requiere rol ADMIN o PROFESOR');
+            return !!(await repositories.calificacionRepository.delete(id));
+        },
+
+        // ── Boletines ─────────────────────────────────────────
+        generarBoletin: async (_: any, { input }: any, { repositories }: any) => {
+            if (!input.estudianteId || !input.cursoId || !input.periodo || !Array.isArray(input.calificaciones))
+                throw new Error('Datos incompletos para generar bolet�n');
+            if (!input.calificaciones.length)
+                throw new Error('No se proporcionaron calificaciones');
+
+            const estudiante =
+                (await repositories.estudianteRepository.findByCedula(input.estudianteId).catch(() => null)) ??
+                (await repositories.estudianteRepository.findById(input.estudianteId).catch(() => null));
+            if (!estudiante) throw new Error('Estudiante no encontrado');
+            const curso = await repositories.cursoRepository.findById(input.cursoId);
+            if (!curso) throw new Error('Curso no encontrado');
+
+            const asignaturasCurso = await repositories.asignaturaRepository.findByCursoId(input.cursoId).catch(() => []);
+            const asigIdsCurso = new Set((asignaturasCurso || []).map((a: any) => String(a.id ?? a._id)));
+            const estIdBoletin = estudiante.cedula ?? input.estudianteId;
+            const todasLasCalificaciones = await repositories.calificacionRepository.findByEstudianteId(estIdBoletin).catch(() => []);
+            const calsAcumuladas = (todasLasCalificaciones || []).filter((c: any) =>
+                mismoAnioYPrevios(input.periodo, c.periodo) && asigIdsCurso.has(String(c.asignaturaId)),
+            );
+            if (!calsAcumuladas.length) throw new Error('No se pudo calcular el promedio acumulado');
+
+            const asigMap: Record<string, Record<number, number[]>> = {};
+            for (const cal of calsAcumuladas) {
+                const k = String(cal.asignaturaId);
+                if (!asigMap[k]) asigMap[k] = {};
+                const numeroPeriodo = parsePeriodo(String(cal.periodo || input.periodo)).numeroPeriodo;
+                if (!asigMap[k][numeroPeriodo]) asigMap[k][numeroPeriodo] = [];
+                asigMap[k][numeroPeriodo].push(Number(cal.nota));
+            }
+
+            const periodoObjetivo = parsePeriodo(input.periodo).numeroPeriodo;
+            const promediosMaterias = Object.values(asigMap)
+                .map((notasPorPeriodo: Record<number, number[]>) => promedioNumeros(notasPorPeriodo[periodoObjetivo] ?? []))
+                .filter((nota): nota is number => nota !== null);
+
+            const promedio = promedioNumeros(promediosMaterias);
+            if (promedio === null || isNaN(promedio)) throw new Error('No se pudo calcular el promedio');
+
+            return await repositories.boletinRepository.create({ ...input, estudianteId: estIdBoletin, promedio });
+        },
+
+        actualizarBoletin: async (_: any, { id, input }: any, { repositories }: any) => {
+            if (!input.estudianteId || !input.cursoId || !input.periodo || !Array.isArray(input.calificaciones))
+                throw new Error('Datos incompletos para actualizar bolet�n');
+            if (!input.calificaciones.length)
+                throw new Error('No se proporcionaron calificaciones');
+
+            const estudiante =
+                (await repositories.estudianteRepository.findByCedula(input.estudianteId).catch(() => null)) ??
+                (await repositories.estudianteRepository.findById(input.estudianteId).catch(() => null));
+            if (!estudiante) throw new Error('Estudiante no encontrado');
+            const curso = await repositories.cursoRepository.findById(input.cursoId);
+            if (!curso) throw new Error('Curso no encontrado');
+
+            const asignaturasCurso = await repositories.asignaturaRepository.findByCursoId(input.cursoId).catch(() => []);
+            const asigIdsCurso = new Set((asignaturasCurso || []).map((a: any) => String(a.id ?? a._id)));
+            const estIdBoletin = estudiante.cedula ?? input.estudianteId;
+            const todasLasCalificaciones = await repositories.calificacionRepository.findByEstudianteId(estIdBoletin).catch(() => []);
+            const calsAcumuladas = (todasLasCalificaciones || []).filter((c: any) =>
+                mismoAnioYPrevios(input.periodo, c.periodo) && asigIdsCurso.has(String(c.asignaturaId)),
+            );
+            if (!calsAcumuladas.length) throw new Error('No se pudo calcular el promedio acumulado');
+
+            const asigMap: Record<string, Record<number, number[]>> = {};
+            for (const cal of calsAcumuladas) {
+                const k = String(cal.asignaturaId);
+                if (!asigMap[k]) asigMap[k] = {};
+                const numeroPeriodo = parsePeriodo(String(cal.periodo || input.periodo)).numeroPeriodo;
+                if (!asigMap[k][numeroPeriodo]) asigMap[k][numeroPeriodo] = [];
+                asigMap[k][numeroPeriodo].push(Number(cal.nota));
+            }
+
+            const periodoObjetivo = parsePeriodo(input.periodo).numeroPeriodo;
+            const promediosMaterias = Object.values(asigMap)
+                .map((notasPorPeriodo: Record<number, number[]>) => promedioNumeros(notasPorPeriodo[periodoObjetivo] ?? []))
+                .filter((nota): nota is number => nota !== null);
+
+            const promedio = promedioNumeros(promediosMaterias);
+            if (promedio === null || isNaN(promedio)) throw new Error('No se pudo calcular el promedio');
+
+            return await repositories.boletinRepository.update(id, { ...input, estudianteId: estIdBoletin, promedio });
+        },
+        eliminarBoletin: async (_: any, { id }: any, { repositories }: any) =>
+            !!(await repositories.boletinRepository.delete(id)),
+
+        // ── Matrículas ────────────────────────────────────────
+        crearMatricula: async (_: any, { input }: any, { user, repositories }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            if (!input.estudianteId || !input.cursoId)
+                throw new Error('El ID del estudiante y del curso son obligatorios');
+
+            const estudiante = await repositories.estudianteRepository.findByCedula(input.estudianteId);
+            if (!estudiante) throw new Error(`Estudiante ${input.estudianteId} no encontrado`);
+
+            const curso = await repositories.cursoRepository.findById(input.cursoId);
+            if (!curso) throw new Error(`Curso ${input.cursoId} no encontrado`);
+
+            const existentes = await repositories.matriculaRepository.findByEstudianteId(input.estudianteId);
+            const yaMatriculado = existentes.some(
+                (m: any) => m.cursoId === input.cursoId && m.estado === 'ACTIVA' && m.periodo === input.periodo,
+            );
+            if (yaMatriculado) throw new Error(`El estudiante ya est� matriculado en este curso para ${input.periodo}`);
+
+            for (const asigId of input.asignaturas ?? []) {
+                const asig = await repositories.asignaturaRepository.findById(asigId);
+                if (!asig) throw new Error(`Asignatura ${asigId} no encontrada`);
+                if (asig.cursoId !== input.cursoId) throw new Error(`La asignatura ${asig.nombre} no pertenece al curso`);
+            }
+
+            const matricula = await repositories.matriculaRepository.create({
+                estudianteId: estudiante.cedula,
+                cursoId: input.cursoId,
+                estado: input.estado ?? 'ACTIVA',
+                periodo: input.periodo,
+                fechaMatricula: new Date(),
+                asignaturas: input.asignaturas ?? [],
+            });
+
+            // Credenciales y confirmación — best-effort
+            (async () => {
+                try {
+                    const yaExiste = await repositories.userRepository.findByUsername(estudiante.cedula);
+                    if (!yaExiste) {
+                        await resolvers.Mutation.enviarCrearCredenciales(_, { estudianteId: estudiante.cedula }, { user, repositories });
+                    } else if (estudiante.email) {
+                        await enviarConfirmacionMatricula({
+                            email: estudiante.email,
+                            nombre: estudiante.nombre,
+                            apellido: estudiante.primerApellido,
+                            curso: curso.nombre,
+                            asignaturas: input.asignaturas ?? [],
+                        }).catch(() => {});
+                    }
+                } catch { /* silencioso */ }
+            })();
+
+            return matricula;
+        },
+
+        actualizarMatricula: async (_: any, { id, input }: any, { repositories }: any) =>
+            await repositories.matriculaRepository.update(id, input),
+
+        actualizarEstadoMatricula: async (_: any, { id, estado }: any, { repositories }: any) =>
+            await repositories.matriculaRepository.updateEstado(id, estado),
+
+        eliminarMatricula: async (_: any, { id }: any, { repositories }: any) =>
+            await repositories.matriculaRepository.delete(id),
+
+        // ── Asignaturas ───────────────────────────────────────
+        crearAsignatura: async (_: any, { input }: any, { user, repositories }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            const profesor = await repositories.profesorRepository.findById(input.profesorId);
+            if (!profesor) throw new Error(`Profesor ${input.profesorId} no encontrado`);
+            const curso = await repositories.cursoRepository.findById(input.cursoId);
+            if (!curso) throw new Error(`Curso ${input.cursoId} no encontrado`);
+            return await repositories.asignaturaRepository.create({
+                nombre: input.nombre,
+                horario: input.horario,
+                profesorId: profesor.cedula,
+                cursoId: curso.id,
+            });
+        },
+
+        // ── Nueva feature: crear la misma asignatura en varios cursos a la vez ──
+        crearAsignaturaEnVariosCursos: async (
+            _: any,
+            { input }: { input: { nombre: string; profesorId: string; cursos: Array<{ cursoId: string; horario: string }> } },
+            { user, repositories }: any,
+        ) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            if (!input.nombre?.trim()) throw new Error('El nombre de la asignatura es obligatorio');
+            if (!input.cursos?.length) throw new Error('Debes seleccionar al menos un curso');
+
+            const profesor = await repositories.profesorRepository.findById(input.profesorId)
+                ?? await repositories.profesorRepository.findByCedula(input.profesorId);
+            if (!profesor) throw new Error(`Profesor ${input.profesorId} no encontrado`);
+
+            const resultados: any[] = [];
+            const errores: string[] = [];
+
+            for (const { cursoId, horario } of input.cursos) {
+                try {
+                    const curso = await repositories.cursoRepository.findById(cursoId);
+                    if (!curso) { errores.push(`Curso ${cursoId} no encontrado`); continue; }
+                    if (!horario?.trim()) { errores.push(`Falta horario para el curso ${curso.nombre}`); continue; }
+                    const nueva = await repositories.asignaturaRepository.create({
+                        nombre: input.nombre.trim(),
+                        horario: horario.trim(),
+                        profesorId: profesor.cedula,
+                        cursoId: curso.id,
+                    });
+                    resultados.push(nueva);
+                } catch (e: any) {
+                    errores.push(`Curso ${cursoId}: ${e.message}`);
+                }
+            }
+
+            if (!resultados.length) throw new Error(`No se pudo crear ninguna asignatura. ${errores.join('; ')}`);
+            return { creadas: resultados, errores };
+        },
+
+        actualizarAsignatura: async (_: any, { id, input }: any, { user, repositories }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            return await repositories.asignaturaRepository.update(id, input);
+        },
+
+        eliminarAsignatura: async (_: any, { id }: any, { user, repositories }: any) => {
+            if (!user || user.role !== 'ADMIN') throw new Error('No autorizado: se requiere rol ADMIN');
+            return !!(await repositories.asignaturaRepository.delete(id));
+        },
+
+        // -- Malla curricular --------------------------------
+        guardarMallaCurricular: async (_: any, { asignaturaId, cursoId, tipo, nombreArchivo, mimeType, contenidoBase64 }: any, { user, repositories }: any) => {
+            if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado');
+            if (String(mimeType) !== 'application/pdf') throw new Error('Solo se permite subir archivos PDF');
+            const cleanBase64 = String(contenidoBase64 || '').replace(/^data:application\/pdf;base64,/, '');
+            if (!cleanBase64) throw new Error('El PDF es obligatorio');
+            if (cleanBase64.length > 10 * 1024 * 1024) throw new Error('El PDF supera el tamano permitido');
+
+            const tipoDoc = String(tipo || 'MATERIA').toUpperCase() === 'CURSO_GENERAL' ? 'CURSO_GENERAL' : 'MATERIA';
+
+            if (tipoDoc === 'CURSO_GENERAL') {
+                const curso = await repositories.cursoRepository.findById(String(cursoId || '')).catch(() => null);
+                if (!curso) throw new Error('Curso no encontrado');
+                if (!esCursoPreescolarNombre(curso.nombre || '')) throw new Error('En primaria la malla se sube por materia.');
+                if (user.role === 'PROFESOR' && String(curso.profesorId) !== String(user.username)) throw new Error('Solo el director de grupo puede subir la malla general del curso');
+                const profesorResponsable = String(curso.profesorId || user.username || '');
+                const cursoCanonicoId = String(curso.id ?? curso._id ?? cursoId);
+                const doc = await MallaCurricularModel.findOneAndUpdate(
+                    { asignaturaId: claveMallaCurso(cursoCanonicoId) },
+                    {
+                        asignaturaId: claveMallaCurso(cursoCanonicoId),
+                        profesorId: profesorResponsable,
+                        tipo: 'CURSO_GENERAL',
+                        cursoId: cursoCanonicoId,
+                        nombreReferencia: String(curso.nombre || 'Curso'),
+                        nombreArchivo: String(nombreArchivo || 'malla-curricular.pdf'),
+                        mimeType: 'application/pdf',
+                        contenidoBase64: cleanBase64,
+                        creadoPor: String(user.username || ''),
+                    },
+                    { upsert: true, new: true, setDefaultsOnInsert: true },
+                ).lean();
+                return doc;
+            }
+
+            const asig = await repositories.asignaturaRepository.findById(String(asignaturaId || ''));
+            if (!asig) throw new Error('Asignatura no encontrada');
+            const cursoAsignatura = await repositories.cursoRepository.findById(String(asig.cursoId || '')).catch(() => null);
+            if (esCursoPreescolarNombre(cursoAsignatura?.nombre || '')) throw new Error('En preescolar la malla se sube una sola vez por curso desde el director de grupo.');
+            if (user.role === 'PROFESOR' && String(asig.profesorId) !== String(user.username)) throw new Error('No autorizado para esta asignatura');
+
+            const asignaturasProfesor = await repositories.asignaturaRepository.findByProfesorId(String(asig.profesorId)).catch(() => []);
+            const asignaturasMismaMateria = asignaturasProfesor.filter((item: any) => normalizarTextoBase(item?.nombre) === normalizarTextoBase(asig.nombre));
+            const idsMateria = asignaturasMismaMateria.map((item: any) => String(item.id ?? item._id ?? ''));
+            const existente = await MallaCurricularModel.findOne({
+                profesorId: String(asig.profesorId),
+                tipo: { $ne: 'CURSO_GENERAL' },
+                $or: [
+                    { nombreReferencia: asig.nombre },
+                    { asignaturaId: { $in: idsMateria } },
+                ],
+            }).sort({ updatedAt: -1 });
+
+            const asignaturaCanonica = String(existente?.asignaturaId || asig.id || asig._id || asignaturaId);
+            const doc = await MallaCurricularModel.findOneAndUpdate(
+                { asignaturaId: asignaturaCanonica },
+                {
+                    asignaturaId: asignaturaCanonica,
+                    profesorId: String(asig.profesorId),
+                    tipo: 'MATERIA',
+                    cursoId: null,
+                    nombreReferencia: String(asig.nombre || ''),
+                    nombreArchivo: String(nombreArchivo || 'malla-curricular.pdf'),
+                    mimeType: 'application/pdf',
+                    contenidoBase64: cleanBase64,
+                    creadoPor: String(user.username || ''),
+                },
+                { upsert: true, new: true, setDefaultsOnInsert: true },
+            ).lean();
+            return doc;
+        },
+
+        eliminarMallaCurricular: async (_: any, { asignaturaId, cursoId, tipo, mallaId }: any, { user, repositories }: any) => {
+            if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado');
+
+            let doc = null as any;
+            if (mallaId) doc = await MallaCurricularModel.findById(String(mallaId)).lean();
+            if (!doc && String(tipo || '').toUpperCase() === 'CURSO_GENERAL' && cursoId) {
+                doc = await MallaCurricularModel.findOne({ asignaturaId: claveMallaCurso(cursoId) }).lean();
+            }
+            if (!doc && asignaturaId) {
+                doc = await MallaCurricularModel.findOne({ asignaturaId: String(asignaturaId) }).lean();
+            }
+            if (!doc) throw new Error('Malla curricular no encontrada');
+
+            if (user.role === 'PROFESOR') {
+                if (String(doc.tipo || '') === 'CURSO_GENERAL' || doc.cursoId) {
+                    const curso = await repositories.cursoRepository.findById(String(doc.cursoId || cursoId || '')).catch(() => null);
+                    if (!curso || String(curso.profesorId) !== String(user.username)) throw new Error('No autorizado para esta malla curricular');
+                } else {
+                    const asig = await repositories.asignaturaRepository.findById(String(doc.asignaturaId || asignaturaId || '')).catch(() => null);
+                    if (!asig || String(asig.profesorId) !== String(user.username)) throw new Error('No autorizado para esta malla curricular');
+                }
+            }
+
+            const res = await MallaCurricularModel.deleteOne({ _id: doc._id });
+            return res.deletedCount > 0;
+        },
+
+
+        // -- Experiencias significativas ----------------------
+        guardarExperienciaSignificativa: async (_: any, { cursoId, titulo, descripcion, fecha, nombreArchivo, mimeType, contenidoBase64 }: any, { user, repositories }: any) => {
+            if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado');
+            const mime = String(mimeType || '').toLowerCase();
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(mime)) throw new Error('Solo se permiten imagenes JPG, PNG o WEBP');
+            const cleanBase64 = String(contenidoBase64 || '').replace(/^data:image\/(jpeg|jpg|png|webp);base64,/i, '');
+            if (!cleanBase64) throw new Error('La imagen es obligatoria');
+            if (cleanBase64.length > 7 * 1024 * 1024) throw new Error('La imagen no debe superar 5 MB');
+
+            const curso = await repositories.cursoRepository.findById(String(cursoId || '')).catch(() => null);
+            if (!curso) throw new Error('Curso no encontrado');
+            if (!esCursoPreescolarNombre(curso.nombre || '')) throw new Error('Las experiencias significativas son solo para preescolar');
+            if (user.role === 'PROFESOR') {
+                const autorizado = await profesorPuedeGestionarCursoPreescolar(String(curso.id ?? curso._id ?? cursoId), String(user.username), repositories);
+                if (!autorizado) throw new Error('No autorizado para este curso de preescolar');
+            }
+
+            const doc = await ExperienciaSignificativaModel.create({
+                cursoId: String(curso.id ?? curso._id ?? cursoId),
+                profesorId: String(user.role === 'PROFESOR' ? user.username : (curso.profesorId || user.username || '')),
+                titulo: String(titulo || '').trim() || 'Experiencia significativa',
+                descripcion: String(descripcion || '').trim(),
+                fecha: String(fecha || '').trim() || new Date().toISOString().slice(0, 10),
+                nombreArchivo: String(nombreArchivo || 'experiencia.jpg'),
+                mimeType: mime,
+                contenidoBase64: cleanBase64,
+                creadoPor: String(user.username || ''),
+            });
+            return doc.toObject();
+        },
+
+        eliminarExperienciaSignificativa: async (_: any, { id }: any, { user }: any) => {
+            if (!user || !['ADMIN', 'PROFESOR'].includes(user.role)) throw new Error('No autorizado');
+            const doc = await ExperienciaSignificativaModel.findById(String(id)).lean();
+            if (!doc) throw new Error('Experiencia no encontrada');
+            if (user.role === 'PROFESOR' && String(doc.profesorId) !== String(user.username)) throw new Error('No autorizado para esta experiencia');
+            const res = await ExperienciaSignificativaModel.deleteOne({ _id: doc._id });
+            return res.deletedCount > 0;
+        },
+        // -- Asistencias
+        registrarLista: async (_: any, { input }: any, { repositories }: any) => {
+            const registros = input.estudiantes.map((est: any) => ({
+                estudianteId:  est.estudianteId,
+                asignaturaId:  input.asignaturaId,
+                fecha:         input.fecha,
+                estado:        est.estado,
+                periodo:       input.periodo,
+                observaciones: est.observaciones ?? '',
+                registradoPor: input.registradoPor ?? '',
+            }));
+            return await repositories.asistenciaRepository.registrarLista(registros);
+        },
+
+        crearAsistencia: async (_: any, { input }: any, { repositories }: any) =>
+            await repositories.asistenciaRepository.create(input),
+
+        actualizarAsistencia: async (_: any, { id, input }: any, { repositories }: any) =>
+            await repositories.asistenciaRepository.update(id, input),
+
+        eliminarAsistencia: async (_: any, { id }: any, { repositories }: any) =>
+            await repositories.asistenciaRepository.delete(id),
+
+        // ── Periodos ─────────────────────────────────────────
+        configurarPeriodo: async (_: any, { input }: any, { user }: any) => {
+            if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
+            const doc = await PeriodoConfigModel.findOneAndUpdate(
+                { anio: input.anio, numeroPeriodo: input.numeroPeriodo },
+                {
+                    numCortes: input.numCortes,
+                    abierto: true,
+                    ...(input.fechaApertura ? { fechaApertura: fechaInicioDiaColombia(input.fechaApertura) } : {}),
+                    ...(input.fechaCierre   ? { fechaCierre:   fechaFinDiaColombia(input.fechaCierre)   } : {}),
+                },
+                { upsert: true, new: true }
+            ).lean();
+            return { ...(doc as any), id: (doc as any)._id?.toString(), pesoPorCorte: 100 / (doc as any).numCortes };
+        },
+
+        cerrarPeriodo: async (_: any, { anio, numeroPeriodo, fechaCierre }: any, { user }: any) => {
+            if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
+            const doc = await PeriodoConfigModel.findOneAndUpdate(
+                { anio, numeroPeriodo },
+                { abierto: false, fechaCierre: fechaCierre ? fechaFinDiaColombia(fechaCierre) : new Date() },
+                { upsert: true, new: true }
+            ).lean();
+            return { ...(doc as any), id: (doc as any)._id?.toString(), pesoPorCorte: 100 / (doc as any).numCortes };
+        },
+
+        abrirPeriodo: async (_: any, { anio, numeroPeriodo }: any, { user }: any) => {
+            if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
+            const doc = await PeriodoConfigModel.findOneAndUpdate(
+                { anio, numeroPeriodo },
+                { abierto: true },
+                { upsert: true, new: true }
+            ).lean();
+            return { ...(doc as any), id: (doc as any)._id?.toString(), pesoPorCorte: 100 / (doc as any).numCortes };
+        },
+
+        // ── Comportamiento ───────────────────────────────────
+        guardarComportamiento: async (_: any, { input }: any, { user, repositories }: any) => {
+            if (!user) throw new Error('No autenticado');
+            const profesor = await repositories.profesorRepository.findByCedula(user.username).catch(() => null);
+            if (!profesor) throw new Error('Solo profesores pueden registrar comportamiento');
+            await verificarPeriodoAbierto(input.periodo);
+            await validarComportamientoNoPreescolar(input.asignaturaId, repositories);
+
+            // Calcular nivel automáticamente desde la nota si se proporciona
+            let nivel = input.nivel;
+            if (input.nota !== undefined && input.nota !== null) {
+                const n = parseFloat(input.nota);
+                if (n >= 4.6)      nivel = 'Superior';
+                else if (n >= 4.0) nivel = 'Alto';
+                else if (n >= 3.5) nivel = 'Basico';
+                else               nivel = 'Bajo';
+            }
+
+            const doc = await ComportamientoModel.findOneAndUpdate(
+                { estudianteId: input.estudianteId, asignaturaId: input.asignaturaId, periodo: input.periodo, anio: input.anio },
+                { ...input, nivel, profesorId: profesor.id ?? profesor.cedula },
+                { upsert: true, new: true }
+            ).lean();
+            return { ...(doc as any), id: (doc as any)._id?.toString() };
+        },
+
+        // ── Cronograma ───────────────────────────────────────
+        crearEventoCronograma: async (_: any, { input }: any, { user }: any) => {
+            if (!['ADMIN', 'PROFESOR'].includes(user?.role)) throw new Error('Solo administradores o profesores');
+            const periodoMatch = String(input.descripcion || '').match(/Periodo:\s*(\d{4}-[123])/i);
+            if (periodoMatch) await verificarPeriodoAbierto(periodoMatch[1]);
+            const doc = await CronogramaModel.create({ ...input, creadoPor: user.username });
+            const obj = doc.toObject() as any;
+            return {
+                ...obj,
+                id: doc._id?.toString(),
+                fechaInicio: obj.fechaInicio instanceof Date ? obj.fechaInicio.toISOString().split('T')[0] : obj.fechaInicio,
+                fechaFin:    obj.fechaFin    instanceof Date ? obj.fechaFin.toISOString().split('T')[0]    : obj.fechaFin,
+            };
+        },
+
+        actualizarEventoCronograma: async (_: any, { id, input }: any, { user }: any) => {
+            if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
+            const doc = await CronogramaModel.findByIdAndUpdate(id, input, { new: true }).lean() as any;
+            if (!doc) throw new Error('Evento no encontrado');
+            return {
+                ...doc,
+                id: doc._id?.toString(),
+                fechaInicio: doc.fechaInicio instanceof Date ? doc.fechaInicio.toISOString().split('T')[0] : doc.fechaInicio,
+                fechaFin:    doc.fechaFin    instanceof Date ? doc.fechaFin.toISOString().split('T')[0]    : doc.fechaFin,
+            };
+        },
+
+        eliminarEventoCronograma: async (_: any, { id }: any, { user }: any) => {
+            if (!['ADMIN', 'PROFESOR'].includes(user?.role)) throw new Error('Solo administradores o profesores');
+            const evento = await CronogramaModel.findById(id).lean();
+            if (!evento) throw new Error('Evento no encontrado');
+            if (user?.role === 'PROFESOR') {
+                const creadoPorMi = String(evento.creadoPor || '') === String(user.username || '');
+                let perteneceAsignatura = false;
+                if (!creadoPorMi && evento.cursoId) {
+                    const asignaturas = await AsignaturaModel.find({ cursoId: String(evento.cursoId), profesorId: String(user.username || '') }).lean().catch(() => []);
+                    const descripcion = String(evento.descripcion || '');
+                    perteneceAsignatura = asignaturas.some((asig: any) => descripcion.includes(`Asignatura: ${asig.nombre}`));
+                }
+                if (!creadoPorMi && !perteneceAsignatura) throw new Error('Solo puedes eliminar actividades creadas por ti');
+            }
+            const result = await CronogramaModel.findByIdAndDelete(id);
+            return !!result;
+        },
+    },
+
+    // ═══════════════════════════
+    //  TYPE RESOLVERS
+    // ═══════════════════════════
+    User: {
+        id: (user: any) => user._id ?? user.id,
+    },
+
+    AuthPayload: {
+        user: (payload: any) => payload.user,
+        token: (payload: any) => payload.token,
+    },
+
+    Asignatura: {
+        profesor: async (asignatura: any, _: any, { repositories }: any) => {
+            if (!asignatura.profesorId) return null;
+            return await repositories.profesorRepository.findById(asignatura.profesorId);
+        },
+        curso: async (asignatura: any, _: any, { repositories }: any) => {
+            if (!asignatura.cursoId) return null;
+            return await repositories.cursoRepository.findById(asignatura.cursoId);
+        },
+    },
+
+    MallaCurricular: {
+        id: (malla: any) => malla?.id ?? malla?._id?.toString() ?? '',
+        asignatura: async (malla: any, _: any, { repositories }: any) => {
+            if (!malla.asignaturaId || esClaveMallaCurso(malla.asignaturaId)) return null;
+            return await repositories.asignaturaRepository.findById(malla.asignaturaId).catch(() => null);
+        },
+        profesor: async (malla: any, _: any, { repositories }: any) => {
+            if (!malla.profesorId) return null;
+            return await repositories.profesorRepository.findById(malla.profesorId);
+        },
+        curso: async (malla: any, _: any, { repositories }: any) => {
+            if (malla?.curso) return malla.curso;
+            if (malla?.cursoId) return await repositories.cursoRepository.findById(malla.cursoId).catch(() => null);
+            const asig = (!malla?.asignaturaId || esClaveMallaCurso(malla.asignaturaId))
+                ? null
+                : await repositories.asignaturaRepository.findById(malla.asignaturaId).catch(() => null);
+            if (!asig?.cursoId) return null;
+            return await repositories.cursoRepository.findById(asig.cursoId).catch(() => null);
+        },
+        createdAt: (malla: any) => malla?.createdAt ? new Date(malla.createdAt).toISOString() : null,
+        updatedAt: (malla: any) => malla?.updatedAt ? new Date(malla.updatedAt).toISOString() : null,
+    },
+
+
+    ExperienciaSignificativa: {
+        id: (exp: any) => exp?.id ?? exp?._id?.toString() ?? '',
+        curso: async (exp: any, _: any, { repositories }: any) => {
+            if (!exp?.cursoId) return null;
+            return await repositories.cursoRepository.findById(exp.cursoId).catch(() => null);
+        },
+        profesor: async (exp: any, _: any, { repositories }: any) => {
+            if (!exp?.profesorId) return null;
+            return await repositories.profesorRepository.findById(exp.profesorId).catch(() => null);
+        },
+        createdAt: (exp: any) => exp?.createdAt ? new Date(exp.createdAt).toISOString() : null,
+        updatedAt: (exp: any) => exp?.updatedAt ? new Date(exp.updatedAt).toISOString() : null,
+    },
+    Estudiante: {
+        id: (e: any) => e.cedula ?? e._id ?? e.id,
+        nombre: (e: any) => e.nombre ?? '',
+        primerApellido: (e: any) => e.primerApellido ?? '',
+        segundoApellido: (e: any) => e.segundoApellido ?? '',
+        email: (e: any) => e.email ?? '',
+        cedula: (e: any) => e.cedula ?? e._id ?? e.id ?? '',
+        empleado: async (e: any, _: any, { repositories }: any) => {
+            const fallback = { id: e.cedula??'', cedula: e.cedula??'', nombre: e.nombre??'', primerApellido: e.primerApellido??'', segundoApellido: e.segundoApellido??'', email: e.email??'', tipo: 'estudiante' };
+            if (!e.empleadoId) return fallback;
+            const emp = await repositories.empleadoRepository.findById(e.empleadoId).catch(() => null);
+            return emp ?? fallback;
+        },
+        matriculas: async (e: any, _: any, { repositories }: any) =>
+            await repositories.matriculaRepository.findByEstudianteId(e.id),
+    },
+
+    Profesor: {
+        id: (p: any) => p.cedula,
+        empleado: async (p: any) => {
+            if (!p.empleadoId) return null;
+            return await EmpleadoModel.findById(p.empleadoId);
+        },
+    },
+
+    Curso: {
+        profesor: async (curso: any, _: any, { repositories }: any) => {
+            if (!curso.profesorId) return null;
+            return await repositories.profesorRepository.findById(curso.profesorId);
+        },
+    },
+
+    Calificacion: {
+        fecha: (cal: any) => {
+            if (!cal?.fecha) return null;
+            const d = new Date(cal.fecha);
+            if (isNaN(d.getTime())) return null;
+            const yyyy = d.getUTCFullYear();
+            const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const dd = String(d.getUTCDate()).padStart(2, '0');
+            return yyyy + '-' + mm + '-' + dd + 'T12:00:00.000Z';
+        },
+    },
+
+    Matricula: {
+        fechaMatricula: (matricula: any) => {
+            if (!matricula?.fechaMatricula) return new Date().toISOString();
+            const d = new Date(matricula.fechaMatricula);
+            return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+        },
+        estudiante: async (matricula: any, _: any, { repositories }: any) => {
+            const estudianteId = String(matricula?.estudianteId ?? '').trim();
+            if (!estudianteId) {
+                return { id: 'n/a', cedula: 'n/a', nombre: 'Sin datos', primerApellido: '', segundoApellido: '', email: '' };
+            }
+            const est =
+                await repositories.estudianteRepository.findByCedula(estudianteId).catch(() => null) ??
+                await repositories.estudianteRepository.findById(estudianteId).catch(() => null);
+            return est ?? {
+                id: estudianteId, cedula: estudianteId,
+                nombre: 'No encontrado', primerApellido: '', segundoApellido: '', email: '',
+            };
+        },
+        curso: async (matricula: any, _: any, { repositories }: any) => {
+            if (!matricula?.cursoId) {
+                return { id: 'n/a', nombre: 'Sin curso', cantidadMax: 0, profesorId: '' };
+            }
+            const curso = await repositories.cursoRepository.findById(matricula.cursoId);
+            return curso ?? { id: matricula.cursoId, nombre: 'No encontrado', cantidadMax: 0, profesorId: '' };
+        },
+        asignaturas: async (matricula: any, _: any, { repositories }: any) => {
+            if (!matricula?.asignaturas) return [];
+            let ids: string[];
+            if (Array.isArray(matricula.asignaturas)) {
+                ids = matricula.asignaturas.map(String).filter(Boolean);
+            } else if (typeof matricula.asignaturas === 'string') {
+                ids = matricula.asignaturas.split(',').map((s: string) => s.trim()).filter(Boolean);
+            } else {
+                return [];
+            }
+            if (!ids.length) return [];
+            return await repositories.asignaturaRepository.findByIds(ids);
+        },
+    },
+
+    Asistencia: {
+        fecha: (asistencia: any) => {
+            if (!asistencia?.fecha) return null;
+            const d = new Date(asistencia.fecha);
+            if (isNaN(d.getTime())) return null;
+            const yyyy = d.getUTCFullYear();
+            const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const dd = String(d.getUTCDate()).padStart(2, '0');
+            return yyyy + '-' + mm + '-' + dd + 'T12:00:00.000Z';
+        },
+    },
+
+    Indicadores: {
+        id: (indicador: any) => indicador?.id ?? indicador?._id?.toString() ?? null,
+        asignaturaId: (indicador: any) => indicador?.asignaturaId ? String(indicador.asignaturaId) : null,
+        saber: (indicador: any) => Array.isArray(indicador?.saber) ? indicador.saber : [],
+        hacer: (indicador: any) => Array.isArray(indicador?.hacer) ? indicador.hacer : [],
+        ser: (indicador: any) => Array.isArray(indicador?.ser) ? indicador.ser : [],
+        estudianteIds: (indicador: any) => Array.isArray(indicador?.estudianteIds) ? indicador.estudianteIds : [],
+    },
+    Boletin: {
+        fecha: (boletin: any) => {
+            if (!boletin?.fecha) return new Date().toISOString();
+            const d = new Date(boletin.fecha);
+            return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+        },
+        estudiante: async (boletin: any, _: any, { repositories }: any) => {
+            if (!boletin.estudianteId) return null;
+            if (typeof boletin.estudianteId === 'object') {
+                try {
+                    const idStr = boletin.estudianteId.toString?.() ?? '';
+                    if (mongoose.Types.ObjectId.isValid(idStr)) {
+                        const doc = await EstudianteModel.findById(idStr);
+                        if (doc) return await repositories.estudianteRepository.findByCedula(doc.cedula);
+                    }
+                } catch { /* continuar con fallback */ }
+            }
+            return await repositories.estudianteRepository.findByCedula(boletin.estudianteId);
+        },
+        curso: async (boletin: any, _: any, { repositories }: any) =>
+            await repositories.cursoRepository.findById(boletin.cursoId),
+    },
+};
+
+
+
+
+
+
+
+

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horarios — LEARNSCAPE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --blue:       #4a69bd;
+      --blue-dark:  #364fc7;
+      --blue-light: #eef2ff;
+      --gray-50:    #f9fafb;
+      --gray-100:   #f3f4f6;
+      --gray-200:   #e5e7eb;
+      --gray-500:   #6b7280;
+      --gray-700:   #374151;
+      --gray-900:   #111827;
+      --shadow:     0 2px 12px rgba(0,0,0,.09);
+      --radius:     10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; background: var(--gray-50); color: var(--gray-900); min-block-size: 100vh; }
+
+    /* ─── Header ─── */
+    header { background: var(--blue); color: #fff; padding: 0 24px; block-size: 60px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+    .header-logo { font-size: 20px; font-weight: 800; letter-spacing: 1px; }
+    .header-back { background: rgba(255,255,255,.18); border: none; color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .2s; }
+    .header-back:hover { background: rgba(255,255,255,.3); }
+
+    /* ─── Container ─── */
+    .container { max-inline-size: 1200px; margin: 0 auto; padding: 28px 20px; }
+    .page-title { font-size: 26px; font-weight: 800; color: var(--blue); margin-block-end: 4px; }
+    .page-subtitle { font-size: 14px; color: var(--gray-500); margin-block-end: 24px; }
+
+    /* ─── Controles ─── */
+    .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-block-end: 24px; background: #fff; padding: 16px 20px; border-radius: var(--radius); box-shadow: var(--shadow); }
+    .controls label { font-size: 13px; font-weight: 700; color: var(--gray-700); }
+    .controls select { padding: 8px 14px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 14px; color: var(--gray-900); background: #fff; cursor: pointer; }
+    .controls select:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(74,105,189,.15); }
+    .btn-export { margin-inline-start: auto; background: var(--blue); color: #fff; border: none; padding: 9px 20px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background .2s; }
+    .btn-export:hover { background: var(--blue-dark); }
+    .btn-export:disabled { background: var(--gray-200); color: var(--gray-500); cursor: not-allowed; }
+
+    /* ─── Grilla principal ─── */
+    .schedule-wrap { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .schedule-grid { display: grid; grid-template-columns: 90px repeat(5, 1fr); min-inline-size: 600px; }
+    .schedule-scroll { overflow-x: auto; }
+
+    /* Cabecera de días */
+    .day-header { padding: 14px 8px; text-align: center; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: .5px; }
+    .day-header.empty { background: var(--gray-50); border-inline-end: 1px solid var(--gray-200); border-block-end: 2px solid var(--gray-200); }
+    .day-header.lunes    { background: #eef2ff; color: #3730a3; border-block-end: 3px solid #6366f1; }
+    .day-header.martes   { background: #ecfdf5; color: #065f46; border-block-end: 3px solid #10b981; }
+    .day-header.miercoles{ background: #fff7ed; color: #92400e; border-block-end: 3px solid #f59e0b; }
+    .day-header.jueves   { background: #fdf4ff; color: #6b21a8; border-block-end: 3px solid #a855f7; }
+    .day-header.viernes  { background: #fff1f2; color: #9f1239; border-block-end: 3px solid #f43f5e; }
+
+    /* Franjas horarias */
+    .time-slot { border-inline-end: 1px solid var(--gray-200); border-block-end: 1px solid var(--gray-100); }
+    .time-label { background: var(--gray-50); padding: 0 10px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--gray-500); text-align: center; min-block-size: 72px; border-inline-end: 2px solid var(--gray-200); border-block-end: 1px solid var(--gray-100); }
+    .cell { min-block-size: 72px; padding: 4px; position: relative; transition: background .15s; }
+    .cell:hover { background: var(--gray-50); }
+    .cell.lunes    { border-inline-start: 2px solid transparent; }
+    .cell.martes   { border-inline-start: 2px solid transparent; }
+    .cell.miercoles{ border-inline-start: 2px solid transparent; }
+    .cell.jueves   { border-inline-start: 2px solid transparent; }
+    .cell.viernes  { border-inline-start: 2px solid transparent; }
+
+    /* Bloque de asignatura */
+    .asig-block { border-radius: 6px; padding: 7px 9px; block-size: 100%; display: flex; flex-direction: column; justify-content: center; cursor: default; transition: transform .15s, box-shadow .15s; }
+    .asig-block:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+    .asig-block .asig-nombre { font-size: 12px; font-weight: 800; line-height: 1.3; }
+    .asig-block .asig-profesor { font-size: 11px; opacity: .85; margin-block-start: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .asig-block .asig-curso { font-size: 10px; opacity: .7; margin-block-start: 2px; font-style: italic; }
+    .asig-block .conflict-badge { font-size: 10px; font-weight: 800; background: #fee2e2; color: #b91c1c; border-radius: 4px; padding: 1px 5px; margin-block-start: 4px; display: inline-block; }
+
+    /* Colores por día */
+    .block-lunes     { background: #eef2ff; color: #3730a3; border-inline-start: 3px solid #6366f1; }
+    .block-martes    { background: #ecfdf5; color: #065f46; border-inline-start: 3px solid #10b981; }
+    .block-miercoles { background: #fff7ed; color: #92400e; border-inline-start: 3px solid #f59e0b; }
+    .block-jueves    { background: #fdf4ff; color: #6b21a8; border-inline-start: 3px solid #a855f7; }
+    .block-viernes   { background: #fff1f2; color: #9f1239; border-inline-start: 3px solid #f43f5e; }
+    .block-conflict  { background: #fee2e2 !important; border-inline-start: 3px solid #dc2626 !important; color: #7f1d1d !important; }
+
+    /* Celda vacía */
+    .empty-cell { display: flex; align-items: center; justify-content: center; block-size: 100%; min-block-size: 64px; }
+    .empty-dot { inline-size: 5px; block-size: 5px; border-radius: 50%; background: var(--gray-200); }
+
+    /* Leyenda */
+    .legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 16px 20px; background: var(--gray-50); border-block-start: 1px solid var(--gray-200); }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--gray-700); }
+    .legend-dot { inline-size: 10px; block-size: 10px; border-radius: 2px; }
+
+    /* Sin datos */
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--gray-500); }
+    .empty-state .empty-icon { font-size: 48px; margin-block-end: 12px; }
+    .empty-state p { font-size: 15px; }
+
+    /* Toast */
+    #toast { position: fixed; inset-block-end: 24px; inset-inline-end: 24px; background: #1e293b; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 9999; opacity: 0; transform: translateY(12px); transition: all .3s; pointer-events: none; }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* Spinner */
+    .spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 60px; }
+    .spinner { inline-size: 36px; block-size: 36px; border: 3px solid var(--gray-200); border-block-start-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-inline-size: 700px) {
+      .controls { flex-direction: column; align-items: stretch; }
+      .btn-export { margin-inline-start: 0; }
+    }
+  </style>
+<script src="../assets/config.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">🎒 LEARNSCAPE</div>
+  <button class="header-back" onclick="history.back()">← Volver</button>
+</header>
+
+<div class="container">
+  <div class="page-title">📅 Horario de Clases</div>
+  <div class="page-subtitle">Vista semanal por curso — detecta choques automáticamente</div>
+
+  <div class="controls">
+    <label for="selectCurso">Curso:</label>
+    <select id="selectCurso" onchange="cargarHorario()">
+      <option value="">— Seleccionar curso —</option>
+    </select>
+
+    <label for="selectVista" style="margin-inline-start:12px;">Vista:</label>
+    <select id="selectVista" onchange="renderHorario()">
+      <option value="asignaturas">Por asignatura</option>
+      <option value="profesor">Por profesor</option>
+    </select>
+
+    <button class="btn-export" id="btnExport" disabled onclick="exportarCSV()">
+      ⬇ Exportar CSV
+    </button>
+  </div>
+
+  <div class="schedule-wrap" id="scheduleWrap">
+    <div class="spinner-wrap"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ══════════════════════════════════════════════════════════
+  //  CONFIG
+  // ══════════════════════════════════════════════════════════
+  const API = window.LEARNSCAPE_API;
+
+  // Franjas horarias mostradas (6 franjas de 1 hora cada una)
+  const FRANJAS = [
+    { id: 'F1', label: '6:00\n7:00'  },
+    { id: 'F2', label: '7:00\n8:00'  },
+    { id: 'F3', label: '8:00\n9:00'  },
+    { id: 'F4', label: '9:00\n10:00' },
+    { id: 'F5', label: '10:00\n11:00'},
+    { id: 'F6', label: '11:00\n12:00'},
+    { id: 'F7', label: '12:00\n13:00'},
+    { id: 'F8', label: '13:00\n14:00'},
+    { id: 'F9', label: '14:00\n15:00'},
+  ];
+
+  const DIAS = ['lunes','martes','miercoles','jueves','viernes'];
+  const DIAS_LABEL = { lunes:'Lunes', martes:'Martes', miercoles:'Miércoles', jueves:'Jueves', viernes:'Viernes' };
+
+  // Palabras clave para detectar día desde el campo horario (texto libre)
+  const DIA_MAP = {
+    lun: 'lunes', lunes: 'lunes',
+    mar: 'martes', martes: 'martes',
+    mié: 'miercoles', mie: 'miercoles', miercoles: 'miercoles', miércoles: 'miercoles',
+    jue: 'jueves', jueves: 'jueves',
+    vie: 'viernes', viernes: 'viernes',
+  };
+
+  // Patrones de hora para detectar franja (ej: "8:00", "8h", "8am", "08:00")
+  function detectarFranja(texto) {
+    const match = texto.match(/(\d{1,2})(?::(\d{2}))?(?:\s*(?:am|h|hs|hrs|:00))?/i);
+    if (!match) return null;
+    const hora = parseInt(match[1]);
+    if (hora >= 6 && hora <= 14) return `F${hora - 5}`;
+    return null;
+  }
+
+  function parsearHorario(horarioStr) {
+    // Retorna { dia, franja } o null si no se puede parsear
+    if (!horarioStr) return null;
+    const lower = horarioStr.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    let dia = null, franja = null;
+    for (const [key, value] of Object.entries(DIA_MAP)) {
+      if (lower.includes(key)) { dia = value; break; }
+    }
+    franja = detectarFranja(lower);
+    if (!dia || !franja) return null;
+    return { dia, franja };
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  ESTADO
+  // ══════════════════════════════════════════════════════════
+  let asignaturasActuales = [];
+  let cursosCache = [];
+
+  // ══════════════════════════════════════════════════════════
+  //  UTILIDADES
+  // ══════════════════════════════════════════════════════════
+  function getToken() { return sessionStorage.getItem('token'); }
+
+  function toast(msg, dur = 3000) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), dur);
+  }
+
+  async function gql(query, variables = {}) {
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+      body: JSON.stringify({ query, variables }),
+    });
+    const json = await res.json();
+    if (json.errors) throw new Error(json.errors[0].message);
+    return json.data;
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  CARGAR CURSOS (init)
+  // ══════════════════════════════════════════════════════════
+  async function cargarCursos() {
+    document.getElementById('scheduleWrap').innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+    try {
+      const data = await gql(`query { cursos { id nombre } }`);
+      cursosCache = data.cursos || [];
+      const select = document.getElementById('selectCurso');
+      select.innerHTML = '<option value="">— Seleccionar curso —</option>';
+      cursosCache.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.nombre;
+        select.appendChild(opt);
+      });
+      document.getElementById('scheduleWrap').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📅</div>
+          <p>Selecciona un curso para ver su horario semanal</p>
+        </div>`;
+    } catch (err) {
+      document.getElementById('scheduleWrap').innerHTML = `
+        <div class="empty-state"><div class="empty-icon">⚠️</div><p>Error al cargar cursos: ${err.message}</p></div>`;
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  CARGAR ASIGNATURAS DEL CURSO
+  // ══════════════════════════════════════════════════════════
+  async function cargarHorario() {
+    const cursoId = document.getElementById('selectCurso').value;
+    if (!cursoId) {
+      asignaturasActuales = [];
+      document.getElementById('btnExport').disabled = true;
+      document.getElementById('scheduleWrap').innerHTML = `
+        <div class="empty-state"><div class="empty-icon">📅</div><p>Selecciona un curso</p></div>`;
+      return;
+    }
+    document.getElementById('scheduleWrap').innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+    try {
+      const data = await gql(`
+        query($cursoId: ID!) {
+          asignaturasPorCurso(cursoId: $cursoId) {
+            id nombre horario
+            profesor { id nombre primerApellido }
+            curso { id nombre }
+          }
+        }
+      `, { cursoId });
+      asignaturasActuales = data.asignaturasPorCurso || [];
+      document.getElementById('btnExport').disabled = asignaturasActuales.length === 0;
+      renderHorario();
+    } catch (err) {
+      document.getElementById('scheduleWrap').innerHTML = `
+        <div class="empty-state"><div class="empty-icon">⚠️</div><p>Error: ${err.message}</p></div>`;
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  RENDERIZAR GRILLA
+  // ══════════════════════════════════════════════════════════
+  function renderHorario() {
+    if (!asignaturasActuales.length) {
+      document.getElementById('scheduleWrap').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🗓️</div>
+          <p>No hay asignaturas registradas para este curso.</p>
+        </div>`;
+      return;
+    }
+
+    // Construir mapa: dia → franja → [asignaturas]
+    const grid = {};
+    DIAS.forEach(d => {
+      grid[d] = {};
+      FRANJAS.forEach(f => { grid[d][f.id] = []; });
+    });
+
+    const sinHorario = [];
+    const conflictos = new Set();
+
+    asignaturasActuales.forEach(asig => {
+      const parsed = parsearHorario(asig.horario);
+      if (!parsed) { sinHorario.push(asig); return; }
+      const { dia, franja } = parsed;
+      if (!grid[dia] || !grid[dia][franja]) return;
+      grid[dia][franja].push(asig);
+      if (grid[dia][franja].length > 1) {
+        grid[dia][franja].forEach(a => conflictos.add(a.id));
+      }
+    });
+
+    // Verificar conflictos de profesor (mismo profesor, mismo día/hora)
+    DIAS.forEach(dia => {
+      FRANJAS.forEach(f => {
+        const cell = grid[dia][f.id];
+        if (cell.length < 2) return;
+        const profs = cell.map(a => a.profesor?.id).filter(Boolean);
+        const profUnicos = new Set(profs);
+        if (profUnicos.size < profs.length) {
+          cell.forEach(a => conflictos.add(a.id));
+        }
+      });
+    });
+
+    let html = `<div class="schedule-scroll"><div class="schedule-grid">`;
+
+    // Cabecera
+    html += `<div class="day-header empty"></div>`;
+    DIAS.forEach(d => {
+      html += `<div class="day-header ${d}">${DIAS_LABEL[d]}</div>`;
+    });
+
+    // Filas
+    FRANJAS.forEach(franja => {
+      html += `<div class="time-label">${franja.label.replace('\n','<br>')}</div>`;
+      DIAS.forEach(dia => {
+        const asigs = grid[dia][franja.id];
+        html += `<div class="time-slot cell ${dia}">`;
+        if (!asigs.length) {
+          html += `<div class="empty-cell"><div class="empty-dot"></div></div>`;
+        } else {
+          asigs.forEach(asig => {
+            const esConflicto = conflictos.has(asig.id);
+            const blockClass = esConflicto ? 'block-conflict' : `block-${dia}`;
+            const profNombre = asig.profesor
+              ? `${asig.profesor.nombre} ${asig.profesor.primerApellido}`
+              : 'Sin docente';
+            html += `
+              <div class="asig-block ${blockClass}" title="${asig.nombre} — ${asig.horario || ''}">
+                <div class="asig-nombre">${asig.nombre}</div>
+                <div class="asig-profesor">👤 ${profNombre}</div>
+                ${esConflicto ? '<span class="conflict-badge">⚠ CHOQUE</span>' : ''}
+              </div>`;
+          });
+        }
+        html += `</div>`;
+      });
+    });
+
+    html += `</div></div>`;
+
+    // Leyenda
+    html += `<div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#6366f1"></div>Lunes</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Martes</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Miércoles</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div>Jueves</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f43f5e"></div>Viernes</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div>⚠ Choque de horario</div>
+    </div>`;
+
+    // Asignaturas sin horario parseado
+    if (sinHorario.length) {
+      html += `<div style="padding:16px 20px;background:#fffbeb;border-block-start:1px solid #fde68a;">
+        <strong style="font-size:13px;color:#92400e;">⚠ Asignaturas con horario no reconocido</strong>
+        <p style="font-size:12px;color:#92400e;margin-block-start:4px;">
+          Estas asignaturas no pudieron ubicarse en la grilla porque su horario no tiene formato estándar (ej: "Lunes 8:00"):<br>
+          ${sinHorario.map(a => `<strong>${a.nombre}</strong> (${a.horario || 'sin horario'})`).join(', ')}
+        </p>
+      </div>`;
+    }
+
+    if (conflictos.size > 0) {
+      toast(`⚠ Se detectaron ${conflictos.size} asignatura(s) con choque de horario`, 5000);
+    }
+
+    document.getElementById('scheduleWrap').innerHTML = html;
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  EXPORTAR CSV
+  // ══════════════════════════════════════════════════════════
+  function exportarCSV() {
+    if (!asignaturasActuales.length) return;
+    const cursoNombre = document.getElementById('selectCurso').selectedOptions[0]?.text || 'Curso';
+    const rows = [['Asignatura', 'Horario', 'Profesor', 'Curso']];
+    asignaturasActuales.forEach(a => {
+      const prof = a.profesor ? `${a.profesor.nombre} ${a.profesor.primerApellido}` : 'Sin asignar';
+      rows.push([a.nombre, a.horario || '', prof, a.curso?.nombre || '']);
+    });
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Horario_${cursoNombre.replace(/\s+/g,'_')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Horario exportado como CSV ✓');
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  INIT
+  // ══════════════════════════════════════════════════════════
+  document.addEventListener('DOMContentLoaded', cargarCursos);
+</script>
+</body>
+</html>
