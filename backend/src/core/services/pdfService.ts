@@ -370,7 +370,7 @@ export class PDFService {
       const lineX2 = fx + fw * 0.9;
       if (ruta) {
         try {
-          doc.image(ruta, fx + (fw - ancho) / 2, y - 2, { width: ancho, height: 28, fit: [ancho, 28] });
+          doc.image(ruta, fx + (fw - ancho) / 2, y - 10, { width: ancho, height: 38, fit: [ancho, 38] });
         } catch { /* fallback to the signature line */ }
       }
       doc.moveTo(lineX1, y + 28).lineTo(lineX2, y + 28)
@@ -595,8 +595,8 @@ export class PDFService {
       }
       y += 6;
       this.dibujarFirmas(doc, ml, cw, y, [
-        { cargo: 'Coordinadora', nombre: 'Martha Mejía', ruta: this.firmaCoordinadoraPath, ancho: 150 },
-        { cargo: 'Directora', nombre: 'Sandra Muñoz', ruta: this.firmaDirectoraPath, ancho: 105 },
+        { cargo: 'Coordinadora', nombre: 'Martha Mejía', ruta: this.firmaCoordinadoraPath, ancho: 210 },
+        { cargo: 'Directora', nombre: 'Sandra Muñoz', ruta: this.firmaDirectoraPath, ancho: 160 },
       ]);
       this.dibujarPie(doc, data, footerLabel);
     });
@@ -922,8 +922,8 @@ export class PDFService {
         y = 30;
       }
       this.dibujarFirmas(doc, ml, cw, y, [
-        { cargo: 'Coordinadora', nombre: 'Martha Mejía', ruta: this.firmaCoordinadoraPath, ancho: 150 },
-        { cargo: 'Directora', nombre: 'Sandra Muñoz', ruta: this.firmaDirectoraPath, ancho: 105 },
+        { cargo: 'Coordinadora', nombre: 'Martha Mejía', ruta: this.firmaCoordinadoraPath, ancho: 210 },
+        { cargo: 'Directora', nombre: 'Sandra Muñoz', ruta: this.firmaDirectoraPath, ancho: 160 },
       ]);
       this.dibujarPie(doc, data, footerLabel);
     });
