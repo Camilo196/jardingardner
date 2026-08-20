@@ -342,7 +342,7 @@ async function generarBoletinAcumuladoBase64(
 
     const todasLasCalificaciones = await repositories.calificacionRepository.findByEstudianteId(estIdBoletin).catch(() => []);
     const calsAcumuladasBase = (todasLasCalificaciones || []).filter((c: any) =>
-        c.nombreActividad !== '__boletin__' && String(c.periodo) === String(periodo),
+        c.nombreActividad !== '__boletin__' && mismoAnioYPrevios(periodo, c.periodo),
     );
     const observacionesBoletin = (todasLasCalificaciones || []).filter((c: any) =>
         c.nombreActividad === '__boletin__' && String(c.periodo) === String(periodo),
