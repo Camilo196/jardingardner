@@ -106,6 +106,14 @@ function obtenerRutaBanner(): string | null {
   return null;
 }
 
+function obtenerRutaFirma(nombreArchivo: string): string | null {
+  const candidatos = [
+    resolve(process.cwd(), `../frondend/src/app/assets/institution/${nombreArchivo}`),
+    resolve(process.cwd(), `frondend/src/app/assets/institution/${nombreArchivo}`),
+  ];
+  return candidatos.find((ruta) => existsSync(ruta)) || null;
+}
+
 function nombreCompleto(e: BoletinData['estudiante']): string {
   return `${e.nombre} ${e.primerApellido} ${e.segundoApellido || ''}`.trim();
 }
@@ -234,6 +242,8 @@ function itemsArr(items: string[] | undefined, fallback: string): string[] {
 // ─── Clase principal ──────────────────────────────────────────────────────────
 export class PDFService {
   private readonly bannerPath = obtenerRutaBanner();
+  private readonly firmaCoordinadoraPath = obtenerRutaFirma('Firma martha.png');
+  private readonly firmaDirectoraPath = obtenerRutaFirma('Firma Sandra.png');
 
   // ── Crear buffer ────────────────────────────────────────────────────────────
   private crearBuffer(
@@ -351,17 +361,24 @@ export class PDFService {
   private dibujarFirmas(
     doc: PDFKit.PDFDocument,
     ml: number, cw: number, y: number,
-    etiquetas: string[],
+    firmas: Array<{ cargo: string; nombre: string; ruta: string | null; ancho: number }>,
   ): void {
-    const fw = cw / etiquetas.length;
-    etiquetas.forEach((label, i) => {
+    const fw = cw / firmas.length;
+    firmas.forEach(({ cargo, nombre, ruta, ancho }, i) => {
       const fx = ml + i * fw;
       const lineX1 = fx + fw * 0.1;
       const lineX2 = fx + fw * 0.9;
+      if (ruta) {
+        try {
+          doc.image(ruta, fx + (fw - ancho) / 2, y - 2, { width: ancho, height: 28, fit: [ancho, 28] });
+        } catch { /* fallback to the signature line */ }
+      }
       doc.moveTo(lineX1, y + 28).lineTo(lineX2, y + 28)
          .lineWidth(0.8).stroke(C.tintaSuave);
+      doc.fillColor(C.tinta).font('Helvetica-Bold').fontSize(8)
+         .text(nombre, fx, y + 32, { width: fw, align: 'center' });
       doc.fillColor(C.tintaSuave).font('Helvetica').fontSize(8)
-         .text(label, fx, y + 32, { width: fw, align: 'center' });
+         .text(cargo, fx, y + 43, { width: fw, align: 'center' });
     });
   }
 
@@ -577,7 +594,10 @@ export class PDFService {
         y = 30;
       }
       y += 6;
-      this.dibujarFirmas(doc, ml, cw, y, ['Directora', 'Coordinadora', 'Docente']);
+      this.dibujarFirmas(doc, ml, cw, y, [
+        { cargo: 'Coordinadora', nombre: 'Martha Mejía', ruta: this.firmaCoordinadoraPath, ancho: 150 },
+        { cargo: 'Directora', nombre: 'Sandra Muñoz', ruta: this.firmaDirectoraPath, ancho: 105 },
+      ]);
       this.dibujarPie(doc, data, footerLabel);
     });
   }
@@ -901,7 +921,10 @@ export class PDFService {
         doc.addPage();
         y = 30;
       }
-      this.dibujarFirmas(doc, ml, cw, y, ['Directora', 'Coordinadora', 'Docente']);
+      this.dibujarFirmas(doc, ml, cw, y, [
+        { cargo: 'Coordinadora', nombre: 'Martha Mejía', ruta: this.firmaCoordinadoraPath, ancho: 150 },
+        { cargo: 'Directora', nombre: 'Sandra Muñoz', ruta: this.firmaDirectoraPath, ancho: 105 },
+      ]);
       this.dibujarPie(doc, data, footerLabel);
     });
   }
