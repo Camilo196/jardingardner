@@ -14,6 +14,12 @@ enum TipoActividad {
     TALLER
 }
 
+enum DimensionActividad {
+    SABER
+    HACER
+    SER
+}
+
 enum EstadoAsistencia {
   PRESENTE
   AUSENTE
@@ -95,6 +101,7 @@ type Calificacion {
     fecha: String
     tipoActividad: TipoActividad
     nombreActividad: String
+    dimensionActividad: DimensionActividad
     corte: Int
 }
 
@@ -311,6 +318,7 @@ input CalificacionInput {
   observaciones: String
   tipoActividad: TipoActividad
   nombreActividad: String
+  dimensionActividad: DimensionActividad
   corte: Int
 }
 
@@ -498,6 +506,7 @@ type Query {
 
   # Comportamiento
   comportamientosPorAsignatura(asignaturaId: ID!, periodo: String!): [Comportamiento!]!
+  comportamientosPorEstudiante(estudianteId: ID!, periodo: String): [Comportamiento!]!
   comportamientoEstudiante(estudianteId: ID!, asignaturaId: ID!, periodo: String!): Comportamiento
 
   # Cronograma

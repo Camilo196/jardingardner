@@ -433,7 +433,7 @@ const DLAB={lunes:'Lunes',martes:'Martes',miercoles:'Miércoles',jueves:'Jueves'
 let FRANJAS=[{id:'F1',h:6,l:'6:00'},{id:'F2',h:7,l:'7:00'},{id:'F3',h:8,l:'8:00'},{id:'F4',h:9,l:'9:00'},{id:'F5',h:10,l:'10:00'},{id:'F6',h:11,l:'11:00'},{id:'F7',h:12,l:'12:00'},{id:'F8',h:13,l:'13:00'},{id:'F9',h:14,l:'14:00'},{id:'FA',h:15,l:'15:00'},{id:'FB',h:16,l:'16:00'},{id:'FC',h:17,l:'17:00'}];
 const DIA_MAP={lun:'lunes',lunes:'lunes',mar:'martes',martes:'martes',mie:'miercoles','mié':'miercoles',miercoles:'miercoles','miércoles':'miercoles',jue:'jueves',jueves:'jueves',vie:'viernes',viernes:'viernes'};
 const DCLS={lunes:'lun',martes:'mar',miercoles:'mie',jueves:'jue',viernes:'vie'};
-const G={id:null,email:'',nombre:'',cursos:[],cals:[],asistencias:[],experiencias:[],cargado:false,esPreescolar:false,calMesActual:new Date().getMonth(),calAnioActual:new Date().getFullYear(),calEventos:[],actMesActual:new Date().getMonth(),actAnioActual:new Date().getFullYear(),actEventos:[]};
+const G={id:null,email:'',nombre:'',cursos:[],cals:[],comps:[],asistencias:[],experiencias:[],cargado:false,esPreescolar:false,calMesActual:new Date().getMonth(),calAnioActual:new Date().getFullYear(),calEventos:[],actMesActual:new Date().getMonth(),actAnioActual:new Date().getFullYear(),actEventos:[]};
 
 function normalizarCursoNombre(nombre=''){ return String(nombre||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
 function esCursoPreescolarNombre(nombre=''){ const n=normalizarCursoNombre(nombre); return ['parvulos','parvulo','pre jardin','prejardin','jardin','transicion'].some(k=>n.includes(k)); }
@@ -517,7 +517,8 @@ async function cargar(){
     const parts=G.nombre.split(' ');
     document.getElementById('sbAvatar').textContent=(parts.length>=2?parts[0][0]+parts[1][0]:G.nombre.substring(0,2)).toUpperCase();
     document.getElementById('sbName').textContent=G.nombre;
-    try{ const dc=await gql(`query{calificacionesPorEstudiante(estudianteId:"${G.id}"){id asignaturaId nota periodo observaciones fecha tipoActividad nombreActividad corte}}`); G.cals=(dc.calificacionesPorEstudiante||[]).map(c=>({...c,asignaturaId:String(c.asignaturaId)})); }catch(e){ G.cals=[]; }
+    try{ const dc=await gql(`query{calificacionesPorEstudiante(estudianteId:"${G.id}"){id asignaturaId nota periodo observaciones fecha tipoActividad nombreActividad dimensionActividad corte}}`); G.cals=(dc.calificacionesPorEstudiante||[]).map(c=>({...c,asignaturaId:String(c.asignaturaId)})); }catch(e){ G.cals=[]; }
+    try{ const dcomp=await gql(`query{comportamientosPorEstudiante(estudianteId:"${G.id}"){id asignaturaId profesorId periodo nota nivel descripcion}}`); G.comps=(dcomp.comportamientosPorEstudiante||[]).map(c=>({...c,asignaturaId:String(c.asignaturaId)})); }catch(e){ G.comps=[]; }
     try{ const dx=await gql(`query($eid:ID!){experienciasPorEstudiante(estudianteId:$eid){id cursoId titulo descripcion fecha mimeType contenidoBase64 curso{id nombre} profesor{nombre primerApellido}}}`,{eid:G.id}); G.experiencias=dx.experienciasPorEstudiante||[]; }catch(e){ G.experiencias=[]; }
     G.cargado=true;
     renderResumen();
@@ -700,7 +701,7 @@ function renderNotas(){
     return;
   }
   const sel=document.getElementById('notasPeriodoSel');
-  const periodos=[...new Set([...G.cursos.map(c=>c.periodo),...G.cals.map(c=>c.periodo)])].filter(Boolean).sort().reverse();
+  const periodos=[...new Set([...G.cursos.map(c=>c.periodo),...G.cals.map(c=>c.periodo),...G.comps.map(c=>c.periodo)])].filter(Boolean).sort().reverse();
   const selVal=sel.value;
   sel.innerHTML='<option value="">Todos los períodos</option>'+periodos.map(p=>`<option value="${p}" ${p===selVal?'selected':''}>${periodoLabel(p)}</option>`).join('');
   const filtroPeriodo=sel.value;
@@ -728,17 +729,32 @@ function renderNotas(){
   });
 
   const gruposCurso={};
-  Object.values(agrupadas).forEach(({asignatura,calificaciones})=>{
+  (G.comps||[]).forEach(comp=>{
+    if(filtroPeriodo && comp.periodo!==filtroPeriodo) return;
+    const id=String(comp.asignaturaId);
+    if(!agrupadas[id]){
+      const ref=asigLookup[id];
+      agrupadas[id]={
+        asignatura: ref || { id, nombre:`Asignatura ${id.slice(-4)}`, prof:'Sin docente', cursoNombre:'Sin curso', cursoPeriodo:comp.periodo||'' },
+        calificaciones:[],
+        comportamientos:[]
+      };
+    }
+    agrupadas[id].comportamientos ||= [];
+    agrupadas[id].comportamientos.push(comp);
+  });
+
+  Object.values(agrupadas).forEach(({asignatura,calificaciones,comportamientos})=>{
     const key=`${asignatura.cursoNombre||'Sin curso'}__${asignatura.cursoPeriodo||''}`;
     if(!gruposCurso[key]) gruposCurso[key]={ cursoNombre:asignatura.cursoNombre||'Sin curso', cursoPeriodo:asignatura.cursoPeriodo||'', items:[] };
-    gruposCurso[key].items.push({asignatura,calificaciones});
+    gruposCurso[key].items.push({asignatura,calificaciones,comportamientos:comportamientos||[]});
   });
 
   let h='';
   Object.values(gruposCurso).forEach(grupo=>{
     h+=`<div style="margin-bottom:28px"><h3 style="font-size:15px;color:var(--blue);margin-bottom:14px;font-weight:800">${grupo.cursoNombre} <span style="font-weight:600;font-size:13px;color:var(--muted)">- ${periodoLabel(grupo.cursoPeriodo)}</span></h3>`;
-    grupo.items.forEach(({asignatura,calificaciones})=>{
-      h+=bloqueAsig(asignatura,calificaciones);
+    grupo.items.forEach(({asignatura,calificaciones,comportamientos})=>{
+      h+=bloqueAsig(asignatura,calificaciones,comportamientos);
     });
     h+=`</div>`;
   });
@@ -749,11 +765,19 @@ function renderNotas(){
   }
   c.innerHTML=h;
 }
-function bloqueAsig(a,cals){
+function bloqueAsig(a,cals,comps=[]){
   const plbl=p=>{ const m=(p||'').match(/^(\d{4})-(\d)$/); return m?`${{1:'1er',2:'2do',3:'3er',4:'4to'}[m[2]]||'P'+m[2]} Periodo ${m[1]}`:p; };
   const rp=p=>p!==null?`<span class="pill ${p>=4?'g':p>=3.5?'a':'r'}" style="font-size:11px">${p.toFixed(1)}</span>`:`<span class="pill n" style="font-size:11px">-</span>`;
   const pg=cals.length?cals.reduce((s,c)=>s+Number(c.nota),0)/cals.length:null;
   let h=`<div class="asig-blk"><div class="asig-blk-h"><div><span>${a.nombre}</span> <small>- Docente: ${a.prof}</small></div>${pg!==null?`<span class="pill ${pg>=4?'g':pg>=3.5?'a':'r'}">Prom: ${pg.toFixed(2)} ${pg>=3.5?'OK':'Revisar'}</span>`:''}</div>`;
+  if(comps.length){
+    h+=`<div style="padding:10px 14px;background:#f8fafc;border-bottom:1px solid var(--border);display:grid;gap:6px">${comps.map(comp=>{
+      const n=Number(comp.nota);
+      const notaTxt=Number.isFinite(n)?n.toFixed(2):'-';
+      const cls=Number.isFinite(n)?(n>=4?'g':n>=3.5?'a':'r'):'n';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div style="font-size:12px;color:var(--muted);font-weight:700">Comportamiento - ${plbl(comp.periodo)}</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="pill ${cls}">${notaTxt} ${comp.nivel||''}</span>${comp.descripcion?`<span style="font-size:12px;color:var(--muted)">${escHtml(comp.descripcion)}</span>`:''}</div></div>`;
+    }).join('')}</div>`;
+  }
   if(!cals.length){
     h+=`<p style="padding:14px;color:var(--muted);font-style:italic;font-size:13px">Sin calificaciones registradas.</p>`;
   } else {
@@ -762,8 +786,8 @@ function bloqueAsig(a,cals){
       const acts=cals.filter(c=>(c.periodo||'Sin periodo')===per);
       const avg=acts.length?acts.reduce((s,c)=>s+Number(c.nota),0)/acts.length:null;
       h+=`<div style="padding:8px 14px 4px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:700;color:#475569">Periodo: ${plbl(per)}</span>${rp(avg)}</div>`;
-      h+=`<table class="ntbl"><thead><tr><th>Actividad</th><th>Tipo</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>`;
-      acts.forEach(c=>{const n=Number(c.nota);const f=c.fecha?fechaLocal(c.fecha):'-'; h+=`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.tipoActividad||'-'}</span></td><td><span class="pill ${n>=4?'g':n>=3.5?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`;});
+      h+=`<table class="ntbl"><thead><tr><th>Actividad</th><th>Tipo</th><th>Dimensión</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>`;
+      acts.forEach(c=>{const n=Number(c.nota);const f=c.fecha?fechaLocal(c.fecha):'-'; h+=`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.tipoActividad||'-'}</span></td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.dimensionActividad||'HACER'}</span></td><td><span class="pill ${n>=4?'g':n>=3.5?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`;});
       h+=`</tbody></table>`;
     });
   }
@@ -920,39 +944,45 @@ function abrirModal(id,nombre){
   if(G.esPreescolar) return;
   // Sin filtro de periodo: mostrar todas las notas de la asignatura
   const cals=G.cals.filter(c=>String(c.asignaturaId)===String(id));
+  const comps=(G.comps||[]).filter(c=>String(c.asignaturaId)===String(id));
   document.getElementById('mTit').textContent=`${nombre}`;
   let h='';
 
-  if(!cals.length){
+  if(!cals.length && !comps.length){
     h='<div class="empty"><div class="empty-ico">Notas</div><p>Sin calificaciones registradas.</p></div>';
   } else {
     // Agrupar por periodo
-    const periodos=[...new Set(cals.map(c=>c.periodo||'Sin periodo'))].sort();
+    const periodos=[...new Set([...cals.map(c=>c.periodo||'Sin periodo'),...comps.map(c=>c.periodo||'Sin periodo')])].sort();
     const rp=p=>p!==null?`<span class="pill ${p>=4?'g':p>=3.5?'a':'r'}">${p.toFixed(2)}</span>`:`<span class="pill n">-</span>`;
     const plabel=p=>{ const m=p.match(/^(\d{4})-(\d)$/); return m?`${{1:'1er',2:'2do',3:'3er',4:'4to'}[m[2]]||'P'+m[2]} Periodo ${m[1]}`:p; };
 
     periodos.forEach(per=>{
       const acts=cals.filter(c=>(c.periodo||'Sin periodo')===per);
+      const comp=comps.find(c=>(c.periodo||'Sin periodo')===per);
       const avg=acts.length?acts.reduce((s,c)=>s+Number(c.nota),0)/acts.length:null;
       const ap=avg!==null&&avg>=3.5;
+      const compNota=comp&&Number.isFinite(Number(comp.nota))?Number(comp.nota):null;
       h+=`<div style="margin-bottom:20px">
         <div style="display:flex;justify-content:space-between;align-items:center;background:${ap?'#f0fdf4':'#f8fafc'};border:1px solid ${ap?'#86efac':'#e2e8f0'};border-radius:10px;padding:12px 16px;margin-bottom:10px">
           <div><div style="font-weight:800;font-size:14px">${plabel(per)}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${acts.length} actividad(es)</div></div>
           <div style="text-align:right">${rp(avg)}<div style="font-size:11px;font-weight:700;color:${ap?'var(--green)':'var(--red)'};margin-top:3px">${avg!==null?(ap?'Aprobado':'Reprobado'):'-'}</div></div>
         </div>
-        <table class="ntbl"><thead><tr><th>Actividad</th><th>Tipo</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>
-        ${acts.map(c=>{ const n=Number(c.nota);const f=c.fecha?fechaLocal(c.fecha):'-'; return`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);font-weight:700">${c.tipoActividad||'-'}</span></td><td><span class="pill ${n>=4?'g':n>=3.5?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`; }).join('')}
+        ${comp?`<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:10px"><div style="font-weight:800;font-size:13px;color:var(--ink)">Comportamiento</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="pill ${compNota===null?'n':compNota>=4?'g':compNota>=3.5?'a':'r'}">${compNota===null?'-':compNota.toFixed(2)} ${comp.nivel||''}</span>${comp.descripcion?`<span style="font-size:12px;color:var(--muted)">${escHtml(comp.descripcion)}</span>`:''}</div></div>`:''}
+        <table class="ntbl"><thead><tr><th>Actividad</th><th>Tipo</th><th>Dimensión</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>
+        ${acts.length?acts.map(c=>{ const n=Number(c.nota);const f=c.fecha?fechaLocal(c.fecha):'-'; return`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);font-weight:700">${c.tipoActividad||'-'}</span></td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);font-weight:700">${c.dimensionActividad||'HACER'}</span></td><td><span class="pill ${n>=4?'g':n>=3.5?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`; }).join(''):`<tr><td colspan="5" style="color:var(--muted);font-style:italic">Sin calificaciones registradas.</td></tr>`}
         </tbody></table>
       </div>`;
     });
 
     // Promedio general
-    const pg=cals.reduce((s,c)=>s+Number(c.nota),0)/cals.length;
-    h+=`<div style="background:${pg>=3.5?'#f0fdf4':'#fff1f2'};border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border:1px solid ${pg>=3.5?'#86efac':'#fca5a5'}">
+    if(cals.length){
+      const pg=cals.reduce((s,c)=>s+Number(c.nota),0)/cals.length;
+      h+=`<div style="background:${pg>=3.5?'#f0fdf4':'#fff1f2'};border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border:1px solid ${pg>=3.5?'#86efac':'#fca5a5'}">
       <span style="font-weight:800;font-size:14px">Promedio General</span>
       <div><span class="pill ${pg>=4?'g':pg>=3.5?'a':'r'}" style="font-size:15px">${pg.toFixed(2)}</span>
       <span style="font-size:12px;margin-left:8px;font-weight:700;color:${pg>=3.5?'var(--green)':'var(--red)'}">${pg>=3.5?'APROBADO':'REPROBADO'}</span></div>
     </div>`;
+    }
   }
 
   document.getElementById('mBody').innerHTML=h;

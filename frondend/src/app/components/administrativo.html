@@ -1495,7 +1495,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     const data = await gql(`
       query($asignaturaId: ID!, $periodo: String!) {
         calificacionesPorAsignaturaYPeriodo(asignaturaId: $asignaturaId, periodo: $periodo) {
-          id estudianteId asignaturaId nota periodo corte tipoActividad nombreActividad observaciones fecha
+          id estudianteId asignaturaId nota periodo corte tipoActividad nombreActividad dimensionActividad observaciones fecha
+        }
+        comportamientosPorAsignatura(asignaturaId: $asignaturaId, periodo: $periodo) {
+          id estudianteId nota nivel descripcion periodo
         }
         matriculasPorAsignatura(asignaturaId: $asignaturaId) {
           estudiante { id cedula nombre primerApellido segundoApellido }
@@ -1505,6 +1508,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     `, { asignaturaId: asigId, periodo });
 
     const cals = data.calificacionesPorAsignaturaYPeriodo || [];
+    const comps = data.comportamientosPorAsignatura || [];
     const asig = data.asignatura;
 
     const matriculas = data.matriculasPorAsignatura || [];
@@ -1528,11 +1532,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       if (!porEstudiante[ced]) porEstudiante[ced] = { est, calificaciones: [] };
       porEstudiante[ced].calificaciones.push(c);
     });
+    const compMap = {};
+    comps.forEach(comp => {
+      const est = estMap[comp.estudianteId] || { cedula: comp.estudianteId, nombre: comp.estudianteId };
+      const ced = est.cedula || comp.estudianteId;
+      compMap[ced] = comp;
+      if (!porEstudiante[ced]) porEstudiante[ced] = { est, calificaciones: [] };
+    });
 
     const tipoLabel = { TRABAJO:'Trabajo', EXAMEN:'Examen', QUIZ:'Quiz', PARTICIPACION:'Participacion', TALLER:'Taller' };
     const corteLabel = { 1:'1er Corte', 2:'2do Corte', 3:'3er Corte' };
 
-    headersExport = ['Cedula', 'Estudiante', 'Actividad', 'Tipo', 'Corte', 'Nota', 'Periodo', 'Observaciones', 'Fecha'];
+    const dimensionLabel = { SABER:'Saber', HACER:'Hacer', SER:'Ser' };
+    headersExport = ['Cedula', 'Estudiante', 'Actividad', 'Tipo', 'Dimension', 'Corte', 'Nota', 'Comportamiento', 'Observacion comportamiento', 'Periodo', 'Observaciones', 'Fecha'];
     datosExport = [];
     Object.values(porEstudiante)
       .sort((a, b) => String(a.est.nombre).localeCompare(String(b.est.nombre), 'es', { sensitivity: 'base' }))
@@ -1542,13 +1554,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           String(a.nombreActividad || '').localeCompare(String(b.nombreActividad || ''), 'es', { sensitivity: 'base' })
         );
         if (!lista.length) {
+          const comp = compMap[item.est.cedula];
+          const compNota = comp && Number.isFinite(Number(comp.nota)) ? Number(comp.nota).toFixed(2) : '';
           datosExport.push({
             'Cedula': item.est.cedula,
             'Estudiante': item.est.nombre,
             'Actividad': 'Sin calificaciones',
             'Tipo': '',
+            'Dimension': '',
             'Corte': '',
             'Nota': '',
+            'Comportamiento': comp ? `${compNota}${comp.nivel ? ' - ' + comp.nivel : ''}` : '',
+            'Observacion comportamiento': comp?.descripcion || '',
             'Periodo': periodo,
             'Observaciones': '',
             'Fecha': '',
@@ -1556,13 +1573,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           return;
         }
         lista.forEach(c => {
+          const comp = compMap[item.est.cedula];
+          const compNota = comp && Number.isFinite(Number(comp.nota)) ? Number(comp.nota).toFixed(2) : '';
           datosExport.push({
             'Cedula': item.est.cedula,
             'Estudiante': item.est.nombre,
             'Actividad': c.nombreActividad || '-',
             'Tipo': tipoLabel[c.tipoActividad] || c.tipoActividad || '-',
+            'Dimension': dimensionLabel[c.dimensionActividad] || c.dimensionActividad || '-',
             'Corte': corteLabel[c.corte] || `Corte ${c.corte || ''}`.trim(),
             'Nota': Number(c.nota),
+            'Comportamiento': comp ? `${compNota}${comp.nivel ? ' - ' + comp.nivel : ''}` : '',
+            'Observacion comportamiento': comp?.descripcion || '',
             'Periodo': c.periodo,
             'Observaciones': c.observaciones || '',
             'Fecha': c.fecha ? new Date(c.fecha).toLocaleDateString('es-ES') : '',

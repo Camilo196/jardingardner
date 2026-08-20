@@ -700,6 +700,12 @@ export const resolvers = {
         comportamientosPorAsignatura: async (_: any, { asignaturaId, periodo }: any) =>
             await ComportamientoModel.find({ asignaturaId, periodo }).lean(),
 
+        comportamientosPorEstudiante: async (_: any, { estudianteId, periodo }: any) => {
+            const query: any = { estudianteId: String(estudianteId) };
+            if (periodo) query.periodo = String(periodo);
+            return await ComportamientoModel.find(query).lean();
+        },
+
         comportamientoEstudiante: async (_: any, { estudianteId, asignaturaId, periodo }: any) =>
             await ComportamientoModel.findOne({ estudianteId, asignaturaId, periodo }).lean(),
 
@@ -1535,6 +1541,7 @@ export const resolvers = {
                 observaciones: cal.observaciones,
                 tipoActividad: cal.tipoActividad,
                 nombreActividad: cal.nombreActividad,
+                dimensionActividad: cal.dimensionActividad,
                 corte: cal.corte,
             };
         },
@@ -2153,6 +2160,10 @@ export const resolvers = {
             const dd = String(d.getUTCDate()).padStart(2, '0');
             return yyyy + '-' + mm + '-' + dd + 'T12:00:00.000Z';
         },
+    },
+
+    Comportamiento: {
+        id: (comp: any) => comp?.id ?? comp?._id?.toString() ?? '',
     },
 
     Matricula: {
