@@ -65,23 +65,37 @@ function mismaFechaUtcAlMediodia(fecha: Date) {
 }
 
 async function corregirFechasCalificacionesSinDesfase() {
-  const docs = await CalificacionModel.find({ fecha: { $type: 'date' } })
-    .select('_id fecha')
-    .lean();
+  const midnightUtcFilter = {
+    fecha: { $type: 'date' },
+    $expr: {
+      $and: [
+        { $eq: [{ $hour: { date: '$fecha', timezone: 'UTC' } }, 0] },
+        { $eq: [{ $minute: { date: '$fecha', timezone: 'UTC' } }, 0] },
+        { $eq: [{ $second: { date: '$fecha', timezone: 'UTC' } }, 0] },
+        { $eq: [{ $millisecond: { date: '$fecha', timezone: 'UTC' } }, 0] },
+      ],
+    },
+  };
 
-  const ops = docs
-    .filter((doc: any) => doc.fecha instanceof Date && fechaEsMedianocheUtc(doc.fecha))
-    .map((doc: any) => ({
-      updateOne: {
-        filter: { _id: doc._id, fecha: doc.fecha },
-        update: { $set: { fecha: mismaFechaUtcAlMediodia(doc.fecha) } },
+  const result = await CalificacionModel.updateMany(midnightUtcFilter, [
+    {
+      $set: {
+        fecha: {
+          $dateFromParts: {
+            year: { $year: { date: '$fecha', timezone: 'UTC' } },
+            month: { $month: { date: '$fecha', timezone: 'UTC' } },
+            day: { $dayOfMonth: { date: '$fecha', timezone: 'UTC' } },
+            hour: 12,
+            timezone: 'UTC',
+          },
+        },
       },
-    }));
+    },
+  ]);
 
-  if (!ops.length) return;
-
-  const result = await CalificacionModel.bulkWrite(ops, { ordered: false });
-  console.log(`Fechas de calificaciones corregidas: ${result.modifiedCount}`);
+  if (result.modifiedCount > 0) {
+    console.log(`Fechas de calificaciones corregidas: ${result.modifiedCount}`);
+  }
 }
 
 // Inicializar repositorios
