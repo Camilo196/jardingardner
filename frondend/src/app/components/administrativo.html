@@ -1246,8 +1246,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
     <div class="report-card" id="card-calificaciones" onclick="seleccionarReporte('calificaciones')">
       <div class="report-icon"><i class="fas fa-file-signature"></i></div>
-      <div class="report-title">Calificaciones por Asignatura</div>
-      <div class="report-desc">Todas las notas de una asignatura en un período, agrupadas por corte y tipo de actividad.</div>
+      <div class="report-title">Definitivas por Materia</div>
+      <div class="report-desc">Definitiva y comportamiento por materia, filtrado por curso, periodo y estudiante.</div>
       <div class="report-badges">
         <span class="report-badge badge-xlsx">Excel</span>
         <span class="report-badge badge-csv">CSV</span>
@@ -1385,7 +1385,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     const panel = document.getElementById('configPanel');
     panel.classList.add('show');
     const titles = {
-      calificaciones: 'Reporte de Calificaciones por Asignatura',
+      calificaciones: 'Reporte de Definitivas por Materia',
       estudiantes:    'Reporte de Estudiantes',
       asistencia:     'Reporte de Asistencia',
       promedios:      'Reporte de Promedios por Curso',
@@ -1398,7 +1398,47 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     campos.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
 
     try {
-      if (tipo === 'calificaciones' || tipo === 'asistencia') {
+      if (tipo === 'calificaciones') {
+        const [dC, dA, dM] = await Promise.all([
+          gql(`query { cursos { id nombre } }`),
+          gql(`query { asignaturas { id nombre curso { id nombre } } }`),
+          gql(`query {
+            matriculas {
+              curso { id nombre }
+              estudiante { id cedula nombre primerApellido segundoApellido }
+            }
+          }`),
+        ]);
+        window.__reporteCalificacionesData = {
+          asignaturas: dA.asignaturas || [],
+          matriculas: dM.matriculas || [],
+        };
+        const optsCursos = (dC.cursos || []).map(c =>
+          `<option value="${c.id}">${c.nombre}</option>`
+        ).join('');
+        campos.innerHTML = `
+          <div class="form-group">
+            <label>Curso *</label>
+            <select id="campo-curso" onchange="actualizarOpcionesCalificaciones()"><option value="">Seleccionar...</option>${optsCursos}</select>
+          </div>
+          <div class="form-group">
+            <label>Período *</label>
+            <select id="campo-periodo"><option value="">Cargando...</option></select>
+          </div>
+          <div class="form-group">
+            <label>Estudiante</label>
+            <select id="campo-estudiante"><option value="">Todos los estudiantes</option></select>
+          </div>
+          <div class="form-group">
+            <label>Asignatura</label>
+            <select id="campo-asignatura"><option value="">Todas las materias</option></select>
+          </div>`;
+        buildPeriodoSelect('campo-periodo').then(html => {
+          const div = document.querySelector('#campo-periodo').parentElement;
+          div.innerHTML = '<label>Período *</label>' + html;
+        });
+        actualizarOpcionesCalificaciones();
+      } else if (tipo === 'asistencia') {
         const [dA] = await Promise.all([
           gql(`query { asignaturas { id nombre curso { nombre } } }`),
         ]);
@@ -1466,6 +1506,48 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     reporteActual = null;
   }
 
+  function actualizarOpcionesCalificaciones() {
+    const cursoId = document.getElementById('campo-curso')?.value || '';
+    const data = window.__reporteCalificacionesData || { asignaturas: [], matriculas: [] };
+    const asignaturas = (data.asignaturas || [])
+      .filter(a => !cursoId || a?.curso?.id === cursoId)
+      .sort((a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es', { sensitivity: 'base' }));
+    const matriculas = (data.matriculas || [])
+      .filter(m => !cursoId || m?.curso?.id === cursoId)
+      .filter(m => {
+        const e = m?.estudiante;
+        return e && e.cedula && String(e.cedula).toLowerCase() !== 'n/a';
+      })
+      .sort((a, b) => {
+        const ea = a.estudiante || {};
+        const eb = b.estudiante || {};
+        const na = `${ea.nombre || ''} ${ea.primerApellido || ''} ${ea.segundoApellido || ''}`.trim();
+        const nb = `${eb.nombre || ''} ${eb.primerApellido || ''} ${eb.segundoApellido || ''}`.trim();
+        return na.localeCompare(nb, 'es', { sensitivity: 'base' });
+      });
+
+    const asigSelect = document.getElementById('campo-asignatura');
+    if (asigSelect) {
+      asigSelect.innerHTML = '<option value="">Todas las materias</option>' +
+        asignaturas.map(a => `<option value="${a.id}">${a.nombre}</option>`).join('');
+    }
+
+    const estSelect = document.getElementById('campo-estudiante');
+    if (estSelect) {
+      const vistos = new Set();
+      const opts = [];
+      matriculas.forEach(m => {
+        const e = m.estudiante;
+        const key = e.id || e.cedula;
+        if (!key || vistos.has(key)) return;
+        vistos.add(key);
+        const nombre = `${e.nombre || ''} ${e.primerApellido || ''} ${e.segundoApellido || ''}`.trim();
+        opts.push(`<option value="${key}">${nombre}</option>`);
+      });
+      estSelect.innerHTML = '<option value="">Todos los estudiantes</option>' + opts.join('');
+    }
+  }
+
   // ??????????????????????????????????????????????????????????
   //  GENERAR REPORTE
   // ??????????????????????????????????????????????????????????
@@ -1488,30 +1570,51 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
   // â”€â”€ Calificaciones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function generarCalificaciones() {
-    const asigId  = document.getElementById('campo-asignatura')?.value;
+    const cursoId = document.getElementById('campo-curso')?.value;
+    const estudianteFiltro = document.getElementById('campo-estudiante')?.value || '';
+    const asigId  = document.getElementById('campo-asignatura')?.value || '';
     const periodo = document.getElementById('campo-periodo')?.value?.trim();
-    if (!asigId || !periodo) { toast('Selecciona asignatura y período'); return; }
+    if (!cursoId || !periodo) { toast('Selecciona curso y período'); return; }
 
     const data = await gql(`
-      query($asignaturaId: ID!, $periodo: String!) {
-        calificacionesPorAsignaturaYPeriodo(asignaturaId: $asignaturaId, periodo: $periodo) {
-          id estudianteId asignaturaId nota periodo corte tipoActividad nombreActividad dimensionActividad observaciones fecha
+      query($cursoId: ID!) {
+        curso(id: $cursoId) { id nombre }
+        asignaturasPorCurso(cursoId: $cursoId) { id nombre profesor { nombre primerApellido } }
+        calificacionesPorCurso(cursoId: $cursoId) {
+          estudianteId asignaturaId nota periodo nombreActividad
         }
-        comportamientosPorAsignatura(asignaturaId: $asignaturaId, periodo: $periodo) {
-          id estudianteId nota nivel descripcion periodo
-        }
-        matriculasPorAsignatura(asignaturaId: $asignaturaId) {
+        matriculas {
+          curso { id nombre }
           estudiante { id cedula nombre primerApellido segundoApellido }
         }
-        asignatura(id: $asignaturaId) { nombre curso { nombre } profesor { nombre primerApellido } }
       }
-    `, { asignaturaId: asigId, periodo });
+    `, { cursoId });
 
-    const cals = data.calificacionesPorAsignaturaYPeriodo || [];
-    const comps = data.comportamientosPorAsignatura || [];
-    const asig = data.asignatura;
+    const curso = data.curso;
+    const asignaturas = (data.asignaturasPorCurso || [])
+      .filter(a => !asigId || a.id === asigId)
+      .sort((a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es', { sensitivity: 'base' }));
+    if (!asignaturas.length) { toast('No hay materias para ese filtro'); return; }
 
-    const matriculas = data.matriculasPorAsignatura || [];
+    const comportamientosRes = await Promise.all(asignaturas.map(async asignatura => ({
+      asignaturaId: asignatura.id,
+      data: await gql(`
+        query($asignaturaId: ID!, $periodo: String!) {
+          comportamientosPorAsignatura(asignaturaId: $asignaturaId, periodo: $periodo) {
+            id estudianteId nota nivel descripcion periodo
+          }
+        }
+      `, { asignaturaId: asignatura.id, periodo })
+    })));
+
+    const matriculas = (data.matriculas || [])
+      .filter(m => m?.curso?.id === cursoId && m?.estudiante)
+      .filter(m => {
+        const e = m.estudiante;
+        if (!e.cedula || String(e.cedula).toLowerCase() === 'n/a') return false;
+        if (!estudianteFiltro) return true;
+        return e.id === estudianteFiltro || e.cedula === estudianteFiltro;
+      });
     const estMap = {};
     matriculas.forEach(m => {
       const e = m?.estudiante;
@@ -1519,83 +1622,67 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       if (!e.cedula || String(e.cedula).toLowerCase() === 'n/a') return;
       const nombre = `${e.nombre} ${e.primerApellido} ${e.segundoApellido || ''}`.trim();
       if (!nombre || nombre.toLowerCase() === 'sin datos') return;
-      if (e.cedula) estMap[e.cedula] = { cedula: e.cedula, nombre };
-      if (e.id) estMap[e.id] = { cedula: e.cedula || e.id, nombre };
+      const est = { id: e.id, cedula: e.cedula, nombre };
+      if (e.cedula) estMap[e.cedula] = est;
+      if (e.id) estMap[e.id] = est;
     });
-    const porEstudiante = {};
-    Object.values(estMap).forEach(est => {
-      if (!porEstudiante[est.cedula]) porEstudiante[est.cedula] = { est, calificaciones: [] };
-    });
-    cals.forEach(c => {
-      const est = estMap[c.estudianteId] || { cedula: c.estudianteId, nombre: c.estudianteId };
-      const ced = est.cedula || c.estudianteId;
-      if (!porEstudiante[ced]) porEstudiante[ced] = { est, calificaciones: [] };
-      porEstudiante[ced].calificaciones.push(c);
-    });
+    const estudiantes = Object.values(estMap)
+      .filter((est, idx, arr) => arr.findIndex(e => e.cedula === est.cedula) === idx)
+      .sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es', { sensitivity: 'base' }));
+
+    const notasMap = {};
+    (data.calificacionesPorCurso || [])
+      .filter(c => c.periodo === periodo && c.nombreActividad !== '__boletin__')
+      .filter(c => asignaturas.some(a => a.id === c.asignaturaId))
+      .forEach(c => {
+        const est = estMap[String(c.estudianteId || '').trim()];
+        if (!est) return;
+        const key = `${est.cedula}::${c.asignaturaId}`;
+        notasMap[key] ||= [];
+        notasMap[key].push(Number(c.nota));
+      });
+
     const compMap = {};
-    comps.forEach(comp => {
-      const est = estMap[comp.estudianteId] || { cedula: comp.estudianteId, nombre: comp.estudianteId };
-      const ced = est.cedula || comp.estudianteId;
-      compMap[ced] = comp;
-      if (!porEstudiante[ced]) porEstudiante[ced] = { est, calificaciones: [] };
+    comportamientosRes.forEach(({ asignaturaId, data: compData }) => {
+      ((compData && compData.comportamientosPorAsignatura) || []).forEach(comp => {
+        const est = estMap[String(comp.estudianteId || '').trim()];
+        if (!est) return;
+        compMap[`${est.cedula}::${asignaturaId}`] = comp;
+      });
     });
 
-    const tipoLabel = { TRABAJO:'Trabajo', EXAMEN:'Examen', QUIZ:'Quiz', PARTICIPACION:'Participacion', TALLER:'Taller' };
-    const corteLabel = { 1:'1er Corte', 2:'2do Corte', 3:'3er Corte' };
-
-    const dimensionLabel = { SABER:'Saber', HACER:'Hacer', SER:'Ser' };
-    headersExport = ['Cedula', 'Estudiante', 'Actividad', 'Tipo', 'Dimension', 'Corte', 'Nota', 'Comportamiento', 'Observacion comportamiento', 'Periodo', 'Observaciones', 'Fecha'];
+    headersExport = ['Cedula', 'Estudiante', 'Asignatura', 'Definitiva', 'Comportamiento', 'Observacion comportamiento', 'Periodo', 'Curso', 'Docente'];
     datosExport = [];
-    Object.values(porEstudiante)
-      .sort((a, b) => String(a.est.nombre).localeCompare(String(b.est.nombre), 'es', { sensitivity: 'base' }))
-      .forEach(item => {
-        const lista = [...item.calificaciones].sort((a, b) =>
-          String(a.fecha || '').localeCompare(String(b.fecha || '')) ||
-          String(a.nombreActividad || '').localeCompare(String(b.nombreActividad || ''), 'es', { sensitivity: 'base' })
-        );
-        if (!lista.length) {
-          const comp = compMap[item.est.cedula];
-          const compNota = comp && Number.isFinite(Number(comp.nota)) ? Number(comp.nota).toFixed(2) : '';
-          datosExport.push({
-            'Cedula': item.est.cedula,
-            'Estudiante': item.est.nombre,
-            'Actividad': 'Sin calificaciones',
-            'Tipo': '',
-            'Dimension': '',
-            'Corte': '',
-            'Nota': '',
-            'Comportamiento': comp ? `${compNota}${comp.nivel ? ' - ' + comp.nivel : ''}` : '',
-            'Observacion comportamiento': comp?.descripcion || '',
-            'Periodo': periodo,
-            'Observaciones': '',
-            'Fecha': '',
-          });
-          return;
-        }
-        lista.forEach(c => {
-          const comp = compMap[item.est.cedula];
-          const compNota = comp && Number.isFinite(Number(comp.nota)) ? Number(comp.nota).toFixed(2) : '';
-          datosExport.push({
-            'Cedula': item.est.cedula,
-            'Estudiante': item.est.nombre,
-            'Actividad': c.nombreActividad || '-',
-            'Tipo': tipoLabel[c.tipoActividad] || c.tipoActividad || '-',
-            'Dimension': dimensionLabel[c.dimensionActividad] || c.dimensionActividad || '-',
-            'Corte': corteLabel[c.corte] || `Corte ${c.corte || ''}`.trim(),
-            'Nota': Number(c.nota),
-            'Comportamiento': comp ? `${compNota}${comp.nivel ? ' - ' + comp.nivel : ''}` : '',
-            'Observacion comportamiento': comp?.descripcion || '',
-            'Periodo': c.periodo,
-            'Observaciones': c.observaciones || '',
-            'Fecha': c.fecha ? new Date(c.fecha).toLocaleDateString('es-ES') : '',
-          });
+    estudiantes.forEach(est => {
+      asignaturas.forEach(asignatura => {
+        const key = `${est.cedula}::${asignatura.id}`;
+        const definitiva = promedioNotas(notasMap[key] || []);
+        const comp = compMap[key];
+        const compNota = comp && Number.isFinite(Number(comp.nota)) ? Number(comp.nota) : null;
+        const compTexto = comp
+          ? `${compNota !== null ? nota2(compNota) : ''}${compNota !== null && comp.nivel ? ' - ' : ''}${comp.nivel || ''}`
+          : '';
+        const prof = asignatura?.profesor ? `${asignatura.profesor.nombre || ''} ${asignatura.profesor.primerApellido || ''}`.trim() : '';
+        datosExport.push({
+          'Cedula': est.cedula,
+          'Estudiante': est.nombre,
+          'Asignatura': asignatura.nombre,
+          'Definitiva': nota2(definitiva),
+          'Comportamiento': compTexto,
+          'Observacion comportamiento': comp?.descripcion || '',
+          'Periodo': periodo,
+          'Curso': curso?.nombre || '',
+          'Docente': prof,
         });
       });
-    const prof = asig?.profesor ? `${asig.profesor.nombre} ${asig.profesor.primerApellido}` : '—';
-    document.getElementById('previewTitle').textContent = `Calificaciones - ${asig?.nombre || ''} (${periodo})`;
-    document.getElementById('previewMeta').textContent = `Curso: ${asig?.curso?.nombre || '-'} · Docente: ${prof} · ${datosExport.length} registros`;
+    });
 
-    renderTabla(headersExport, datosExport, 'Nota');
+    document.getElementById('previewTitle').textContent = `Definitivas por materia - ${curso?.nombre || ''} (${periodo})`;
+    const filtroEstudiante = estudiantes.length === 1 ? ` · Estudiante: ${estudiantes[0].nombre}` : '';
+    const filtroAsignatura = asigId ? ` · Materia: ${asignaturas[0]?.nombre || ''}` : '';
+    document.getElementById('previewMeta').textContent = `${datosExport.length} registros${filtroEstudiante}${filtroAsignatura}`;
+
+    renderTabla(headersExport, datosExport, 'Definitiva');
   }
 
   // â”€â”€ Estudiantes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
