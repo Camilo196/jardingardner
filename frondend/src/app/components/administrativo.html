@@ -1246,6 +1246,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
     <div class="report-card" id="card-calificaciones" onclick="seleccionarReporte('calificaciones')">
       <div class="report-icon"><i class="fas fa-file-signature"></i></div>
+      <div class="report-title">Calificaciones por Asignatura</div>
+      <div class="report-desc">Todas las notas de una asignatura en un período, agrupadas por corte y tipo de actividad.</div>
+      <div class="report-badges">
+        <span class="report-badge badge-xlsx">Excel</span>
+        <span class="report-badge badge-csv">CSV</span>
+      </div>
+    </div>
+
+    <div class="report-card" id="card-materias" onclick="seleccionarReporte('materias')">
+      <div class="report-icon"><i class="fas fa-list-check"></i></div>
       <div class="report-title">Definitivas por Materia</div>
       <div class="report-desc">Definitiva y comportamiento por materia, filtrado por curso, periodo y estudiante.</div>
       <div class="report-badges">
@@ -1385,7 +1395,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     const panel = document.getElementById('configPanel');
     panel.classList.add('show');
     const titles = {
-      calificaciones: 'Reporte de Definitivas por Materia',
+      calificaciones: 'Reporte de Calificaciones por Asignatura',
+      materias:       'Reporte de Definitivas por Materia',
       estudiantes:    'Reporte de Estudiantes',
       asistencia:     'Reporte de Asistencia',
       promedios:      'Reporte de Promedios por Curso',
@@ -1398,7 +1409,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     campos.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
 
     try {
-      if (tipo === 'calificaciones') {
+      if (tipo === 'materias') {
         const [dC, dA, dM] = await Promise.all([
           gql(`query { cursos { id nombre } }`),
           gql(`query { asignaturas { id nombre curso { id nombre } } }`),
@@ -1438,7 +1449,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           div.innerHTML = '<label>Período *</label>' + html;
         });
         actualizarOpcionesCalificaciones();
-      } else if (tipo === 'asistencia') {
+      } else if (tipo === 'calificaciones' || tipo === 'asistencia') {
         const [dA] = await Promise.all([
           gql(`query { asignaturas { id nombre curso { nombre } } }`),
         ]);
@@ -1557,6 +1568,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
     try {
       if (reporteActual === 'calificaciones') await generarCalificaciones();
+      else if (reporteActual === 'materias')   await generarDefinitivasMateria();
       else if (reporteActual === 'estudiantes')  await generarEstudiantes();
       else if (reporteActual === 'asistencia')   await generarAsistencia();
       else if (reporteActual === 'promedios')    await generarPromedios();
@@ -1570,6 +1582,117 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
   // â”€â”€ Calificaciones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function generarCalificaciones() {
+    const asigId  = document.getElementById('campo-asignatura')?.value;
+    const periodo = document.getElementById('campo-periodo')?.value?.trim();
+    if (!asigId || !periodo) { toast('Selecciona asignatura y período'); return; }
+
+    const data = await gql(`
+      query($asignaturaId: ID!, $periodo: String!) {
+        calificacionesPorAsignaturaYPeriodo(asignaturaId: $asignaturaId, periodo: $periodo) {
+          id estudianteId asignaturaId nota periodo corte tipoActividad nombreActividad dimensionActividad observaciones fecha
+        }
+        comportamientosPorAsignatura(asignaturaId: $asignaturaId, periodo: $periodo) {
+          id estudianteId nota nivel descripcion periodo
+        }
+        matriculasPorAsignatura(asignaturaId: $asignaturaId) {
+          estudiante { id cedula nombre primerApellido segundoApellido }
+        }
+        asignatura(id: $asignaturaId) { nombre curso { nombre } profesor { nombre primerApellido } }
+      }
+    `, { asignaturaId: asigId, periodo });
+
+    const cals = data.calificacionesPorAsignaturaYPeriodo || [];
+    const comps = data.comportamientosPorAsignatura || [];
+    const asig = data.asignatura;
+
+    const matriculas = data.matriculasPorAsignatura || [];
+    const estMap = {};
+    matriculas.forEach(m => {
+      const e = m?.estudiante;
+      if (!e) return;
+      if (!e.cedula || String(e.cedula).toLowerCase() === 'n/a') return;
+      const nombre = `${e.nombre} ${e.primerApellido} ${e.segundoApellido || ''}`.trim();
+      if (!nombre || nombre.toLowerCase() === 'sin datos') return;
+      if (e.cedula) estMap[e.cedula] = { cedula: e.cedula, nombre };
+      if (e.id) estMap[e.id] = { cedula: e.cedula || e.id, nombre };
+    });
+    const porEstudiante = {};
+    Object.values(estMap).forEach(est => {
+      if (!porEstudiante[est.cedula]) porEstudiante[est.cedula] = { est, calificaciones: [] };
+    });
+    cals.forEach(c => {
+      const est = estMap[c.estudianteId] || { cedula: c.estudianteId, nombre: c.estudianteId };
+      const ced = est.cedula || c.estudianteId;
+      if (!porEstudiante[ced]) porEstudiante[ced] = { est, calificaciones: [] };
+      porEstudiante[ced].calificaciones.push(c);
+    });
+    const compMap = {};
+    comps.forEach(comp => {
+      const est = estMap[comp.estudianteId] || { cedula: comp.estudianteId, nombre: comp.estudianteId };
+      const ced = est.cedula || comp.estudianteId;
+      compMap[ced] = comp;
+      if (!porEstudiante[ced]) porEstudiante[ced] = { est, calificaciones: [] };
+    });
+
+    const tipoLabel = { TRABAJO:'Trabajo', EXAMEN:'Examen', QUIZ:'Quiz', PARTICIPACION:'Participacion', TALLER:'Taller' };
+    const corteLabel = { 1:'1er Corte', 2:'2do Corte', 3:'3er Corte' };
+
+    const dimensionLabel = { SABER:'Saber', HACER:'Hacer', SER:'Ser' };
+    headersExport = ['Cedula', 'Estudiante', 'Actividad', 'Tipo', 'Dimension', 'Corte', 'Nota', 'Comportamiento', 'Observacion comportamiento', 'Periodo', 'Observaciones', 'Fecha'];
+    datosExport = [];
+    Object.values(porEstudiante)
+      .sort((a, b) => String(a.est.nombre).localeCompare(String(b.est.nombre), 'es', { sensitivity: 'base' }))
+      .forEach(item => {
+        const lista = [...item.calificaciones].sort((a, b) =>
+          String(a.fecha || '').localeCompare(String(b.fecha || '')) ||
+          String(a.nombreActividad || '').localeCompare(String(b.nombreActividad || ''), 'es', { sensitivity: 'base' })
+        );
+        if (!lista.length) {
+          const comp = compMap[item.est.cedula];
+          const compNota = comp && Number.isFinite(Number(comp.nota)) ? Number(comp.nota).toFixed(2) : '';
+          datosExport.push({
+            'Cedula': item.est.cedula,
+            'Estudiante': item.est.nombre,
+            'Actividad': 'Sin calificaciones',
+            'Tipo': '',
+            'Dimension': '',
+            'Corte': '',
+            'Nota': '',
+            'Comportamiento': comp ? `${compNota}${comp.nivel ? ' - ' + comp.nivel : ''}` : '',
+            'Observacion comportamiento': comp?.descripcion || '',
+            'Periodo': periodo,
+            'Observaciones': '',
+            'Fecha': '',
+          });
+          return;
+        }
+        lista.forEach(c => {
+          const comp = compMap[item.est.cedula];
+          const compNota = comp && Number.isFinite(Number(comp.nota)) ? Number(comp.nota).toFixed(2) : '';
+          datosExport.push({
+            'Cedula': item.est.cedula,
+            'Estudiante': item.est.nombre,
+            'Actividad': c.nombreActividad || '-',
+            'Tipo': tipoLabel[c.tipoActividad] || c.tipoActividad || '-',
+            'Dimension': dimensionLabel[c.dimensionActividad] || c.dimensionActividad || '-',
+            'Corte': corteLabel[c.corte] || `Corte ${c.corte || ''}`.trim(),
+            'Nota': Number(c.nota),
+            'Comportamiento': comp ? `${compNota}${comp.nivel ? ' - ' + comp.nivel : ''}` : '',
+            'Observacion comportamiento': comp?.descripcion || '',
+            'Periodo': c.periodo,
+            'Observaciones': c.observaciones || '',
+            'Fecha': c.fecha ? new Date(c.fecha).toLocaleDateString('es-ES') : '',
+          });
+        });
+      });
+    const prof = asig?.profesor ? `${asig.profesor.nombre} ${asig.profesor.primerApellido}` : '—';
+    document.getElementById('previewTitle').textContent = `Calificaciones - ${asig?.nombre || ''} (${periodo})`;
+    document.getElementById('previewMeta').textContent = `Curso: ${asig?.curso?.nombre || '-'} · Docente: ${prof} · ${datosExport.length} registros`;
+
+    renderTabla(headersExport, datosExport, 'Nota');
+  }
+
+  async function generarDefinitivasMateria() {
     const cursoId = document.getElementById('campo-curso')?.value;
     const estudianteFiltro = document.getElementById('campo-estudiante')?.value || '';
     const asigId  = document.getElementById('campo-asignatura')?.value || '';
