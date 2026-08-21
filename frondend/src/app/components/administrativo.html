@@ -1287,7 +1287,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     <div class="report-card" id="card-definitivas" onclick="seleccionarReporte('definitivas')">
       <div class="report-icon"><i class="fas fa-table"></i></div>
       <div class="report-title">Definitivas por Curso</div>
-      <div class="report-desc">Notas de 1er, 2do y 3er periodo por materia, definitiva de cada materia y promedio general.</div>
+      <div class="report-desc">Definitiva y comportamiento por materia, notas por periodo, promedio general y puesto.</div>
       <div class="report-badges">
         <span class="report-badge badge-xlsx">Excel</span>
         <span class="report-badge badge-csv">CSV</span>
@@ -1854,6 +1854,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         const respuestas = await Promise.all(
           asignaturas.map(async a => ({
             periodo,
+            asignaturaId: a.id,
             data: await gql(`
               query($asignaturaId: ID!, $periodo: String!) {
                 comportamientosPorAsignatura(asignaturaId: $asignaturaId, periodo: $periodo) {
@@ -1883,6 +1884,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           nombre,
           notas: { [periodos[0]]: [], [periodos[1]]: [], [periodos[2]]: [] },
           comportamiento: { [periodos[0]]: [], [periodos[1]]: [], [periodos[2]]: [] },
+          comportamientoPorAsignatura: {},
         };
         if (e.id) porEstudiante[e.id] = porEstudiante[e.cedula];
       });
@@ -1900,7 +1902,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       });
 
     comportamientosPorPeriodo.forEach(respuestas => {
-      respuestas.forEach(({ periodo, data }) => {
+      respuestas.forEach(({ periodo, asignaturaId, data }) => {
         ((data && data.comportamientosPorAsignatura) || []).forEach(comp => {
           const item = porEstudiante[String(comp.estudianteId || '').trim()];
           if (!item) return;
@@ -1908,6 +1910,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
             ? Number(comp.nota)
             : (comp.nivel === 'Superior' ? 4.6 : comp.nivel === 'Alto' ? 4.0 : (comp.nivel === 'B??sico' || comp.nivel === 'Basico') ? 3.5 : 3.4);
           item.comportamiento[periodo].push(nota);
+          item.comportamientoPorAsignatura[asignaturaId] ||= { [periodos[0]]: [], [periodos[1]]: [], [periodos[2]]: [] };
+          item.comportamientoPorAsignatura[asignaturaId][periodo].push(nota);
         });
       });
     });
@@ -1917,6 +1921,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       .map(p => Number(p.numeroPeriodo))
       .filter(n => n >= 1 && n <= 3)
       .sort((a, b) => b - a)[0] || 0;
+
+    if (!periodoReferenciaNumero) {
+      const tieneNotaPeriodo = num => (base.calificacionesPorCurso || [])
+        .some(c => c.periodo === periodos[num - 1] && c.nombreActividad !== '__boletin__');
+      if (tieneNotaPeriodo(3)) periodoReferenciaNumero = 3;
+      else if (tieneNotaPeriodo(2)) periodoReferenciaNumero = 2;
+      else periodoReferenciaNumero = 1;
+    }
 
     const datosBase = Object.values(porEstudiante)
       .filter((item, idx, arr) => arr.indexOf(item) === idx)
@@ -1941,6 +1953,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         const rawComp1 = promedioNotas(item.comportamiento[periodos[0]] || []);
         const rawComp2 = promedioNotas(item.comportamiento[periodos[1]] || []);
         const rawComp3 = promedioNotas(item.comportamiento[periodos[2]] || []);
+        const materiasExport = {};
+
+        asignaturas.forEach(asignatura => {
+          const notasMateria = item.notasPorAsignatura?.[asignatura.id] || { [periodos[0]]: [], [periodos[1]]: [], [periodos[2]]: [] };
+          const compMateria = item.comportamientoPorAsignatura?.[asignatura.id] || { [periodos[0]]: [], [periodos[1]]: [], [periodos[2]]: [] };
+          const periodoDefinitiva = periodos[periodoReferenciaNumero - 1] || periodos[0];
+          const definitivaMateria = promedioNotas(notasMateria[periodoDefinitiva] || []);
+          const comportamientoMateria = promedioNotas(compMateria[periodoDefinitiva] || []);
+          materiasExport[`${asignatura.nombre} - Definitiva`] = nota2(definitivaMateria);
+          materiasExport[`${asignatura.nombre} - Comportamiento`] = comportamientoMateria === null
+            ? ''
+            : `${nota2(comportamientoMateria)} - ${comportamientoDesdeNota(comportamientoMateria)}`;
+        });
 
         const p1 = rawP1;
         const p2 = periodoReferenciaNumero >= 2 ? rawP2 : null;
@@ -1956,6 +1981,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           '3er Periodo': nota2(p3),
           'Promedio general': nota2(rawGeneral),
           'Comportamiento general': compGeneral === null ? '' : `${nota2(compGeneral)} - ${comportamientoDesdeNota(compGeneral)}`,
+          __materias: materiasExport,
           __puestoP1: rawP1,
           __puestoP2: rawP2,
           __puestoP3: rawP3,
@@ -1983,11 +2009,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         notaAnterior = item[campoPuesto];
       });
 
-    headersExport = ['Cedula', 'Estudiante', '1er Periodo', '2do Periodo', '3er Periodo', 'Promedio general', 'Comportamiento general', 'Puesto'];
+    const headersMaterias = asignaturas.flatMap(asignatura => [
+      `${asignatura.nombre} - Definitiva`,
+      `${asignatura.nombre} - Comportamiento`,
+    ]);
+    headersExport = ['Cedula', 'Estudiante', ...headersMaterias, '1er Periodo', '2do Periodo', '3er Periodo', 'Promedio general', 'Comportamiento general', 'Puesto'];
     datosExport = datosBase
       .map(item => ({
         'Cedula': item.Cedula,
         'Estudiante': item.Estudiante,
+        ...(item.__materias || {}),
         '1er Periodo': item['1er Periodo'],
         '2do Periodo': item['2do Periodo'],
         '3er Periodo': item['3er Periodo'],
