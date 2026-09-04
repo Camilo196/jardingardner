@@ -10,6 +10,7 @@ export interface CalificacionDocument extends Document {
   fecha: Date;
   tipoActividad?: 'TRABAJO' | 'EXAMEN' | 'QUIZ' | 'PARTICIPACION' | 'TALLER';
   nombreActividad?: string;
+  dimensionActividad?: 'SABER' | 'HACER' | 'SER';
   corte?: 1 | 2 | 3;
 }
 
@@ -53,6 +54,12 @@ const calificacionSchema: Schema = new Schema(
     },
     nombreActividad: {
       type: String,
+      required: false
+    },
+    dimensionActividad: {
+      type: String,
+      enum: ['SABER', 'HACER', 'SER'],
+      default: 'HACER',
       required: false
     },
     corte: {

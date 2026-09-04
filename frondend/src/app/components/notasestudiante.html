@@ -137,10 +137,47 @@
         return '<span class="badge badge-bajo">Bajo</span>';
     }
 
+    function promedioNotas(vals) {
+        const nums = (vals || []).map(Number).filter(Number.isFinite);
+        if (!nums.length) return null;
+        return nums.reduce((s, n) => s + n, 0) / nums.length;
+    }
+
+    function numeroPeriodo(p) {
+        const m = String(p || '').match(/([123])\D*$/);
+        return m ? Number(m[1]) : Number(p) || 1;
+    }
+
+    function promedioPeriodo(cals, periodo) {
+        const notas = (cals || []).filter(c => Number.isFinite(Number(c.nota)));
+        if (!notas.length) return null;
+        if (numeroPeriodo(periodo) !== 3) return promedioNotas(notas.map(c => c.nota));
+        const pesos = { SABER: 0.5, HACER: 0.3, SER: 0.2 };
+        const dimensionDe = c => {
+            const dimension = String(c.dimensionActividad || '').toUpperCase();
+            if (pesos[dimension]) return dimension;
+            const tipo = String(c.tipoActividad || '').toUpperCase();
+            if (['EXAMEN', 'QUIZ'].includes(tipo) || tipo.includes('EVALUACION')) return 'SABER';
+            if (tipo === 'PARTICIPACION' || tipo.includes('AUTO') || tipo.includes('COEVALUACION')) return 'SER';
+            return 'HACER';
+        };
+        let suma = 0;
+        let pesoUsado = 0;
+        Object.entries(pesos).forEach(([dimension, peso]) => {
+            const prom = promedioNotas(notas
+                .filter(c => dimensionDe(c) === dimension)
+                .map(c => c.nota));
+            if (prom === null) return;
+            suma += prom * peso;
+            pesoUsado += peso;
+        });
+        return pesoUsado ? suma / pesoUsado : null;
+    }
+
     try {
         const [asigData, calData, asistData] = await Promise.all([
             gql('query($id:ID!){ asignatura(id:$id){ nombre horario profesor{ nombre primerApellido } } }', { id: asigId }),
-            gql('query($eid:ID!){ calificacionesPorEstudiante(estudianteId:$eid){ id nota periodo asignaturaId tipoActividad nombreActividad corte observaciones } }', { eid: username }),
+            gql('query($eid:ID!){ calificacionesPorEstudiante(estudianteId:$eid){ id nota periodo asignaturaId tipoActividad nombreActividad dimensionActividad corte observaciones } }', { eid: username }),
             gql('query($eid:String!,$periodo:String){ resumenAsistenciaEstudiante(estudianteId:$eid,periodo:$periodo){ asignaturaId presentes ausentes tardes excusas } }', { eid: username, periodo })
         ]);
 
@@ -150,9 +187,8 @@
         const cals = (calData.calificacionesPorEstudiante || [])
             .filter(c => String(c.asignaturaId) === String(asigId) && c.periodo === periodo);
 
-        const promedio = cals.length
-            ? (cals.reduce((s, c) => s + Number(c.nota), 0) / cals.length).toFixed(2) + ' / 5.0'
-            : '—';
+        const promedioValor = promedioPeriodo(cals, periodo);
+        const promedio = promedioValor !== null ? promedioValor.toFixed(2) + ' / 5.0' : '—';
 
         const asistRow = (asistData.resumenAsistenciaEstudiante || [])
             .find(r => String(r.asignaturaId) === String(asigId));
@@ -187,6 +223,7 @@
                 '<tr>' +
                 '<td>' + (c.nombreActividad || '—') + '</td>' +
                 '<td>' + (c.tipoActividad || '—') + '</td>' +
+                '<td>' + (c.dimensionActividad || 'HACER') + '</td>' +
                 '<td><strong>' + Number(c.nota).toFixed(1) + '</strong></td>' +
                 '<td>' + valBadge(c.nota) + '</td>' +
                 '<td>' + (c.observaciones || '') + '</td>' +
@@ -200,8 +237,8 @@
                 '<span style="margin-left:auto;font-size:0.85rem;color:#64748b;font-weight:600;">Promedio: ' + promCorte + '</span>' +
                 '</div>' +
                 '<table class="grades-table">' +
-                '<thead><tr><th>Actividad</th><th>Tipo</th><th>Nota</th><th>Valoración</th><th>Observaciones</th></tr></thead>' +
-                '<tbody>' + (rows || '<tr><td colspan="5" class="empty">Sin calificaciones</td></tr>') + '</tbody>' +
+                '<thead><tr><th>Actividad</th><th>Tipo</th><th>Dimensión</th><th>Nota</th><th>Valoración</th><th>Observaciones</th></tr></thead>' +
+                '<tbody>' + (rows || '<tr><td colspan="6" class="empty">Sin calificaciones</td></tr>') + '</tbody>' +
                 '</table>';
         }
 

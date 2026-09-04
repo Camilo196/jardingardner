@@ -1704,7 +1704,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         curso(id: $cursoId) { id nombre }
         asignaturasPorCurso(cursoId: $cursoId) { id nombre profesor { nombre primerApellido } }
         calificacionesPorCurso(cursoId: $cursoId) {
-          estudianteId asignaturaId nota periodo nombreActividad
+          estudianteId asignaturaId nota periodo nombreActividad dimensionActividad
         }
         matriculas {
           curso { id nombre }
@@ -1762,7 +1762,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         if (!est) return;
         const key = `${est.cedula}::${c.asignaturaId}`;
         notasMap[key] ||= [];
-        notasMap[key].push(Number(c.nota));
+        notasMap[key].push(c);
       });
 
     const compMap = {};
@@ -1779,7 +1779,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     estudiantes.forEach(est => {
       asignaturas.forEach(asignatura => {
         const key = `${est.cedula}::${asignatura.id}`;
-        const definitiva = promedioNotas(notasMap[key] || []);
+        const definitiva = promedioCalificacionesPeriodo(notasMap[key] || [], periodo);
         const comp = compMap[key];
         const compNota = comp && Number.isFinite(Number(comp.nota)) ? Number(comp.nota) : null;
         const compTexto = comp
@@ -1953,7 +1953,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       query($cursoId: ID!) {
         curso(id: $cursoId) { id nombre }
         calificacionesPorCurso(cursoId: $cursoId) {
-          estudianteId nota periodo nombreActividad
+          estudianteId asignaturaId nota periodo nombreActividad dimensionActividad
         }
         matriculas {
           estado
@@ -1979,7 +1979,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           cedula: e.cedula,
           nombre,
           estado: m.estado || 'ACTIVA',
-          notas: [],
+          notasPorAsignatura: {},
         };
         if (e.id) porEstudiante[e.id] = porEstudiante[e.cedula];
       });
@@ -1989,14 +1989,21 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       .forEach(c => {
         const item = porEstudiante[c.estudianteId];
         if (!item) return;
-        item.notas.push(Number(c.nota));
+        const asignaturaId = String(c.asignaturaId || '').trim();
+        if (!asignaturaId) return;
+        item.notasPorAsignatura[asignaturaId] ||= [];
+        item.notasPorAsignatura[asignaturaId].push(c);
       });
 
     headersExport = ['Cedula', 'Estudiante', 'Promedio', 'Estado', 'Periodo', 'Curso'];
     datosExport = Object.values(porEstudiante)
       .filter((item, idx, arr) => arr.indexOf(item) === idx)
       .map(item => {
-        const promedio = promedioNotas(item.notas);
+        const promedio = promedioNotas(
+          Object.values(item.notasPorAsignatura || {})
+            .map(notas => promedioCalificacionesPeriodo(notas, periodo))
+            .filter(n => n !== null)
+        );
         return {
           'Cedula': item.cedula,
           'Estudiante': item.nombre,
@@ -2019,6 +2026,40 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     const nums = vals.map(Number).filter(n => Number.isFinite(n));
     if (!nums.length) return null;
     return nums.reduce((s, n) => s + n, 0) / nums.length;
+  }
+
+  function numeroPeriodoDesdeValor(periodo) {
+    const m = String(periodo || '').match(/([123])\D*$/);
+    return m ? Number(m[1]) : Number(periodo) || 1;
+  }
+
+  function promedioCalificacionesPeriodo(calificaciones, periodo) {
+    const notas = (calificaciones || []).filter(cal => Number.isFinite(Number(cal?.nota ?? cal)));
+    if (!notas.length) return null;
+    if (numeroPeriodoDesdeValor(periodo) !== 3) {
+      return promedioNotas(notas.map(cal => Number(cal?.nota ?? cal)));
+    }
+    const pesos = { SABER: 0.5, HACER: 0.3, SER: 0.2 };
+    const dimensionDe = cal => {
+      const dimension = String(cal?.dimensionActividad || '').toUpperCase();
+      if (pesos[dimension]) return dimension;
+      const tipo = String(cal?.tipoActividad || '').toUpperCase();
+      if (['EXAMEN', 'QUIZ'].includes(tipo) || tipo.includes('EVALUACION')) return 'SABER';
+      if (tipo === 'PARTICIPACION' || tipo.includes('AUTO') || tipo.includes('COEVALUACION')) return 'SER';
+      return 'HACER';
+    };
+    let suma = 0;
+    let pesoUsado = 0;
+    Object.entries(pesos).forEach(([dimension, peso]) => {
+      const vals = notas
+        .filter(cal => dimensionDe(cal) === dimension)
+        .map(cal => Number(cal.nota));
+      const promedio = promedioNotas(vals);
+      if (promedio === null) return;
+      suma += promedio * peso;
+      pesoUsado += peso;
+    });
+    return pesoUsado ? suma / pesoUsado : null;
   }
 
   function nota2(n) {
@@ -2047,7 +2088,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         asignaturasPorCurso(cursoId: $cursoId) { id nombre }
         periodosConfig(anio: $anio) { numeroPeriodo abierto }
         calificacionesPorCurso(cursoId: $cursoId) {
-          estudianteId asignaturaId nota periodo nombreActividad
+          estudianteId asignaturaId nota periodo nombreActividad dimensionActividad
         }
         matriculas {
           estado
@@ -2108,7 +2149,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         if (!asignaturaId) return;
         item.notasPorAsignatura ||= {};
         item.notasPorAsignatura[asignaturaId] ||= { [periodos[0]]: [], [periodos[1]]: [], [periodos[2]]: [] };
-        item.notasPorAsignatura[asignaturaId][c.periodo].push(Number(c.nota));
+        item.notasPorAsignatura[asignaturaId][c.periodo].push(c);
       });
 
     comportamientosPorPeriodo.forEach(respuestas => {
@@ -2145,9 +2186,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       .map(item => {
         const materias = Object.values(item.notasPorAsignatura || {});
         const periodosMateria = materias.map(notasMateria => {
-          const p1Materia = promedioNotas(notasMateria[periodos[0]] || []);
-          const p2Materia = promedioNotas(notasMateria[periodos[1]] || []);
-          const p3Materia = promedioNotas(notasMateria[periodos[2]] || []);
+          const p1Materia = promedioCalificacionesPeriodo(notasMateria[periodos[0]] || [], periodos[0]);
+          const p2Materia = promedioCalificacionesPeriodo(notasMateria[periodos[1]] || [], periodos[1]);
+          const p3Materia = promedioCalificacionesPeriodo(notasMateria[periodos[2]] || [], periodos[2]);
           return {
             p1: p1Materia,
             p2: p2Materia,
@@ -2169,7 +2210,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           const notasMateria = item.notasPorAsignatura?.[asignatura.id] || { [periodos[0]]: [], [periodos[1]]: [], [periodos[2]]: [] };
           const compMateria = item.comportamientoPorAsignatura?.[asignatura.id] || { [periodos[0]]: [], [periodos[1]]: [], [periodos[2]]: [] };
           const periodoDefinitiva = periodos[periodoReferenciaNumero - 1] || periodos[0];
-          const definitivaMateria = promedioNotas(notasMateria[periodoDefinitiva] || []);
+          const definitivaMateria = promedioCalificacionesPeriodo(notasMateria[periodoDefinitiva] || [], periodoDefinitiva);
           const comportamientoMateria = promedioNotas(compMateria[periodoDefinitiva] || []);
           materiasExport[`${asignatura.nombre} - Definitiva`] = nota2(definitivaMateria);
           materiasExport[`${asignatura.nombre} - Comportamiento`] = comportamientoMateria === null

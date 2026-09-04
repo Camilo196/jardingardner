@@ -108,8 +108,39 @@ function mismoAnioYPrevios(periodoBase: string, periodoComparado?: string | null
 }
 
 function promedioNumeros(numeros: number[]): number | null {
-    if (!numeros.length) return null;
-    return numeros.reduce((s, n) => s + Number(n), 0) / numeros.length;
+    const nums = numeros.map(Number).filter((n) => Number.isFinite(n));
+    if (!nums.length) return null;
+    return nums.reduce((s, n) => s + Number(n), 0) / nums.length;
+}
+
+function promedioCalificacionesPeriodo(calificaciones: any[], numeroPeriodo: number): number | null {
+    const notasValidas = (calificaciones || []).filter((cal) => Number.isFinite(Number(cal?.nota)));
+    if (!notasValidas.length) return null;
+    if (numeroPeriodo !== 3) return promedioNumeros(notasValidas.map((cal) => Number(cal.nota)));
+
+    const pesos: Record<string, number> = { SABER: 0.5, HACER: 0.3, SER: 0.2 };
+    const dimensionDe = (cal: any): string => {
+        const dimension = String(cal?.dimensionActividad || '').toUpperCase();
+        if (pesos[dimension]) return dimension;
+        const tipo = String(cal?.tipoActividad || '').toUpperCase();
+        if (['EXAMEN', 'QUIZ'].includes(tipo) || tipo.includes('EVALUACION')) return 'SABER';
+        if (['PARTICIPACION'].includes(tipo) || tipo.includes('AUTO') || tipo.includes('COEVALUACION')) return 'SER';
+        return 'HACER';
+    };
+    let sumaPonderada = 0;
+    let pesoUsado = 0;
+
+    for (const [dimension, peso] of Object.entries(pesos)) {
+        const notasDimension = notasValidas
+            .filter((cal) => dimensionDe(cal) === dimension)
+            .map((cal) => Number(cal.nota));
+        const promedioDimension = promedioNumeros(notasDimension);
+        if (promedioDimension === null) continue;
+        sumaPonderada += promedioDimension * peso;
+        pesoUsado += peso;
+    }
+
+    return pesoUsado ? sumaPonderada / pesoUsado : null;
 }
 
 function redondearNota(nota: any): number {
@@ -281,7 +312,8 @@ async function calcularPuestoCurso(
         nombreActividad: { $ne: '__boletin__' },
     }).lean().catch(() => []);
 
-    const estudianteMap: Record<string, Record<string, number[]>> = {};
+    const periodoObjetivo = parsePeriodo(periodo).numeroPeriodo;
+    const estudianteMap: Record<string, Record<string, any[]>> = {};
 
     for (const cal of calificaciones as any[]) {
         if (String(cal.periodo) !== String(periodo)) continue;
@@ -289,14 +321,14 @@ async function calcularPuestoCurso(
         const asigId = String(cal.asignaturaId);
         estudianteMap[estId] ||= {};
         estudianteMap[estId][asigId] ||= [];
-        estudianteMap[estId][asigId].push(Number(cal.nota));
+        estudianteMap[estId][asigId].push(cal);
     }
 
     const promedios = estudiantesCurso
         .map((estId) => {
             const asignaturas = estudianteMap[estId] || {};
             const promediosMaterias = Object.values(asignaturas)
-                .map((notas: number[]) => promedioNumeros(notas))
+                .map((notas: any[]) => promedioCalificacionesPeriodo(notas, periodoObjetivo))
                 .filter((nota): nota is number => nota !== null);
 
             const promedio = promedioNumeros(promediosMaterias);
@@ -384,7 +416,7 @@ async function generarBoletinAcumuladoBase64(
         }
     }
 
-    const asigMap: Record<string, { asig: any; notasPorPeriodo: Record<number, number[]> }> = {};
+    const asigMap: Record<string, { asig: any; notasPorPeriodo: Record<number, any[]> }> = {};
     for (const cal of calsAcumuladas) {
         const originalId = String(cal.asignaturaId);
         const asigOriginal = asigById[originalId] ?? null;
@@ -398,7 +430,7 @@ async function generarBoletinAcumuladoBase64(
         }
         const numeroPeriodo = parsePeriodo(String(cal.periodo || periodo)).numeroPeriodo;
         if (!asigMap[k].notasPorPeriodo[numeroPeriodo]) asigMap[k].notasPorPeriodo[numeroPeriodo] = [];
-        asigMap[k].notasPorPeriodo[numeroPeriodo].push(Number(cal.nota));
+        asigMap[k].notasPorPeriodo[numeroPeriodo].push(cal);
     }
 
     if (esPreescolar || esPrimaria) {
@@ -456,7 +488,7 @@ async function generarBoletinAcumuladoBase64(
     const periodoObjetivo = parsePeriodo(periodo).numeroPeriodo;
     const calificacionesBoletin = Object.entries(asigMap).map(([asignaturaId, { asig, notasPorPeriodo }]) => {
         const promediosPeriodos: Array<number | null> = [1, 2, 3].map((numeroPeriodo) =>
-            promedioNumeros(notasPorPeriodo[numeroPeriodo] ?? []),
+            promedioCalificacionesPeriodo(notasPorPeriodo[numeroPeriodo] ?? [], numeroPeriodo),
         );
         const promPeriodoActual = promediosPeriodos[periodoObjetivo - 1] ?? 0;
         const promGeneralMateria = promedioNumeros(
@@ -1592,19 +1624,19 @@ export const resolvers = {
             );
             if (!calsAcumuladas.length) throw new Error('No se pudo calcular el promedio del periodo');
 
-            const asigMap: Record<string, Record<number, number[]>> = {};
+            const asigMap: Record<string, Record<number, any[]>> = {};
             for (const cal of calsAcumuladas) {
                 const k = String(cal.asignaturaId);
                 if (!asigMap[k]) asigMap[k] = {};
                 const numeroPeriodo = parsePeriodo(String(cal.periodo || input.periodo)).numeroPeriodo;
                 if (!asigMap[k][numeroPeriodo]) asigMap[k][numeroPeriodo] = [];
-                asigMap[k][numeroPeriodo].push(Number(cal.nota));
+                asigMap[k][numeroPeriodo].push(cal);
             }
 
             const periodoObjetivo = parsePeriodo(input.periodo).numeroPeriodo;
             const promediosMaterias = Object.values(asigMap)
-                .map((notasPorPeriodo: Record<number, number[]>) => {
-                    return promedioNumeros(notasPorPeriodo[periodoObjetivo] ?? []);
+                .map((notasPorPeriodo: Record<number, any[]>) => {
+                    return promedioCalificacionesPeriodo(notasPorPeriodo[periodoObjetivo] ?? [], periodoObjetivo);
                 })
                 .filter((nota): nota is number => nota !== null);
 
@@ -1638,19 +1670,19 @@ export const resolvers = {
             );
             if (!calsAcumuladas.length) throw new Error('No se pudo calcular el promedio del periodo');
 
-            const asigMap: Record<string, Record<number, number[]>> = {};
+            const asigMap: Record<string, Record<number, any[]>> = {};
             for (const cal of calsAcumuladas) {
                 const k = String(cal.asignaturaId);
                 if (!asigMap[k]) asigMap[k] = {};
                 const numeroPeriodo = parsePeriodo(String(cal.periodo || input.periodo)).numeroPeriodo;
                 if (!asigMap[k][numeroPeriodo]) asigMap[k][numeroPeriodo] = [];
-                asigMap[k][numeroPeriodo].push(Number(cal.nota));
+                asigMap[k][numeroPeriodo].push(cal);
             }
 
             const periodoObjetivo = parsePeriodo(input.periodo).numeroPeriodo;
             const promediosMaterias = Object.values(asigMap)
-                .map((notasPorPeriodo: Record<number, number[]>) => {
-                    return promedioNumeros(notasPorPeriodo[periodoObjetivo] ?? []);
+                .map((notasPorPeriodo: Record<number, any[]>) => {
+                    return promedioCalificacionesPeriodo(notasPorPeriodo[periodoObjetivo] ?? [], periodoObjetivo);
                 })
                 .filter((nota): nota is number => nota !== null);
 

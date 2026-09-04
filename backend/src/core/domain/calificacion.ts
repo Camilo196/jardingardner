@@ -10,6 +10,7 @@ export class Calificacion {
       public boletinId?: string, // Opcional, puede ser null
       public tipoActividad?: TipoActividad, // TRABAJO, EXAMEN, QUIZ, etc.
       public nombreActividad?: string,      // Ej: "Trabajo 1 - Fracciones"
+      public dimensionActividad?: DimensionActividad, // SABER, HACER o SER
       public corte?: number  
     ) {}
   }
@@ -20,4 +21,10 @@ export class Calificacion {
   QUIZ = 'QUIZ',
   PARTICIPACION = 'PARTICIPACION',
   TALLER = 'TALLER'
+}
+
+export enum DimensionActividad {
+  SABER = 'SABER',
+  HACER = 'HACER',
+  SER = 'SER'
 }

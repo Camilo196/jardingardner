@@ -412,7 +412,7 @@ async function cargar(){
 
     // Calificaciones
     try{
-      const dc = await gql(`query{calificacionesPorEstudiante(estudianteId:"${G.estudianteId}"){id asignaturaId nota periodo observaciones fecha tipoActividad nombreActividad corte}}`);
+      const dc = await gql(`query{calificacionesPorEstudiante(estudianteId:"${G.estudianteId}"){id asignaturaId nota periodo observaciones fecha tipoActividad nombreActividad dimensionActividad corte}}`);
       G.cals = (dc.calificacionesPorEstudiante||[]).map(c=>({...c,asignaturaId:String(c.asignaturaId)}));
     }catch{ G.cals=[]; }
 
@@ -477,14 +477,14 @@ function bloqueAsig(a,cals){
   const pc1=pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===1).map(c=>c.nota));
   const pc2=pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===2).map(c=>c.nota));
   const pc3=pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===3).map(c=>c.nota));
-  const pf=pPond(pc1,pc2,pc3);
+  const pf=promAsig(cals);
   let h=`<div class="asig-blk"><div class="asig-blk-h"><div><span>${a.nombre}</span> <small style="font-size:11px;color:var(--muted)">— 👤 ${a.prof}</small></div>${pf!==null?`<span class="pill ${pf>=4?'g':pf>=3.5?'a':'r'}">Final: ${pf.toFixed(2)} ${pf>=3.5?'✅':'❌'}</span>`:''}</div>`;
   if(!cals.length){ h+=`<p style="padding:14px;color:var(--muted);font-style:italic;font-size:13px">Sin calificaciones registradas.</p>`; }
   else{
     const sorted=[...cals].sort((a,b)=>((a.corte||0)-(b.corte||0)));
-    h+=`<table class="ntbl"><thead><tr><th>Actividad</th><th>Tipo</th><th>Corte</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>`;
+    h+=`<table class="ntbl"><thead><tr><th>Actividad</th><th>Tipo</th><th>Dimensión</th><th>Corte</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>`;
     sorted.forEach(c=>{ const n=Number(c.nota); const cor=c.corte||gc(c.observaciones)||'—'; const f=c.fecha?fechaLocal(c.fecha):'-';
-      h+=`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.tipoActividad||'—'}</span></td><td style="font-size:12px;color:var(--muted)">${cor===1?'1° Corte':cor===2?'2° Corte':cor===3?'3° Corte':cor}</td><td><span class="pill ${n>=4?'g':n>=3.5?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`; });
+      h+=`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.tipoActividad||'—'}</span></td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.dimensionActividad||'HACER'}</span></td><td style="font-size:12px;color:var(--muted)">${cor===1?'1° Corte':cor===2?'2° Corte':cor===3?'3° Corte':cor}</td><td><span class="pill ${n>=4?'g':n>=3.5?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`; });
     h+=`</tbody></table>`;
   }
   return h+`</div>`;
@@ -555,9 +555,12 @@ async function descargar(per, btnOrigen){
 }
 
 function gc(obs){if(!obs)return null;const m=obs.match(/CORTE\s+(\d+)/i);return m?parseInt(m[1]):null;}
-function pArr(arr){if(!arr||!arr.length)return null;return arr.reduce((s,n)=>s+Number(n),0)/arr.length;}
+function nPeriodo(p){const m=String(p||'').match(/([123])\D*$/);return m?Number(m[1]):Number(p)||1;}
+function pArr(arr){const nums=(arr||[]).map(Number).filter(Number.isFinite);if(!nums.length)return null;return nums.reduce((s,n)=>s+n,0)/nums.length;}
+function dimCal(c){const d=String(c?.dimensionActividad||'').toUpperCase();if(['SABER','HACER','SER'].includes(d))return d;const t=String(c?.tipoActividad||'').toUpperCase();if(['EXAMEN','QUIZ'].includes(t)||t.includes('EVALUACION'))return'SABER';if(t==='PARTICIPACION'||t.includes('AUTO')||t.includes('COEVALUACION'))return'SER';return'HACER';}
+function promPeriodoCalificaciones(cals,periodo){const notas=(cals||[]).filter(c=>Number.isFinite(Number(c?.nota??c)));if(!notas.length)return null;if(nPeriodo(periodo)!==3)return pArr(notas.map(c=>Number(c?.nota??c)));const pesos={SABER:.5,HACER:.3,SER:.2};let s=0,w=0;Object.entries(pesos).forEach(([d,p])=>{const avg=pArr(notas.filter(c=>dimCal(c)===d).map(c=>c.nota));if(avg===null)return;s+=avg*p;w+=p;});return w?s/w:null;}
 function pPond(p1,p2,p3){let s=0,w=0;if(p1!==null){s+=p1*.3;w+=.3;}if(p2!==null){s+=p2*.3;w+=.3;}if(p3!==null){s+=p3*.4;w+=.4;}return w>0?s/w:null;}
-function promAsig(cals){return pPond(pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===1).map(c=>c.nota)),pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===2).map(c=>c.nota)),pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===3).map(c=>c.nota)));}
+function promAsig(cals){const periodos=[...new Set((cals||[]).map(c=>c.periodo).filter(Boolean))];if(periodos.length===1)return promPeriodoCalificaciones(cals,periodos[0]);if(periodos.length>1){const ps=periodos.map(p=>promPeriodoCalificaciones(cals.filter(c=>c.periodo===p),p)).filter(p=>p!==null);return pArr(ps);}return pPond(pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===1).map(c=>c.nota)),pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===2).map(c=>c.nota)),pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===3).map(c=>c.nota)));}
 function promGen(){const ids=[...new Set(G.cursos.flatMap(c=>c.asignaturas.map(a=>a.id)))];if(!ids.length)return 0;const ps=ids.map(id=>promAsig(G.cals.filter(c=>c.asignaturaId===id))).filter(p=>p!==null);return ps.length?ps.reduce((s,p)=>s+p,0)/ps.length:0;}
 function periodoLabel(p){if(!p)return'—';const m=p.match(/^(\d{4})-(\d)$/);if(m){const labs={1:'1er Período',2:'2do Período',3:'3er Período',4:'4to Período'};return`${labs[m[2]]||'Período '+m[2]} ${m[1]}`;}return p;}
 

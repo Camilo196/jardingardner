@@ -155,6 +155,9 @@ table.t tbody tr:last-child td{border-bottom:none}
 .tchip.QUIZ{background:#e0e7ff;color:#4338ca}.tchip.PARTICIPACION{background:var(--green-lt);color:#166534}
 .tchip.TALLER{background:#fce7f3;color:#9d174d}
 .tchip.sel{border-color:currentColor;box-shadow:0 0 0 2px rgba(0,0,0,.1);transform:scale(1.05)}
+.dchip{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;border:2px solid transparent;transition:.15s}
+.dchip.SABER{background:#dbeafe;color:#1d4ed8}.dchip.HACER{background:#fef3c7;color:#92400e}.dchip.SER{background:#dcfce7;color:#166534}
+.dchip.sel{border-color:currentColor;box-shadow:0 0 0 2px rgba(0,0,0,.1);transform:scale(1.05)}
 .fgroup{margin-bottom:16px}
 .fgroup label{display:block;margin-bottom:5px;font-weight:700;font-size:12px;color:var(--muted);letter-spacing:.3px}
 .fgroup input,.fgroup select,.fgroup textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;transition:.2s;background:var(--bg);outline:none}
@@ -522,8 +525,8 @@ table.t tbody tr:last-child td{border-bottom:none}
         <button class="btn bp" onclick="abrirNuevaAct()"><i class="fas fa-plus-circle"></i> Registrar nota individual</button>
       </div>
       <div class="twrap">
-        <table class="t"><thead><tr><th>Actividad</th><th>Tipo</th><th>Período</th><th>Nota</th><th>Fecha</th><th>Observaciones</th><th></th></tr></thead>
-        <tbody id="tbActiv"><tr><td colspan="7" style="text-align:center;padding:20px">Cargando...</td></tr></tbody></table>
+        <table class="t"><thead><tr><th>Actividad</th><th>Tipo</th><th>Dimensión</th><th>Período</th><th>Nota</th><th>Fecha</th><th>Observaciones</th><th></th></tr></thead>
+        <tbody id="tbActiv"><tr><td colspan="8" style="text-align:center;padding:20px">Cargando...</td></tr></tbody></table>
       </div>
     </div>
     <div id="cCortes" class="mpanel"><div id="cortesContent"><div class="spin-w"><div class="spin"></div></div></div></div>
@@ -680,6 +683,15 @@ table.t tbody tr:last-child td{border-bottom:none}
           <span class="tchip TALLER" data-t="TALLER" onclick="selTipo(this)">Taller</span>
         </div>
         <input type="hidden" id="actTipo" value="TRABAJO">
+      </div>
+      <div class="fgroup">
+        <label>DIMENSIÓN EVALUADA</label>
+        <div class="tipo-chips">
+          <span class="dchip SABER" data-d="SABER" onclick="selDimension(this)">Saber</span>
+          <span class="dchip HACER sel" data-d="HACER" onclick="selDimension(this)">Hacer</span>
+          <span class="dchip SER" data-d="SER" onclick="selDimension(this)">Ser</span>
+        </div>
+        <input type="hidden" id="actDimension" value="HACER">
       </div>
       <div class="fgroup"><label>NOMBRE DE LA ACTIVIDAD</label><input type="text" id="actNombre" placeholder="Ej: Taller 1 - Ecuaciones"></div>
       <div class="fgroup"><label>NOTA (0 - 5)</label><input type="number" id="actNota" min="0" max="5" step="0.01"></div>
@@ -1038,7 +1050,7 @@ async function recargarCals(){
     const de=await gql(`query{estudiantes{id cedula}}`);
     const est=(de.estudiantes||[]).find(e=>e.cedula===W.estId);
     if(!est)throw new Error('Estudiante no encontrado');
-    const dc=await gql(`query{calificacionesPorEstudiante(estudianteId:"${W.estId}"){id estudianteId asignaturaId nota periodo observaciones fecha tipoActividad nombreActividad corte}}`);
+    const dc=await gql(`query{calificacionesPorEstudiante(estudianteId:"${W.estId}"){id estudianteId asignaturaId nota periodo observaciones fecha tipoActividad nombreActividad dimensionActividad corte}}`);
     W.cals=(dc.calificacionesPorEstudiante||[]).filter(c=>String(c.asignaturaId)===String(W.asigId));
     renderActiv(W.cals); if(W.calTab==='cCortes')renderCortes(W.cals);
   }catch(err){ document.getElementById('tbActiv').innerHTML=`<tr><td colspan="7" style="color:var(--red);text-align:center;padding:20px">Error: ${err.message}</td></tr>`; }
@@ -1046,12 +1058,19 @@ async function recargarCals(){
 
 function renderActiv(cals){
   const tb=document.getElementById('tbActiv');
-  if(!cals.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);font-style:italic">Sin actividades. ¡Agrega la primera!</td></tr>';return;}
+  if(!cals.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted);font-style:italic">Sin actividades. ¡Agrega la primera!</td></tr>';return;}
   const sorted=[...cals].sort((a,b)=>((a.corte||0)-(b.corte||0))||new Date(a.fecha||0)-new Date(b.fecha||0));
   tb.innerHTML=sorted.map(c=>{ const n=Number(c.nota);const tipo=c.tipoActividad||'EXAMEN'; const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'-'; const per=c.periodo||'-';
-    return `<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 9px;border-radius:10px;font-weight:700" class="badge-${tipo}">${tipo.charAt(0)+tipo.slice(1).toLowerCase()}</span></td><td style="font-size:12px;color:var(--muted)">${per}</td><td><strong style="color:${n>=4?'var(--green)':n>=3.5?'var(--amber)':'var(--red)'}">${n.toFixed(2)}</strong></td><td style="font-size:12px;color:var(--muted)">${f}</td><td style="font-size:12px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.observaciones||'-'}</td><td style="white-space:nowrap"><button class="btn bo" style="padding:4px 8px;font-size:11px;margin-right:3px" onclick="editarAct('${c.id}')"><i class="fas fa-pen"></i></button><button class="btn bd" style="padding:4px 8px;font-size:11px" onclick="eliminarCal('${c.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
+    const dim=c.dimensionActividad||'HACER';
+    return `<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 9px;border-radius:10px;font-weight:700" class="badge-${tipo}">${tipo.charAt(0)+tipo.slice(1).toLowerCase()}</span></td><td><span class="dchip ${dim}" style="font-size:10px;padding:2px 8px;cursor:default">${dim.charAt(0)+dim.slice(1).toLowerCase()}</span></td><td style="font-size:12px;color:var(--muted)">${per}</td><td><strong style="color:${n>=4?'var(--green)':n>=3.5?'var(--amber)':'var(--red)'}">${n.toFixed(2)}</strong></td><td style="font-size:12px;color:var(--muted)">${f}</td><td style="font-size:12px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.observaciones||'-'}</td><td style="white-space:nowrap"><button class="btn bo" style="padding:4px 8px;font-size:11px;margin-right:3px" onclick="editarAct('${c.id}')"><i class="fas fa-pen"></i></button><button class="btn bd" style="padding:4px 8px;font-size:11px" onclick="eliminarCal('${c.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
   }).join('');
 }
+
+function nPeriodo(p){const m=String(p||'').match(/([123])\D*$/);return m?Number(m[1]):Number(p)||1;}
+function pArr(arr){const nums=(arr||[]).map(Number).filter(Number.isFinite);if(!nums.length)return null;return nums.reduce((s,n)=>s+n,0)/nums.length;}
+function dimCal(c){const d=String(c.dimensionActividad||'').toUpperCase();if(['SABER','HACER','SER'].includes(d))return d;const t=String(c.tipoActividad||'').toUpperCase();if(['EXAMEN','QUIZ'].includes(t)||t.includes('EVALUACION'))return'SABER';if(t==='PARTICIPACION'||t.includes('AUTO')||t.includes('COEVALUACION'))return'SER';return'HACER';}
+function promPeriodoCalificaciones(cals,periodo){const notas=(cals||[]).filter(c=>Number.isFinite(Number(c.nota)));if(!notas.length)return null;if(nPeriodo(periodo)!==3)return pArr(notas.map(c=>c.nota));const pesos={SABER:.5,HACER:.3,SER:.2};let s=0,w=0;Object.entries(pesos).forEach(([d,p])=>{const avg=pArr(notas.filter(c=>dimCal(c)===d).map(c=>c.nota));if(avg===null)return;s+=avg*p;w+=p;});return w?s/w:null;}
+function promAsignatura(cals){const periodos=[...new Set((cals||[]).map(c=>c.periodo).filter(Boolean))];if(periodos.length===1)return promPeriodoCalificaciones(cals,periodos[0]);if(periodos.length>1){const ps=periodos.map(p=>promPeriodoCalificaciones(cals.filter(c=>c.periodo===p),p)).filter(p=>p!==null);return pArr(ps);}return pArr((cals||[]).map(c=>c.nota));}
 
 function renderCortes(cals){
   const cont=document.getElementById('cortesContent');
@@ -1061,13 +1080,13 @@ function renderCortes(cals){
   let html='';
   periodos.forEach(per=>{
     const acts=cals.filter(c=>(c.periodo||'Sin período')===per);
-    const avg=acts.length?acts.reduce((s,c)=>s+Number(c.nota),0)/acts.length:null;
+    const avg=promPeriodoCalificaciones(acts, per);
     const perLabel=per.match(/^(\d{4})-(\d)$/)?`${{1:'1er',2:'2do',3:'3er',4:'4to'}[per.split('-')[1]]||'P'+per.split('-')[1]} Período ${per.split('-')[0]}`:per;
-    const tabla=`<table class="t" style="font-size:12px"><thead><tr><th>Actividad</th><th>Tipo</th><th>Nota</th><th>Fecha</th><th>Observaciones</th></tr></thead><tbody>${acts.map(a=>{const n=Number(a.nota);const f=a.fecha?new Date(a.fecha).toLocaleDateString('es-CO'):'-';return`<tr><td style="font-weight:700">${a.nombreActividad||'Actividad'}</td><td><span class="badge-${a.tipoActividad||'EXAMEN'}" style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">${(a.tipoActividad||'EXAMEN').charAt(0)+(a.tipoActividad||'EXAMEN').slice(1).toLowerCase()}</span></td><td><strong style="color:${n>=4?'var(--green)':n>=3.5?'var(--amber)':'var(--red)'}">${n.toFixed(2)}</strong></td><td style="font-size:11px;color:var(--muted)">${f}</td><td style="font-size:11px;color:var(--muted)">${a.observaciones||'-'}</td></tr>`;}).join('')}</tbody></table>`;
+    const tabla=`<table class="t" style="font-size:12px"><thead><tr><th>Actividad</th><th>Tipo</th><th>Dimensión</th><th>Nota</th><th>Fecha</th><th>Observaciones</th></tr></thead><tbody>${acts.map(a=>{const n=Number(a.nota);const f=a.fecha?new Date(a.fecha).toLocaleDateString('es-CO'):'-';const dim=a.dimensionActividad||'HACER';return`<tr><td style="font-weight:700">${a.nombreActividad||'Actividad'}</td><td><span class="badge-${a.tipoActividad||'EXAMEN'}" style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">${(a.tipoActividad||'EXAMEN').charAt(0)+(a.tipoActividad||'EXAMEN').slice(1).toLowerCase()}</span></td><td><span class="dchip ${dim}" style="font-size:10px;padding:2px 8px;cursor:default">${dim.charAt(0)+dim.slice(1).toLowerCase()}</span></td><td><strong style="color:${n>=4?'var(--green)':n>=3.5?'var(--amber)':'var(--red)'}">${n.toFixed(2)}</strong></td><td style="font-size:11px;color:var(--muted)">${f}</td><td style="font-size:11px;color:var(--muted)">${a.observaciones||'-'}</td></tr>`;}).join('')}</tbody></table>`;
     html+=`<div class="corte-card"><div class="corte-head"><div><div class="corte-title"><i class="fas fa-calendar-alt"></i> ${perLabel}</div><div class="corte-peso">${acts.length} actividad(es)</div></div><div class="corte-avg">${avg!==null?avg.toFixed(2):'-'}</div></div>${tabla}</div>`;
   });
   // Promedio general de todas las calificaciones
-  const todas=cals; const pg=todas.length?todas.reduce((s,c)=>s+Number(c.nota),0)/todas.length:null;
+  const todas=cals; const pg=promAsignatura(todas);
   if(pg!==null){ const ap=pg>=3.5; html+=`<div class="final-row"><div style="font-weight:700;font-size:15px">Promedio general <span style="font-size:12px;opacity:.8;margin-left:6px">${ap?'APROBADO':'REPROBADO'}</span></div><div style="font-size:22px;font-weight:800">${pg.toFixed(2)}</div></div>`; }
   cont.innerHTML=html;
 }
@@ -1232,21 +1251,24 @@ async function guardarActividadCurso(){
     toast('Error: '+err.message,'er');
   }
 }
-async function abrirNuevaAct(){ if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; } document.getElementById('actId').value=''; document.getElementById('actTit').textContent='Nueva Actividad'; document.getElementById('actNombre').value=''; document.getElementById('actNota').value=''; document.getElementById('actObs').value=''; document.getElementById('actFecha').value=hoyIsoLocal(); await cargarPeriodosCalificacion(W.periodo||periodoLabel()); document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); document.querySelector('.tchip.TRABAJO').classList.add('sel'); document.getElementById('actTipo').value='TRABAJO'; document.getElementById('mAct').classList.add('o'); }
-async function editarAct(id){ const cal=W.cals.find(c=>c.id===id);if(!cal)return; document.getElementById('actId').value=id; document.getElementById('actTit').textContent='Editar Actividad'; document.getElementById('actNombre').value=cal.nombreActividad||''; document.getElementById('actNota').value=cal.nota; document.getElementById('actObs').value=cal.observaciones||''; document.getElementById('actFecha').value=fechaInputValue(cal.fecha); await cargarPeriodosCalificacion(cal.periodo||W.periodo||periodoLabel(), true); setPeriodoSelect(cal.periodo||W.periodo||periodoLabel(), true); document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); const chip=document.querySelector(`.tchip.${cal.tipoActividad||'EXAMEN'}`); if(chip)chip.classList.add('sel'); document.getElementById('actTipo').value=cal.tipoActividad||'EXAMEN'; document.getElementById('mAct').classList.add('o'); }
-function selTipo(chip){ document.querySelectorAll('.tchip').forEach(c=>c.classList.remove('sel')); chip.classList.add('sel'); document.getElementById('actTipo').value=chip.dataset.t; }
+async function abrirNuevaAct(){ if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; } document.getElementById('actId').value=''; document.getElementById('actTit').textContent='Nueva Actividad'; document.getElementById('actNombre').value=''; document.getElementById('actNota').value=''; document.getElementById('actObs').value=''; document.getElementById('actFecha').value=hoyIsoLocal(); await cargarPeriodosCalificacion(W.periodo||periodoLabel()); document.querySelectorAll('#mAct .tchip').forEach(c=>c.classList.remove('sel')); document.querySelector('#mAct .tchip.TRABAJO').classList.add('sel'); document.getElementById('actTipo').value='TRABAJO'; document.querySelectorAll('#mAct .dchip').forEach(c=>c.classList.remove('sel')); document.querySelector('#mAct .dchip.HACER').classList.add('sel'); document.getElementById('actDimension').value='HACER'; document.getElementById('mAct').classList.add('o'); }
+async function editarAct(id){ const cal=W.cals.find(c=>c.id===id);if(!cal)return; document.getElementById('actId').value=id; document.getElementById('actTit').textContent='Editar Actividad'; document.getElementById('actNombre').value=cal.nombreActividad||''; document.getElementById('actNota').value=cal.nota; document.getElementById('actObs').value=cal.observaciones||''; document.getElementById('actFecha').value=fechaInputValue(cal.fecha); await cargarPeriodosCalificacion(cal.periodo||W.periodo||periodoLabel(), true); setPeriodoSelect(cal.periodo||W.periodo||periodoLabel(), true); document.querySelectorAll('#mAct .tchip').forEach(c=>c.classList.remove('sel')); const chip=document.querySelector(`#mAct .tchip.${cal.tipoActividad||'EXAMEN'}`); if(chip)chip.classList.add('sel'); document.getElementById('actTipo').value=cal.tipoActividad||'EXAMEN'; document.querySelectorAll('#mAct .dchip').forEach(c=>c.classList.remove('sel')); const dchip=document.querySelector(`#mAct .dchip.${cal.dimensionActividad||'HACER'}`); if(dchip)dchip.classList.add('sel'); document.getElementById('actDimension').value=cal.dimensionActividad||'HACER'; document.getElementById('mAct').classList.add('o'); }
+function dimensionPorTipo(tipo){tipo=String(tipo||'').toUpperCase();if(['EXAMEN','QUIZ'].includes(tipo)||tipo.includes('EVALUACION'))return'SABER';if(tipo==='PARTICIPACION'||tipo.includes('AUTO')||tipo.includes('COEVALUACION'))return'SER';return'HACER';}
+function selTipo(chip){ document.querySelectorAll('#mAct .tchip').forEach(c=>c.classList.remove('sel')); chip.classList.add('sel'); document.getElementById('actTipo').value=chip.dataset.t; const dim=dimensionPorTipo(chip.dataset.t); const dchip=document.querySelector(`#mAct .dchip.${dim}`); if(dchip)selDimension(dchip); }
+function selDimension(chip){ document.querySelectorAll('#mAct .dchip').forEach(c=>c.classList.remove('sel')); chip.classList.add('sel'); document.getElementById('actDimension').value=chip.dataset.d; }
 function notaDosDecimales(valor){ const n=parseFloat(valor); return Number.isFinite(n)?Math.round((n+Number.EPSILON)*100)/100:NaN; }
 async function guardarActividad(){
   if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; }
-  const id=document.getElementById('actId').value; const tipo=document.getElementById('actTipo').value; const nombre=document.getElementById('actNombre').value.trim(); const nota=notaDosDecimales(document.getElementById('actNota').value); const periodo=document.getElementById('actPeriodo').value.trim(); const fecha=document.getElementById('actFecha').value; const obs=document.getElementById('actObs').value.trim();
+  const id=document.getElementById('actId').value; const tipo=document.getElementById('actTipo').value; const dimension=document.getElementById('actDimension').value||'HACER'; const nombre=document.getElementById('actNombre').value.trim(); const nota=notaDosDecimales(document.getElementById('actNota').value); const periodo=document.getElementById('actPeriodo').value.trim(); const fecha=document.getElementById('actFecha').value; const obs=document.getElementById('actObs').value.trim();
   if(!periodoNotaHabilitado()){toast('Ese período no está habilitado para calificar','er');return;}
   if(!nombre||isNaN(nota)||!periodo||!fecha){toast('Completa todos los campos obligatorios','er');return;} if(nota<0||nota>5){toast('La nota debe estar entre 0.0 y 5.0','er');return;}
-  try{ if(id){ await gql(`mutation A($id:ID!,$inp:CalificacionInput!){actualizarCalificacion(id:$id,input:$inp){id}}`,{id,inp:{estudianteId:W.estId,asignaturaId:W.asigId,nota,periodo,fecha,observaciones:obs,tipoActividad:tipo,nombreActividad:nombre}}); toast('Actividad actualizada'); }else{ await gql(`mutation C($inp:CalificacionInput!){crearCalificacion(input:$inp){id}}`,{inp:{estudianteId:W.estId,asignaturaId:W.asigId,nota,periodo,fecha,observaciones:obs,tipoActividad:tipo,nombreActividad:nombre}}); toast('Actividad registrada'); } cerrarMAct(); await recargarCals(); }catch(err){toast('Error: '+err.message,'er');}
+  try{ if(id){ await gql(`mutation A($id:ID!,$inp:CalificacionInput!){actualizarCalificacion(id:$id,input:$inp){id}}`,{id,inp:{estudianteId:W.estId,asignaturaId:W.asigId,nota,periodo,fecha,observaciones:obs,tipoActividad:tipo,nombreActividad:nombre,dimensionActividad:dimension}}); toast('Actividad actualizada'); }else{ await gql(`mutation C($inp:CalificacionInput!){crearCalificacion(input:$inp){id}}`,{inp:{estudianteId:W.estId,asignaturaId:W.asigId,nota,periodo,fecha,observaciones:obs,tipoActividad:tipo,nombreActividad:nombre,dimensionActividad:dimension}}); toast('Actividad registrada'); } cerrarMAct(); await recargarCals(); }catch(err){toast('Error: '+err.message,'er');}
 }
 async function guardarActividadV2(){
   if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; }
   const id=document.getElementById('actId').value;
   const tipo=document.getElementById('actTipo').value;
+  const dimension=document.getElementById('actDimension').value||'HACER';
   const nombre=document.getElementById('actNombre').value.trim();
   const nota=notaDosDecimales(document.getElementById('actNota').value);
   const periodo=document.getElementById('actPeriodo').value.trim();
@@ -1255,7 +1277,7 @@ async function guardarActividadV2(){
   if(!periodoNotaHabilitado()){toast('Ese período no está habilitado para calificar','er');return;}
   if(!nombre||isNaN(nota)||!periodo||!fecha){toast('Completa todos los campos obligatorios','er');return;}
   if(nota<0||nota>5){toast('La nota debe estar entre 0.0 y 5.0','er');return;}
-  const inp={estudianteId:W.estId,asignaturaId:W.asigId,nota,periodo,fecha,observaciones:obs,tipoActividad:tipo,nombreActividad:nombre};
+  const inp={estudianteId:W.estId,asignaturaId:W.asigId,nota,periodo,fecha,observaciones:obs,tipoActividad:tipo,nombreActividad:nombre,dimensionActividad:dimension};
   try{
     if(id){
       await gql(`mutation A($id:ID!,$inp:CalificacionInput!){actualizarCalificacion(id:$id,input:$inp){id}}`,{id,inp});
@@ -1836,7 +1858,7 @@ function metaIndicadores(){
       hacer:'OBJETIVO',
       ser:'ACTIVIDADES',
       placeholders:{
-        saber:'Ej: Avanza en la expresion de palabras, sonidos y gestos para comunicarse.',
+        saber:'Ej: Avanza en la expresión de palabras, sonidos y gestos para comunicarse.',
         hacer:'Ej: Desarrollar habilidades de comunicacion y lenguaje.',
         ser:'Ej: Leer libros con imagenes; cantar canciones; jugar con palabras y sonidos.'
       }
@@ -2079,7 +2101,7 @@ function renderIndLista(tipo){
   if(esCursoPreescolarNombre(W.cursoNombre)){
     if(tipo==='saber'){
       const val=(IND.saber||[]).join('\n');
-      ul.innerHTML=`<textarea rows="5" placeholder="Escribe el avance que aparecera en el boletin..." oninput="setPreResumen(this.value)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical">${val.replace(/</g,'&lt;')}</textarea>`;
+      ul.innerHTML=`<textarea rows="5" placeholder="Escribe el avance que aparecerá en el boletín..." oninput="setPreResumen(this.value)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical">${val.replace(/</g,'&lt;')}</textarea>`;
       return;
     }
     if(tipo==='hacer'){

@@ -75,7 +75,11 @@ export class BoletinRepositoryImpl {
         doc.cursoId,
         calificacion.nota,
         calificacion.periodo, // 👈 Si es `undefined`, usa la fecha actual
-        calificacion.observaciones || ''
+        calificacion.observaciones || '',
+        undefined,
+        undefined,
+        undefined,
+        undefined
       );
     });
 

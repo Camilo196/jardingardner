@@ -768,7 +768,7 @@ function renderNotas(){
 function bloqueAsig(a,cals,comps=[]){
   const plbl=p=>{ const m=(p||'').match(/^(\d{4})-(\d)$/); return m?`${{1:'1er',2:'2do',3:'3er',4:'4to'}[m[2]]||'P'+m[2]} Periodo ${m[1]}`:p; };
   const rp=p=>p!==null?`<span class="pill ${p>=4?'g':p>=3.5?'a':'r'}" style="font-size:11px">${p.toFixed(1)}</span>`:`<span class="pill n" style="font-size:11px">-</span>`;
-  const pg=cals.length?cals.reduce((s,c)=>s+Number(c.nota),0)/cals.length:null;
+  const pg=promAsig(cals);
   let h=`<div class="asig-blk"><div class="asig-blk-h"><div><span>${a.nombre}</span> <small>- Docente: ${a.prof}</small></div>${pg!==null?`<span class="pill ${pg>=4?'g':pg>=3.5?'a':'r'}">Prom: ${pg.toFixed(2)} ${pg>=3.5?'OK':'Revisar'}</span>`:''}</div>`;
   if(comps.length){
     h+=`<div style="padding:10px 14px;background:#f8fafc;border-bottom:1px solid var(--border);display:grid;gap:6px">${comps.map(comp=>{
@@ -784,7 +784,7 @@ function bloqueAsig(a,cals,comps=[]){
     const periodos=[...new Set(cals.map(c=>c.periodo||'Sin periodo'))].sort();
     periodos.forEach(per=>{
       const acts=cals.filter(c=>(c.periodo||'Sin periodo')===per);
-      const avg=acts.length?acts.reduce((s,c)=>s+Number(c.nota),0)/acts.length:null;
+      const avg=promPeriodoCalificaciones(acts, per);
       h+=`<div style="padding:8px 14px 4px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:700;color:#475569">Periodo: ${plbl(per)}</span>${rp(avg)}</div>`;
       h+=`<table class="ntbl"><thead><tr><th>Actividad</th><th>Tipo</th><th>Dimensión</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>`;
       acts.forEach(c=>{const n=Number(c.nota);const f=c.fecha?fechaLocal(c.fecha):'-'; h+=`<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.tipoActividad||'-'}</span></td><td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700">${c.dimensionActividad||'HACER'}</span></td><td><span class="pill ${n>=4?'g':n>=3.5?'a':'r'}">${n.toFixed(1)}</span></td><td style="font-size:12px;color:var(--muted)">${f}</td></tr>`;});
@@ -959,7 +959,7 @@ function abrirModal(id,nombre){
     periodos.forEach(per=>{
       const acts=cals.filter(c=>(c.periodo||'Sin periodo')===per);
       const comp=comps.find(c=>(c.periodo||'Sin periodo')===per);
-      const avg=acts.length?acts.reduce((s,c)=>s+Number(c.nota),0)/acts.length:null;
+      const avg=promPeriodoCalificaciones(acts, per);
       const ap=avg!==null&&avg>=3.5;
       const compNota=comp&&Number.isFinite(Number(comp.nota))?Number(comp.nota):null;
       h+=`<div style="margin-bottom:20px">
@@ -976,7 +976,7 @@ function abrirModal(id,nombre){
 
     // Promedio general
     if(cals.length){
-      const pg=cals.reduce((s,c)=>s+Number(c.nota),0)/cals.length;
+      const pg=promAsig(cals);
       h+=`<div style="background:${pg>=3.5?'#f0fdf4':'#fff1f2'};border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border:1px solid ${pg>=3.5?'#86efac':'#fca5a5'}">
       <span style="font-weight:800;font-size:14px">Promedio General</span>
       <div><span class="pill ${pg>=4?'g':pg>=3.5?'a':'r'}" style="font-size:15px">${pg.toFixed(2)}</span>
@@ -991,9 +991,12 @@ function abrirModal(id,nombre){
 function cerrarM(){document.getElementById('mNotas').classList.remove('o');}
 
 function gc(obs){if(!obs)return null;const m=obs.match(/CORTE\s+(\d+)/i);return m?parseInt(m[1]):null;}
-function pArr(arr){if(!arr||!arr.length)return null;return arr.reduce((s,n)=>s+Number(n),0)/arr.length;}
+function nPeriodo(p){const m=String(p||'').match(/([123])\D*$/);return m?Number(m[1]):Number(p)||1;}
+function pArr(arr){const nums=(arr||[]).map(Number).filter(Number.isFinite);if(!nums.length)return null;return nums.reduce((s,n)=>s+n,0)/nums.length;}
+function dimCal(c){const d=String(c?.dimensionActividad||'').toUpperCase();if(['SABER','HACER','SER'].includes(d))return d;const t=String(c?.tipoActividad||'').toUpperCase();if(['EXAMEN','QUIZ'].includes(t)||t.includes('EVALUACION'))return'SABER';if(t==='PARTICIPACION'||t.includes('AUTO')||t.includes('COEVALUACION'))return'SER';return'HACER';}
+function promPeriodoCalificaciones(cals,periodo){const notas=(cals||[]).filter(c=>Number.isFinite(Number(c?.nota??c)));if(!notas.length)return null;if(nPeriodo(periodo)!==3)return pArr(notas.map(c=>Number(c?.nota??c)));const pesos={SABER:.5,HACER:.3,SER:.2};let s=0,w=0;Object.entries(pesos).forEach(([d,p])=>{const avg=pArr(notas.filter(c=>dimCal(c)===d).map(c=>c.nota));if(avg===null)return;s+=avg*p;w+=p;});return w?s/w:null;}
 function pPond(p1,p2,p3){let s=0,w=0;if(p1!==null){s+=p1*.3;w+=.3;}if(p2!==null){s+=p2*.3;w+=.3;}if(p3!==null){s+=p3*.4;w+=.4;}return w>0?s/w:null;}
-function promAsig(cals){return pPond(pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===1).map(c=>c.nota)),pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===2).map(c=>c.nota)),pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===3).map(c=>c.nota)));}
+function promAsig(cals){const periodos=[...new Set((cals||[]).map(c=>c.periodo).filter(Boolean))];if(periodos.length===1)return promPeriodoCalificaciones(cals,periodos[0]);if(periodos.length>1){const ps=periodos.map(p=>promPeriodoCalificaciones(cals.filter(c=>c.periodo===p),p)).filter(p=>p!==null);return pArr(ps);}return pPond(pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===1).map(c=>c.nota)),pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===2).map(c=>c.nota)),pArr(cals.filter(c=>(c.corte||gc(c.observaciones))===3).map(c=>c.nota)));}
 function promGen(){const ids=[...new Set(G.cursos.flatMap(c=>c.asignaturas.map(a=>a.id)))];if(!ids.length)return 0;const ps=ids.map(id=>promAsig(G.cals.filter(c=>c.asignaturaId===id))).filter(p=>p!==null);return ps.length?ps.reduce((s,p)=>s+p,0)/ps.length:0;}
 function periodoLabel(p){if(!p)return'-';const m=p.match(/^(\d{4})-(\d)$/);if(m){const labs={1:'1er Periodo',2:'2do Periodo',3:'3er Periodo',4:'4to Periodo'};return`${labs[m[2]]||'Periodo '+m[2]} ${m[1]}`;}return p;}
 

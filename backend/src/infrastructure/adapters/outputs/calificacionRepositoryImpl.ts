@@ -1,5 +1,5 @@
 import { Calificacion } from '../../../core/domain/calificacion.js';
-import { CalificacionModel, CalificacionDocument } from '../outputs/models/CalificacionModel.js';
+import { CalificacionModel } from '../outputs/models/CalificacionModel.js';
 import { CalificacionRepository } from '../../../core/ports/CalificacionRepository.js';
 import { AsignaturaModel } from '../outputs/models/AsignaturaModel.js';
 import mongoose from 'mongoose';
@@ -133,16 +133,17 @@ export class CalificacionRepositoryImpl implements CalificacionRepository {
       if (!calificacion.asignaturaId) throw new Error("El campo asignaturaId es requerido");
 
       const calificacionData = {
-        estudianteId:    calificacion.estudianteId,
-        asignaturaId:    calificacion.asignaturaId,
-        nota:            calificacion.nota,
-        periodo:         calificacion.periodo,
-        observaciones:   calificacion.observaciones || '',
-        fecha:           fechaCalificacionSinDesfase(calificacion.fecha),
-        boletinId:       calificacion.boletinId,
-        tipoActividad:   calificacion.tipoActividad,
+        estudianteId: calificacion.estudianteId,
+        asignaturaId: calificacion.asignaturaId,
+        nota: calificacion.nota,
+        periodo: calificacion.periodo,
+        observaciones: calificacion.observaciones || '',
+        fecha: fechaCalificacionSinDesfase(calificacion.fecha),
+        boletinId: calificacion.boletinId,
+        tipoActividad: calificacion.tipoActividad,
         nombreActividad: calificacion.nombreActividad,
-        corte:           calificacion.corte,
+        dimensionActividad: calificacion.dimensionActividad,
+        corte: calificacion.corte,
       };
 
       const nueva = new CalificacionModel(calificacionData);
@@ -167,7 +168,6 @@ export class CalificacionRepositoryImpl implements CalificacionRepository {
     return !!result;
   }
 
-  // ── FIX: mapToEntity ahora incluye tipoActividad, nombreActividad y corte ──
   private mapToEntity(doc: any): Calificacion {
     try {
       const toStr = (v: any) => v ? (typeof v === 'string' ? v : v.toString()) : '';
@@ -180,9 +180,10 @@ export class CalificacionRepositoryImpl implements CalificacionRepository {
         doc.observaciones || '',
         doc.fecha || new Date(),
         doc.boletinId,
-        doc.tipoActividad,      // ← nuevo
-        doc.nombreActividad,    // ← nuevo
-        doc.corte               // ← nuevo
+        doc.tipoActividad,
+        doc.nombreActividad,
+        doc.dimensionActividad,
+        doc.corte
       );
     } catch (error) {
       console.error("Error al mapear documento a entidad:", error, doc);
