@@ -7,11 +7,20 @@ enum UserRole {
 }
 
 enum TipoActividad {
-    TRABAJO
     EXAMEN
     QUIZ
-    PARTICIPACION
+    EVALUACION_ORAL
+    EVALUACION_ESCRITA
+    EXPOSICION
+    TRABAJO
     TALLER
+    TAREA
+    EJERCICIO_CLASE
+    CUADERNO
+    AUTOEVALUACION
+    COEVALUACION
+    HETEROEVALUACION
+    PARTICIPACION
 }
 
 enum DimensionActividad {

@@ -1634,7 +1634,22 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       if (!porEstudiante[ced]) porEstudiante[ced] = { est, calificaciones: [] };
     });
 
-    const tipoLabel = { TRABAJO:'Trabajo', EXAMEN:'Examen', QUIZ:'Quiz', PARTICIPACION:'Participacion', TALLER:'Taller' };
+    const tipoLabel = {
+      EXAMEN: 'Examen',
+      QUIZ: 'Quiz',
+      EVALUACION_ORAL: 'Evaluacion oral',
+      EVALUACION_ESCRITA: 'Evaluacion escrita',
+      EXPOSICION: 'Exposicion',
+      TRABAJO: 'Trabajo',
+      TALLER: 'Taller',
+      TAREA: 'Tarea',
+      EJERCICIO_CLASE: 'Ejercicio en clase',
+      CUADERNO: 'Cuaderno',
+      AUTOEVALUACION: 'Autoevaluacion',
+      COEVALUACION: 'Coevaluacion',
+      HETEROEVALUACION: 'Heteroevaluacion',
+      PARTICIPACION: 'Participacion'
+    };
     const corteLabel = { 1:'1er Corte', 2:'2do Corte', 3:'3er Corte' };
 
     const dimensionLabel = { SABER:'Saber', HACER:'Hacer', SER:'Ser' };
@@ -2044,8 +2059,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       const dimension = String(cal?.dimensionActividad || '').toUpperCase();
       if (pesos[dimension]) return dimension;
       const tipo = String(cal?.tipoActividad || '').toUpperCase();
-      if (['EXAMEN', 'QUIZ'].includes(tipo) || tipo.includes('EVALUACION')) return 'SABER';
-      if (tipo === 'PARTICIPACION' || tipo.includes('AUTO') || tipo.includes('COEVALUACION')) return 'SER';
+      if (['EXAMEN', 'QUIZ', 'EVALUACION_ORAL', 'EVALUACION_ESCRITA', 'EXPOSICION'].includes(tipo)) return 'SABER';
+      if (['AUTOEVALUACION', 'COEVALUACION', 'HETEROEVALUACION', 'PARTICIPACION'].includes(tipo)) return 'SER';
       return 'HACER';
     };
     let suma = 0;

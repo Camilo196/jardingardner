@@ -8,7 +8,7 @@ export interface CalificacionDocument extends Document {
   periodo: string;
   observaciones: string;
   fecha: Date;
-  tipoActividad?: 'TRABAJO' | 'EXAMEN' | 'QUIZ' | 'PARTICIPACION' | 'TALLER';
+  tipoActividad?: 'EXAMEN' | 'QUIZ' | 'EVALUACION_ORAL' | 'EVALUACION_ESCRITA' | 'EXPOSICION' | 'TRABAJO' | 'TALLER' | 'TAREA' | 'EJERCICIO_CLASE' | 'CUADERNO' | 'AUTOEVALUACION' | 'COEVALUACION' | 'HETEROEVALUACION' | 'PARTICIPACION';
   nombreActividad?: string;
   dimensionActividad?: 'SABER' | 'HACER' | 'SER';
   corte?: 1 | 2 | 3;
@@ -49,7 +49,7 @@ const calificacionSchema: Schema = new Schema(
     // ── Nuevos campos para actividades/trabajos ──
     tipoActividad: {
       type: String,
-      enum: ['TRABAJO', 'EXAMEN', 'QUIZ', 'PARTICIPACION', 'TALLER'],
+      enum: ['EXAMEN', 'QUIZ', 'EVALUACION_ORAL', 'EVALUACION_ESCRITA', 'EXPOSICION', 'TRABAJO', 'TALLER', 'TAREA', 'EJERCICIO_CLASE', 'CUADERNO', 'AUTOEVALUACION', 'COEVALUACION', 'HETEROEVALUACION', 'PARTICIPACION'],
       default: 'EXAMEN'
     },
     nombreActividad: {

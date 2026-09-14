@@ -113,9 +113,9 @@ table.t tbody tr:last-child td{border-bottom:none}
 .pill-ok{background:var(--green-lt);color:var(--green)}
 .pill-er{background:var(--red-lt);color:var(--red)}
 .pill-wa{background:var(--amber-lt);color:var(--amber)}
-.badge-TRABAJO{background:#dbeafe;color:#1d4ed8}.badge-EXAMEN{background:var(--amber-lt);color:#92400e}
-.badge-QUIZ{background:#e0e7ff;color:#4338ca}.badge-PARTICIPACION{background:var(--green-lt);color:#166534}
-.badge-TALLER{background:#fce7f3;color:#9d174d}
+.badge-EXAMEN,.badge-QUIZ,.badge-EVALUACION_ORAL,.badge-EVALUACION_ESCRITA,.badge-EXPOSICION{background:var(--amber-lt);color:#92400e}
+.badge-TRABAJO,.badge-TALLER,.badge-TAREA,.badge-EJERCICIO_CLASE,.badge-CUADERNO{background:#dbeafe;color:#1d4ed8}
+.badge-AUTOEVALUACION,.badge-COEVALUACION,.badge-HETEROEVALUACION,.badge-PARTICIPACION{background:var(--green-lt);color:#166534}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;font-size:12px;font-weight:800;cursor:pointer;border:none;transition:.2s;font-family:inherit}
 .bp{background:var(--blue);color:#fff}.bp:hover{background:var(--blue-dark)}
 .bg{background:var(--green);color:#fff}.bg:hover{background:#059669}
@@ -151,9 +151,9 @@ table.t tbody tr:last-child td{border-bottom:none}
 .final-row{background:var(--blue);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-radius:0 0 8px 8px;margin-top:8px}
 .tipo-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .tchip{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid transparent;transition:.15s}
-.tchip.TRABAJO{background:#dbeafe;color:#1d4ed8}.tchip.EXAMEN{background:var(--amber-lt);color:#92400e}
-.tchip.QUIZ{background:#e0e7ff;color:#4338ca}.tchip.PARTICIPACION{background:var(--green-lt);color:#166534}
-.tchip.TALLER{background:#fce7f3;color:#9d174d}
+.tchip.EXAMEN,.tchip.QUIZ,.tchip.EVALUACION_ORAL,.tchip.EVALUACION_ESCRITA,.tchip.EXPOSICION{background:var(--amber-lt);color:#92400e}
+.tchip.TRABAJO,.tchip.TALLER,.tchip.TAREA,.tchip.EJERCICIO_CLASE,.tchip.CUADERNO{background:#dbeafe;color:#1d4ed8}
+.tchip.AUTOEVALUACION,.tchip.COEVALUACION,.tchip.HETEROEVALUACION,.tchip.PARTICIPACION{background:var(--green-lt);color:#166534}
 .tchip.sel{border-color:currentColor;box-shadow:0 0 0 2px rgba(0,0,0,.1);transform:scale(1.05)}
 .dchip{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;border:2px solid transparent;transition:.15s}
 .dchip.SABER{background:#dbeafe;color:#1d4ed8}.dchip.HACER{background:#fef3c7;color:#92400e}.dchip.SER{background:#dcfce7;color:#166534}
@@ -647,13 +647,18 @@ table.t tbody tr:last-child td{border-bottom:none}
       <div class="fgroup">
         <label>TIPO DE ACTIVIDAD</label>
         <div class="tipo-chips">
-          <span class="tchip TRABAJO sel" data-t="TRABAJO" onclick="selTipoCurso(this)">Trabajo</span>
-          <span class="tchip EXAMEN" data-t="EXAMEN" onclick="selTipoCurso(this)">Examen</span>
+          <span class="tchip EXAMEN sel" data-t="EXAMEN" onclick="selTipoCurso(this)">Examen</span>
           <span class="tchip QUIZ" data-t="QUIZ" onclick="selTipoCurso(this)">Quiz</span>
-          <span class="tchip PARTICIPACION" data-t="PARTICIPACION" onclick="selTipoCurso(this)">Participación</span>
+          <span class="tchip EVALUACION_ORAL" data-t="EVALUACION_ORAL" onclick="selTipoCurso(this)">Evaluación oral</span>
+          <span class="tchip EVALUACION_ESCRITA" data-t="EVALUACION_ESCRITA" onclick="selTipoCurso(this)">Evaluación escrita</span>
+          <span class="tchip EXPOSICION" data-t="EXPOSICION" onclick="selTipoCurso(this)">Exposición</span>
+          <span class="tchip TRABAJO" data-t="TRABAJO" onclick="selTipoCurso(this)">Trabajo</span>
           <span class="tchip TALLER" data-t="TALLER" onclick="selTipoCurso(this)">Taller</span>
+          <span class="tchip TAREA" data-t="TAREA" onclick="selTipoCurso(this)">Tarea</span>
+          <span class="tchip EJERCICIO_CLASE" data-t="EJERCICIO_CLASE" onclick="selTipoCurso(this)">Ejercicio en clase</span>
+          <span class="tchip CUADERNO" data-t="CUADERNO" onclick="selTipoCurso(this)">Cuaderno</span>
         </div>
-        <input type="hidden" id="actCursoTipo" value="TRABAJO">
+        <input type="hidden" id="actCursoTipo" value="EXAMEN">
       </div>
       <div class="fgroup"><label>NOMBRE DE LA ACTIVIDAD</label><input type="text" id="actCursoNombre" placeholder="Ej: Taller 1 - Sumas"></div>
       <div class="fgroup"><label>PERIODO</label><select id="actCursoPeriodo"><option value="">Seleccionar periodo...</option></select></div>
@@ -676,13 +681,21 @@ table.t tbody tr:last-child td{border-bottom:none}
       <div class="fgroup">
         <label>TIPO DE ACTIVIDAD</label>
         <div class="tipo-chips">
-          <span class="tchip TRABAJO sel" data-t="TRABAJO" onclick="selTipo(this)">Trabajo</span>
-          <span class="tchip EXAMEN" data-t="EXAMEN" onclick="selTipo(this)">Examen</span>
+          <span class="tchip EXAMEN sel" data-t="EXAMEN" onclick="selTipo(this)">Examen</span>
           <span class="tchip QUIZ" data-t="QUIZ" onclick="selTipo(this)">Quiz</span>
-          <span class="tchip PARTICIPACION" data-t="PARTICIPACION" onclick="selTipo(this)">Participación</span>
+          <span class="tchip EVALUACION_ORAL" data-t="EVALUACION_ORAL" onclick="selTipo(this)">Evaluación oral</span>
+          <span class="tchip EVALUACION_ESCRITA" data-t="EVALUACION_ESCRITA" onclick="selTipo(this)">Evaluación escrita</span>
+          <span class="tchip EXPOSICION" data-t="EXPOSICION" onclick="selTipo(this)">Exposición</span>
+          <span class="tchip TRABAJO" data-t="TRABAJO" onclick="selTipo(this)">Trabajo</span>
           <span class="tchip TALLER" data-t="TALLER" onclick="selTipo(this)">Taller</span>
+          <span class="tchip TAREA" data-t="TAREA" onclick="selTipo(this)">Tarea</span>
+          <span class="tchip EJERCICIO_CLASE" data-t="EJERCICIO_CLASE" onclick="selTipo(this)">Ejercicio en clase</span>
+          <span class="tchip CUADERNO" data-t="CUADERNO" onclick="selTipo(this)">Cuaderno</span>
+          <span class="tchip AUTOEVALUACION" data-t="AUTOEVALUACION" onclick="selTipo(this)">Autoevaluación</span>
+          <span class="tchip COEVALUACION" data-t="COEVALUACION" onclick="selTipo(this)">Coevaluación</span>
+          <span class="tchip HETEROEVALUACION" data-t="HETEROEVALUACION" onclick="selTipo(this)">Heteroevaluación</span>
         </div>
-        <input type="hidden" id="actTipo" value="TRABAJO">
+        <input type="hidden" id="actTipo" value="EXAMEN">
       </div>
       <div class="fgroup">
         <label>DIMENSIÓN EVALUADA</label>
@@ -1062,13 +1075,14 @@ function renderActiv(cals){
   const sorted=[...cals].sort((a,b)=>((a.corte||0)-(b.corte||0))||new Date(a.fecha||0)-new Date(b.fecha||0));
   tb.innerHTML=sorted.map(c=>{ const n=Number(c.nota);const tipo=c.tipoActividad||'EXAMEN'; const f=c.fecha?new Date(c.fecha).toLocaleDateString('es-CO'):'-'; const per=c.periodo||'-';
     const dim=c.dimensionActividad||'HACER';
-    return `<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 9px;border-radius:10px;font-weight:700" class="badge-${tipo}">${tipo.charAt(0)+tipo.slice(1).toLowerCase()}</span></td><td><span class="dchip ${dim}" style="font-size:10px;padding:2px 8px;cursor:default">${dim.charAt(0)+dim.slice(1).toLowerCase()}</span></td><td style="font-size:12px;color:var(--muted)">${per}</td><td><strong style="color:${n>=4?'var(--green)':n>=3.5?'var(--amber)':'var(--red)'}">${n.toFixed(2)}</strong></td><td style="font-size:12px;color:var(--muted)">${f}</td><td style="font-size:12px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.observaciones||'-'}</td><td style="white-space:nowrap"><button class="btn bo" style="padding:4px 8px;font-size:11px;margin-right:3px" onclick="editarAct('${c.id}')"><i class="fas fa-pen"></i></button><button class="btn bd" style="padding:4px 8px;font-size:11px" onclick="eliminarCal('${c.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
+    return `<tr><td style="font-weight:700">${c.nombreActividad||'Actividad'}</td><td><span style="font-size:11px;padding:2px 9px;border-radius:10px;font-weight:700" class="badge-${tipo}">${labelTipoActividad(tipo)}</span></td><td><span class="dchip ${dim}" style="font-size:10px;padding:2px 8px;cursor:default">${dim.charAt(0)+dim.slice(1).toLowerCase()}</span></td><td style="font-size:12px;color:var(--muted)">${per}</td><td><strong style="color:${n>=4?'var(--green)':n>=3.5?'var(--amber)':'var(--red)'}">${n.toFixed(2)}</strong></td><td style="font-size:12px;color:var(--muted)">${f}</td><td style="font-size:12px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.observaciones||'-'}</td><td style="white-space:nowrap"><button class="btn bo" style="padding:4px 8px;font-size:11px;margin-right:3px" onclick="editarAct('${c.id}')"><i class="fas fa-pen"></i></button><button class="btn bd" style="padding:4px 8px;font-size:11px" onclick="eliminarCal('${c.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
   }).join('');
 }
 
 function nPeriodo(p){const m=String(p||'').match(/([123])\D*$/);return m?Number(m[1]):Number(p)||1;}
 function pArr(arr){const nums=(arr||[]).map(Number).filter(Number.isFinite);if(!nums.length)return null;return nums.reduce((s,n)=>s+n,0)/nums.length;}
-function dimCal(c){const d=String(c.dimensionActividad||'').toUpperCase();if(['SABER','HACER','SER'].includes(d))return d;const t=String(c.tipoActividad||'').toUpperCase();if(['EXAMEN','QUIZ'].includes(t)||t.includes('EVALUACION'))return'SABER';if(t==='PARTICIPACION'||t.includes('AUTO')||t.includes('COEVALUACION'))return'SER';return'HACER';}
+function labelTipoActividad(tipo){return {EXAMEN:'Examen',QUIZ:'Quiz',EVALUACION_ORAL:'Evaluación oral',EVALUACION_ESCRITA:'Evaluación escrita',EXPOSICION:'Exposición',TRABAJO:'Trabajo',TALLER:'Taller',TAREA:'Tarea',EJERCICIO_CLASE:'Ejercicio en clase',CUADERNO:'Cuaderno',AUTOEVALUACION:'Autoevaluación',COEVALUACION:'Coevaluación',HETEROEVALUACION:'Heteroevaluación',PARTICIPACION:'Participación'}[tipo]||tipo||'-';}
+function dimCal(c){const d=String(c.dimensionActividad||'').toUpperCase();if(['SABER','HACER','SER'].includes(d))return d;const t=String(c.tipoActividad||'').toUpperCase();if(['EXAMEN','QUIZ','EVALUACION_ORAL','EVALUACION_ESCRITA','EXPOSICION'].includes(t))return'SABER';if(['AUTOEVALUACION','COEVALUACION','HETEROEVALUACION','PARTICIPACION'].includes(t))return'SER';return'HACER';}
 function promPeriodoCalificaciones(cals,periodo){const notas=(cals||[]).filter(c=>Number.isFinite(Number(c.nota)));if(!notas.length)return null;if(nPeriodo(periodo)!==3)return pArr(notas.map(c=>c.nota));const pesos={SABER:.5,HACER:.3,SER:.2};let s=0,w=0;Object.entries(pesos).forEach(([d,p])=>{const avg=pArr(notas.filter(c=>dimCal(c)===d).map(c=>c.nota));if(avg===null)return;s+=avg*p;w+=p;});return w?s/w:null;}
 function promAsignatura(cals){const periodos=[...new Set((cals||[]).map(c=>c.periodo).filter(Boolean))];if(periodos.length===1)return promPeriodoCalificaciones(cals,periodos[0]);if(periodos.length>1){const ps=periodos.map(p=>promPeriodoCalificaciones(cals.filter(c=>c.periodo===p),p)).filter(p=>p!==null);return pArr(ps);}return pArr((cals||[]).map(c=>c.nota));}
 
@@ -1082,7 +1096,7 @@ function renderCortes(cals){
     const acts=cals.filter(c=>(c.periodo||'Sin período')===per);
     const avg=promPeriodoCalificaciones(acts, per);
     const perLabel=per.match(/^(\d{4})-(\d)$/)?`${{1:'1er',2:'2do',3:'3er',4:'4to'}[per.split('-')[1]]||'P'+per.split('-')[1]} Período ${per.split('-')[0]}`:per;
-    const tabla=`<table class="t" style="font-size:12px"><thead><tr><th>Actividad</th><th>Tipo</th><th>Dimensión</th><th>Nota</th><th>Fecha</th><th>Observaciones</th></tr></thead><tbody>${acts.map(a=>{const n=Number(a.nota);const f=a.fecha?new Date(a.fecha).toLocaleDateString('es-CO'):'-';const dim=a.dimensionActividad||'HACER';return`<tr><td style="font-weight:700">${a.nombreActividad||'Actividad'}</td><td><span class="badge-${a.tipoActividad||'EXAMEN'}" style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">${(a.tipoActividad||'EXAMEN').charAt(0)+(a.tipoActividad||'EXAMEN').slice(1).toLowerCase()}</span></td><td><span class="dchip ${dim}" style="font-size:10px;padding:2px 8px;cursor:default">${dim.charAt(0)+dim.slice(1).toLowerCase()}</span></td><td><strong style="color:${n>=4?'var(--green)':n>=3.5?'var(--amber)':'var(--red)'}">${n.toFixed(2)}</strong></td><td style="font-size:11px;color:var(--muted)">${f}</td><td style="font-size:11px;color:var(--muted)">${a.observaciones||'-'}</td></tr>`;}).join('')}</tbody></table>`;
+    const tabla=`<table class="t" style="font-size:12px"><thead><tr><th>Actividad</th><th>Tipo</th><th>Dimensión</th><th>Nota</th><th>Fecha</th><th>Observaciones</th></tr></thead><tbody>${acts.map(a=>{const n=Number(a.nota);const f=a.fecha?new Date(a.fecha).toLocaleDateString('es-CO'):'-';const dim=a.dimensionActividad||'HACER';return`<tr><td style="font-weight:700">${a.nombreActividad||'Actividad'}</td><td><span class="badge-${a.tipoActividad||'EXAMEN'}" style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">${labelTipoActividad(a.tipoActividad||'EXAMEN')}</span></td><td><span class="dchip ${dim}" style="font-size:10px;padding:2px 8px;cursor:default">${dim.charAt(0)+dim.slice(1).toLowerCase()}</span></td><td><strong style="color:${n>=4?'var(--green)':n>=3.5?'var(--amber)':'var(--red)'}">${n.toFixed(2)}</strong></td><td style="font-size:11px;color:var(--muted)">${f}</td><td style="font-size:11px;color:var(--muted)">${a.observaciones||'-'}</td></tr>`;}).join('')}</tbody></table>`;
     html+=`<div class="corte-card"><div class="corte-head"><div><div class="corte-title"><i class="fas fa-calendar-alt"></i> ${perLabel}</div><div class="corte-peso">${acts.length} actividad(es)</div></div><div class="corte-avg">${avg!==null?avg.toFixed(2):'-'}</div></div>${tabla}</div>`;
   });
   // Promedio general de todas las calificaciones
@@ -1204,9 +1218,9 @@ async function abrirActividadCurso(){
   document.getElementById('actCursoFechaFin').value='';
   setPeriodoSelectById('actCursoPeriodo', W.periodo||periodoLabel());
   document.querySelectorAll('#mActCurso .tchip').forEach(c=>c.classList.remove('sel'));
-  const chip=document.querySelector('#mActCurso .tchip.TRABAJO');
+  const chip=document.querySelector('#mActCurso .tchip.EXAMEN');
   if(chip) chip.classList.add('sel');
-  document.getElementById('actCursoTipo').value='TRABAJO';
+  document.getElementById('actCursoTipo').value='EXAMEN';
   document.getElementById('mActCurso').classList.add('o');
 }
 async function guardarActividadCurso(){
@@ -1251,9 +1265,9 @@ async function guardarActividadCurso(){
     toast('Error: '+err.message,'er');
   }
 }
-async function abrirNuevaAct(){ if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; } document.getElementById('actId').value=''; document.getElementById('actTit').textContent='Nueva Actividad'; document.getElementById('actNombre').value=''; document.getElementById('actNota').value=''; document.getElementById('actObs').value=''; document.getElementById('actFecha').value=hoyIsoLocal(); await cargarPeriodosCalificacion(W.periodo||periodoLabel()); document.querySelectorAll('#mAct .tchip').forEach(c=>c.classList.remove('sel')); document.querySelector('#mAct .tchip.TRABAJO').classList.add('sel'); document.getElementById('actTipo').value='TRABAJO'; document.querySelectorAll('#mAct .dchip').forEach(c=>c.classList.remove('sel')); document.querySelector('#mAct .dchip.HACER').classList.add('sel'); document.getElementById('actDimension').value='HACER'; document.getElementById('mAct').classList.add('o'); }
+async function abrirNuevaAct(){ if(esCursoPreescolarNombre(W.cursoNombre)){ toast('Preescolar no maneja notas por materia; usa indicadores.','er'); return; } document.getElementById('actId').value=''; document.getElementById('actTit').textContent='Nueva Actividad'; document.getElementById('actNombre').value=''; document.getElementById('actNota').value=''; document.getElementById('actObs').value=''; document.getElementById('actFecha').value=hoyIsoLocal(); await cargarPeriodosCalificacion(W.periodo||periodoLabel()); document.querySelectorAll('#mAct .tchip').forEach(c=>c.classList.remove('sel')); document.querySelector('#mAct .tchip.EXAMEN').classList.add('sel'); document.getElementById('actTipo').value='EXAMEN'; document.querySelectorAll('#mAct .dchip').forEach(c=>c.classList.remove('sel')); document.querySelector('#mAct .dchip.SABER').classList.add('sel'); document.getElementById('actDimension').value='SABER'; document.getElementById('mAct').classList.add('o'); }
 async function editarAct(id){ const cal=W.cals.find(c=>c.id===id);if(!cal)return; document.getElementById('actId').value=id; document.getElementById('actTit').textContent='Editar Actividad'; document.getElementById('actNombre').value=cal.nombreActividad||''; document.getElementById('actNota').value=cal.nota; document.getElementById('actObs').value=cal.observaciones||''; document.getElementById('actFecha').value=fechaInputValue(cal.fecha); await cargarPeriodosCalificacion(cal.periodo||W.periodo||periodoLabel(), true); setPeriodoSelect(cal.periodo||W.periodo||periodoLabel(), true); document.querySelectorAll('#mAct .tchip').forEach(c=>c.classList.remove('sel')); const chip=document.querySelector(`#mAct .tchip.${cal.tipoActividad||'EXAMEN'}`); if(chip)chip.classList.add('sel'); document.getElementById('actTipo').value=cal.tipoActividad||'EXAMEN'; document.querySelectorAll('#mAct .dchip').forEach(c=>c.classList.remove('sel')); const dchip=document.querySelector(`#mAct .dchip.${cal.dimensionActividad||'HACER'}`); if(dchip)dchip.classList.add('sel'); document.getElementById('actDimension').value=cal.dimensionActividad||'HACER'; document.getElementById('mAct').classList.add('o'); }
-function dimensionPorTipo(tipo){tipo=String(tipo||'').toUpperCase();if(['EXAMEN','QUIZ'].includes(tipo)||tipo.includes('EVALUACION'))return'SABER';if(tipo==='PARTICIPACION'||tipo.includes('AUTO')||tipo.includes('COEVALUACION'))return'SER';return'HACER';}
+function dimensionPorTipo(tipo){tipo=String(tipo||'').toUpperCase();if(['EXAMEN','QUIZ','EVALUACION_ORAL','EVALUACION_ESCRITA','EXPOSICION'].includes(tipo))return'SABER';if(['AUTOEVALUACION','COEVALUACION','HETEROEVALUACION','PARTICIPACION'].includes(tipo))return'SER';return'HACER';}
 function selTipo(chip){ document.querySelectorAll('#mAct .tchip').forEach(c=>c.classList.remove('sel')); chip.classList.add('sel'); document.getElementById('actTipo').value=chip.dataset.t; const dim=dimensionPorTipo(chip.dataset.t); const dchip=document.querySelector(`#mAct .dchip.${dim}`); if(dchip)selDimension(dchip); }
 function selDimension(chip){ document.querySelectorAll('#mAct .dchip').forEach(c=>c.classList.remove('sel')); chip.classList.add('sel'); document.getElementById('actDimension').value=chip.dataset.d; }
 function notaDosDecimales(valor){ const n=parseFloat(valor); return Number.isFinite(n)?Math.round((n+Number.EPSILON)*100)/100:NaN; }

@@ -157,8 +157,8 @@
             const dimension = String(c.dimensionActividad || '').toUpperCase();
             if (pesos[dimension]) return dimension;
             const tipo = String(c.tipoActividad || '').toUpperCase();
-            if (['EXAMEN', 'QUIZ'].includes(tipo) || tipo.includes('EVALUACION')) return 'SABER';
-            if (tipo === 'PARTICIPACION' || tipo.includes('AUTO') || tipo.includes('COEVALUACION')) return 'SER';
+            if (['EXAMEN', 'QUIZ', 'EVALUACION_ORAL', 'EVALUACION_ESCRITA', 'EXPOSICION'].includes(tipo)) return 'SABER';
+            if (['AUTOEVALUACION', 'COEVALUACION', 'HETEROEVALUACION', 'PARTICIPACION'].includes(tipo)) return 'SER';
             return 'HACER';
         };
         let suma = 0;

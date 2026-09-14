@@ -123,8 +123,8 @@ function promedioCalificacionesPeriodo(calificaciones: any[], numeroPeriodo: num
         const dimension = String(cal?.dimensionActividad || '').toUpperCase();
         if (pesos[dimension]) return dimension;
         const tipo = String(cal?.tipoActividad || '').toUpperCase();
-        if (['EXAMEN', 'QUIZ'].includes(tipo) || tipo.includes('EVALUACION')) return 'SABER';
-        if (['PARTICIPACION'].includes(tipo) || tipo.includes('AUTO') || tipo.includes('COEVALUACION')) return 'SER';
+        if (['EXAMEN', 'QUIZ', 'EVALUACION_ORAL', 'EVALUACION_ESCRITA', 'EXPOSICION'].includes(tipo)) return 'SABER';
+        if (['AUTOEVALUACION', 'COEVALUACION', 'HETEROEVALUACION', 'PARTICIPACION'].includes(tipo)) return 'SER';
         return 'HACER';
     };
     let sumaPonderada = 0;
