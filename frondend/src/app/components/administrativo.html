@@ -2451,6 +2451,12 @@ function openTab(evt, tabName){
               <label for="telefonoProfesor">Teléfono</label>
               <input type="tel" id="telefonoProfesor" />
             </div>
+            <div class="form-group">
+              <label for="firmaProfesor">Firma para boletines</label>
+              <input type="file" id="firmaProfesor" accept="image/png,image/jpeg,image/webp" onchange="leerFirmaProfesor(this)" />
+              <input type="hidden" id="firmaProfesorBase64" />
+              <img id="vistaFirmaProfesor" alt="Vista previa de firma" style="display:none; max-width:220px; max-height:70px; object-fit:contain; margin-top:8px;" />
+            </div>
             <div class="form-actions">
               <button
                 type="button"
@@ -3655,6 +3661,7 @@ function cargarProfesores() {
                   segundoApellido
                   email
                   telefono
+                  firmaBase64
               }
           }
       `,
@@ -3739,12 +3746,45 @@ function openModalProfesor() {
   document.getElementById("segundoApellidoProfesor").value = "";
   document.getElementById("emailProfesor").value = "";
   document.getElementById("telefonoProfesor").value = "";
+  document.getElementById("firmaProfesorBase64").value = "";
+  document.getElementById("vistaFirmaProfesor").style.display = "none";
 
   // Configurar el botón para crear nuevo profesor
   document.getElementById("guardarProfesor").onclick = crearProfesor;
 
   // Abrir el modal
   openModal("modalProfesor");
+}
+
+function leerFirmaProfesor(input) {
+  const archivo = input.files && input.files[0];
+  if (!archivo) return;
+  if (!['image/png', 'image/jpeg', 'image/webp'].includes(archivo.type)) {
+    alert('La firma debe ser una imagen PNG, JPG o WEBP.');
+    input.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const imagen = new Image();
+    imagen.onload = () => {
+      const maxAncho = 700;
+      const maxAlto = 220;
+      const escala = Math.min(1, maxAncho / imagen.width, maxAlto / imagen.height);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(imagen.width * escala));
+      canvas.height = Math.max(1, Math.round(imagen.height * escala));
+      canvas.getContext('2d').drawImage(imagen, 0, 0, canvas.width, canvas.height);
+      const firmaBase64 = canvas.toDataURL('image/png');
+      document.getElementById('firmaProfesorBase64').value = firmaBase64;
+      const vista = document.getElementById('vistaFirmaProfesor');
+      vista.src = firmaBase64;
+      vista.style.display = 'block';
+    };
+    imagen.src = reader.result;
+  };
+  reader.readAsDataURL(archivo);
 }
 
 function crearProfesor() {
@@ -3795,7 +3835,8 @@ function crearProfesor() {
     segundoApellido: segundoApellido || "",
     email: email,
     telefono: telefono || "",
-    direccion: direccion || ""
+    direccion: direccion || "",
+    firmaBase64: document.getElementById("firmaProfesorBase64").value || ""
   };
   
   console.log("Datos del profesor a enviar:", profesor);
@@ -3884,6 +3925,14 @@ function editarProfesor(id) {
   document.getElementById("segundoApellidoProfesor").value = profesor.segundoApellido;
   document.getElementById("emailProfesor").value = profesor.email;
   document.getElementById("telefonoProfesor").value = profesor.telefono || "";
+  document.getElementById("firmaProfesorBase64").value = profesor.firmaBase64 || "";
+  const vistaFirmaProfesor = document.getElementById("vistaFirmaProfesor");
+  if (profesor.firmaBase64) {
+    vistaFirmaProfesor.src = profesor.firmaBase64;
+    vistaFirmaProfesor.style.display = "block";
+  } else {
+    vistaFirmaProfesor.style.display = "none";
+  }
 
   document.getElementById("guardarProfesor").onclick = function () {
     const profesorActualizado = {
@@ -3893,6 +3942,7 @@ function editarProfesor(id) {
       segundoApellido: document.getElementById("segundoApellidoProfesor").value.trim(),
       email: document.getElementById("emailProfesor").value.trim(),
       telefono: document.getElementById("telefonoProfesor").value.trim(),
+      firmaBase64: document.getElementById("firmaProfesorBase64").value || "",
     };
 
     // Mostrar indicador de carga

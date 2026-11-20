@@ -10,6 +10,7 @@ export class Profesor {
         public email: string,
         public telefono: string = '',
         public direccion: string = '',
+        public firmaBase64: string = '',
     ) {}
 
     get id(): string {

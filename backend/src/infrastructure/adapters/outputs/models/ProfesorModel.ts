@@ -16,6 +16,10 @@ const profesorSchema = new Schema({
     type: Schema.Types.Mixed, // CAMBIO AQUÍ: Ahora acepta tanto ObjectId como String
     ref: 'Empleado',
     required: true
+  },
+  firmaBase64: {
+    type: String,
+    default: ''
   }
 }, { 
   timestamps: true,

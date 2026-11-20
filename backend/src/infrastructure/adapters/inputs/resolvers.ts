@@ -554,9 +554,13 @@ async function generarBoletinAcumuladoBase64(
     const observacionBoletinGeneral = esPreescolar ? introPreescolar : (observacionManual || objetivoDirector);
 
     let directorNombre = 'Coordinaci�n Acad�mica';
+    let firmaDirectorBase64 = '';
     if (curso?.profesorId) {
         const dirProf = await repositories.profesorRepository.findById(curso.profesorId).catch(() => null);
-        if (dirProf) directorNombre = `${dirProf.nombre} ${dirProf.primerApellido}`;
+        if (dirProf) {
+            directorNombre = `${dirProf.nombre} ${dirProf.primerApellido}`;
+            firmaDirectorBase64 = dirProf.firmaBase64 || '';
+        }
     }
 
     const puestoCurso = curso && esPrimaria
@@ -577,6 +581,7 @@ async function generarBoletinAcumuladoBase64(
         },
         curso: { nombre: curso?.nombre ?? 'Sin curso' },
         director: directorNombre,
+        firmaDirectorBase64,
         periodo,
         anio: new Date().getFullYear().toString(),
         calificaciones: calificacionesBoletin,

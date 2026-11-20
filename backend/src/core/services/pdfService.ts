@@ -47,6 +47,7 @@ export interface BoletinData {
   };
   curso: { nombre: string };
   director: string;
+  firmaDirectorBase64?: string;
   periodo: string;
   anio: string;
   calificaciones: CalificacionBoletinData[];
@@ -151,6 +152,7 @@ function limpiarListaBoletin(items: string[] | undefined): string[] {
 function limpiarDataBoletin(data: BoletinData): BoletinData {
   return {
     ...data,
+    firmaDirectorBase64: String(data.firmaDirectorBase64 || ''),
     estudiante: {
       nombre: limpiarTextoBoletin(data.estudiante.nombre),
       primerApellido: limpiarTextoBoletin(data.estudiante.primerApellido),
@@ -365,32 +367,44 @@ export class PDFService {
       cargo: string;
       nombre: string;
       ruta: string | null;
+      firmaBase64?: string;
       ancho: number;
       recorte: { x: number; y: number; ancho: number; alto: number };
     }>,
   ): void {
     const fw = cw / firmas.length;
-    firmas.forEach(({ cargo, nombre, ruta, ancho, recorte }, i) => {
+    firmas.forEach(({ cargo, nombre, ruta, firmaBase64, ancho, recorte }, i) => {
       const fx = ml + i * fw;
+      const firmaAncho = Math.min(ancho, fw * 0.8);
       const lineX1 = fx + fw * 0.1;
       const lineX2 = fx + fw * 0.9;
       if (ruta) {
         try {
           const alto = 70;
-          const escala = Math.min(ancho / recorte.ancho, alto / recorte.alto);
+          const escala = Math.min(firmaAncho / recorte.ancho, alto / recorte.alto);
           const imagenAncho = 1600 * escala;
           const imagenAlto = 900 * escala;
-          const areaX = fx + (fw - ancho) / 2;
+          const areaX = fx + (fw - firmaAncho) / 2;
           const areaY = y + 28 - alto;
           doc.save();
-          doc.rect(areaX, areaY, ancho, alto).clip();
+          doc.rect(areaX, areaY, firmaAncho, alto).clip();
           doc.image(
             ruta,
-            areaX - recorte.x * escala + (ancho - recorte.ancho * escala) / 2,
+            areaX - recorte.x * escala + (firmaAncho - recorte.ancho * escala) / 2,
             areaY - recorte.y * escala + (alto - recorte.alto * escala) / 2,
             { width: imagenAncho, height: imagenAlto },
           );
           doc.restore();
+        } catch { /* fallback to the signature line */ }
+      } else if (firmaBase64) {
+        try {
+          const base64 = firmaBase64.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
+          const areaX = fx + (fw - firmaAncho) / 2;
+          doc.image(Buffer.from(base64, 'base64'), areaX, y - 42, {
+            fit: [firmaAncho, 70],
+            align: 'center',
+            valign: 'center',
+          });
         } catch { /* fallback to the signature line */ }
       }
       doc.moveTo(lineX1, y + 28).lineTo(lineX2, y + 28)
@@ -617,6 +631,7 @@ export class PDFService {
       this.dibujarFirmas(doc, ml, cw, y, [
         { cargo: 'Coordinadora', nombre: 'Martha Mejía', ruta: this.firmaCoordinadoraPath, ancho: 240, recorte: { x: 430, y: 280, ancho: 770, alto: 490 } },
         { cargo: 'Directora', nombre: 'Sandra Muñoz', ruta: this.firmaDirectoraPath, ancho: 240, recorte: { x: 40, y: 50, ancho: 890, alto: 520 } },
+        { cargo: 'Director(a) de grado', nombre: data.director || 'Director(a) de grado', ruta: null, firmaBase64: data.firmaDirectorBase64, ancho: 170, recorte: { x: 0, y: 0, ancho: 1, alto: 1 } },
       ]);
       this.dibujarPie(doc, data, footerLabel);
     });
@@ -944,6 +959,7 @@ export class PDFService {
       this.dibujarFirmas(doc, ml, cw, y, [
         { cargo: 'Coordinadora', nombre: 'Martha Mejía', ruta: this.firmaCoordinadoraPath, ancho: 240, recorte: { x: 430, y: 280, ancho: 770, alto: 490 } },
         { cargo: 'Directora', nombre: 'Sandra Muñoz', ruta: this.firmaDirectoraPath, ancho: 240, recorte: { x: 40, y: 50, ancho: 890, alto: 520 } },
+        { cargo: 'Director(a) de grado', nombre: data.director || 'Director(a) de grado', ruta: null, firmaBase64: data.firmaDirectorBase64, ancho: 170, recorte: { x: 0, y: 0, ancho: 1, alto: 1 } },
       ]);
       this.dibujarPie(doc, data, footerLabel);
     });

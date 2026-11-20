@@ -88,6 +88,7 @@ type Profesor {
     email: String!
     telefono: String
     direccion: String
+    firmaBase64: String
     empleado: Empleado
 }
 
@@ -308,6 +309,7 @@ input ProfesorInput {
     email: String!
     telefono: String
     direccion: String
+    firmaBase64: String
 }
 
 input CursoInput {

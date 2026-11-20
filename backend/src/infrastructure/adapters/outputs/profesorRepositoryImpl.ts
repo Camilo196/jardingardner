@@ -45,7 +45,8 @@ export class ProfesorRepositoryImpl {
       const nuevoProfesor = new ProfesorModel({
         _id: profesorData.cedula,  // CÃ©dula como ID del profesor
         cedula: profesorData.cedula,
-        empleadoId: savedEmpleado._id  // Usar el mismo ID que el empleado
+        empleadoId: savedEmpleado._id,  // Usar el mismo ID que el empleado
+        firmaBase64: profesorData.firmaBase64 || ''
       });
   
       console.log("Creando profesor con ID:", nuevoProfesor._id);
@@ -63,7 +64,8 @@ export class ProfesorRepositoryImpl {
         profesorData.segundoApellido || '',
         profesorData.email,
         profesorData.telefono || '',
-        profesorData.direccion || ''
+        profesorData.direccion || '',
+        profesorData.firmaBase64 || ''
       );
     } catch (error) {
       await session.abortTransaction();
@@ -94,7 +96,8 @@ export class ProfesorRepositoryImpl {
           empleado.segundoApellido,
           empleado.email || "",
           empleado.telefono || '',
-          empleado.direccion || ''
+          empleado.direccion || '',
+          doc.firmaBase64 || ''
         );
       }).filter(Boolean) as Profesor[];
     } catch (error) {
@@ -136,7 +139,8 @@ export class ProfesorRepositoryImpl {
         empleado.segundoApellido || '',
         empleado.email || "",
         empleado.telefono || '',
-        empleado.direccion || ''
+        empleado.direccion || '',
+        profesor.firmaBase64 || ''
       );
     } catch (error) {
       console.error("Error en findById de profesor:", error);
@@ -160,7 +164,8 @@ export class ProfesorRepositoryImpl {
         empleado.segundoApellido || '',
         empleado.email || "",
         empleado.telefono || '',
-        empleado.direccion || ''
+        empleado.direccion || '',
+        profesor.firmaBase64 || ''
       );
     } catch (error) {
       throw error;
@@ -178,7 +183,7 @@ export class ProfesorRepositoryImpl {
       return new Profesor(
         profesor.cedula,
         emp.nombre, emp.primerApellido, emp.segundoApellido || '',
-        emp.email, emp.telefono || '', emp.direccion || ''
+        emp.email, emp.telefono || '', emp.direccion || '', profesor.firmaBase64 || ''
       );
     } catch { return null; }
   }
@@ -212,8 +217,10 @@ export class ProfesorRepositoryImpl {
       if (profesorData.email) empleado.email = profesorData.email;
       if (profesorData.telefono) empleado.telefono = profesorData.telefono;
       if (profesorData.direccion) empleado.direccion = profesorData.direccion;
+      if (typeof profesorData.firmaBase64 === 'string') profesor.firmaBase64 = profesorData.firmaBase64;
 
       await empleado.save({ session });
+      await profesor.save({ session });
       await session.commitTransaction();
 
       return new Profesor(
@@ -223,7 +230,8 @@ export class ProfesorRepositoryImpl {
         empleado.segundoApellido || '',
         empleado.email || "",
         empleado.telefono || '',
-        empleado.direccion || ''
+        empleado.direccion || '',
+        profesor.firmaBase64 || ''
       );
     } catch (error) {
       await session.abortTransaction();
