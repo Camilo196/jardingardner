@@ -283,7 +283,6 @@ async function calcularPuestoCurso(
     cursoId: string,
     periodo: string,
     estudianteObjetivoId: string,
-    asigIdsCurso: Set<string>,
 ): Promise<number | null> {
     let matriculas = await MatriculaModel.find({
         cursoId,
@@ -297,7 +296,7 @@ async function calcularPuestoCurso(
     }
 
     const estudiantesCurso = [...new Set((matriculas as any[]).map((m: any) => String(m.estudianteId)).filter(Boolean))];
-    if (!estudiantesCurso.length || !asigIdsCurso.size) return null;
+    if (!estudiantesCurso.length) return null;
 
     const idsEstudiantesConsulta = new Map<string, any>();
     const agregarIdEstudiante = (id: any) => {
@@ -331,19 +330,8 @@ async function calcularPuestoCurso(
         estudiantesCurso.map((id) => estudianteCanonicoPorId.get(id) ?? id),
     )];
 
-    const idsAsignaturasConsulta = new Map<string, any>();
-    const agregarIdAsignatura = (id: any) => {
-        if (id === undefined || id === null || id === '') return;
-        idsAsignaturasConsulta.set(String(id), id);
-    };
-    [...asigIdsCurso].forEach(agregarIdAsignatura);
-    [...asigIdsCurso]
-        .filter((id) => mongoose.Types.ObjectId.isValid(id))
-        .forEach((id) => agregarIdAsignatura(new mongoose.Types.ObjectId(id)));
-
     const calificaciones = await CalificacionModel.find({
         estudianteId: { $in: Array.from(idsEstudiantesConsulta.values()) },
-        asignaturaId: { $in: Array.from(idsAsignaturasConsulta.values()) },
         nombreActividad: { $ne: '__boletin__' },
     }).lean().catch(() => []);
 
@@ -605,7 +593,6 @@ async function generarBoletinAcumuladoBase64(
             String(curso.id ?? curso._id),
             String(periodo),
             String(estIdBoletin),
-            asigIdsCurso.size ? asigIdsCurso : new Set<string>(asigIdsList.map(String)),
         )
         : null;
 
