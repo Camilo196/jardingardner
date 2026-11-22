@@ -362,20 +362,59 @@ async function calcularPuestoCurso(
         .filter((item): item is { estId: string; promedio: number } => item !== null)
         .sort((a, b) => b.promedio - a.promedio || a.estId.localeCompare(b.estId, 'es', { sensitivity: 'base' }));
 
-    if (!promedios.length) return null;
-
-    let puesto = 1;
-    let anterior: number | null = null;
-    for (let i = 0; i < promedios.length; i++) {
-        const actual = promedios[i];
-        if (anterior !== null && Math.abs(actual.promedio - anterior) > 0.0001) {
-            puesto += 1;
+    const buscarPuesto = (items: Array<{ estId: string; promedio: number }>, objetivoId: string): number | null => {
+        let puesto = 1;
+        let anterior: number | null = null;
+        for (const actual of items) {
+            if (anterior !== null && Math.abs(actual.promedio - anterior) > 0.0001) puesto += 1;
+            if (actual.estId === objetivoId) return puesto;
+            anterior = actual.promedio;
         }
-        if (actual.estId === String(estudianteObjetivoId)) return puesto;
-        anterior = actual.promedio;
-    }
+        return null;
+    };
 
-    return null;
+    const puestoDirecto = buscarPuesto(promedios, String(estudianteObjetivoId));
+    if (puestoDirecto !== null) return puestoDirecto;
+
+    // Algunas matrículas antiguas no conservan el mismo identificador del curso.
+    // En ese caso, el curso se reconoce desde sus materias y sus notas reales.
+    const materiasCurso = await AsignaturaModel.find({ cursoId }).select('_id').lean().catch(() => []);
+    const idsMateriasCurso = materiasCurso.flatMap((materia: any) => {
+        const id = materia?._id?.toString?.() ?? materia?._id;
+        return id && mongoose.Types.ObjectId.isValid(String(id))
+            ? [id, new mongoose.Types.ObjectId(String(id))]
+            : id ? [id] : [];
+    });
+    if (!idsMateriasCurso.length) return null;
+
+    const notasCurso = await CalificacionModel.find({
+        asignaturaId: { $in: idsMateriasCurso },
+        nombreActividad: { $ne: '__boletin__' },
+    }).lean().catch(() => []);
+    const notasPorEstudiante: Record<string, Record<string, any[]>> = {};
+    for (const cal of notasCurso as any[]) {
+        const periodoCalificacion = parsePeriodo(String(cal.periodo ?? ''));
+        if (periodoCalificacion.anio !== anioObjetivo || periodoCalificacion.numeroPeriodo !== periodoObjetivo) continue;
+        const estId = String(cal.estudianteId ?? '');
+        const asigId = String(cal.asignaturaId ?? '');
+        if (!estId || !asigId) continue;
+        notasPorEstudiante[estId] ||= {};
+        notasPorEstudiante[estId][asigId] ||= [];
+        notasPorEstudiante[estId][asigId].push(cal);
+    }
+    const promediosPorMateria = Object.entries(notasPorEstudiante)
+        .map(([estId, asignaturas]) => {
+            const promedio = promedioNumeros(
+                Object.values(asignaturas)
+                    .map((notas: any[]) => promedioCalificacionesPeriodo(notas, periodoObjetivo))
+                    .filter((nota): nota is number => nota !== null),
+            );
+            return promedio === null ? null : { estId, promedio: redondearNota(promedio) };
+        })
+        .filter((item): item is { estId: string; promedio: number } => item !== null)
+        .sort((a, b) => b.promedio - a.promedio || a.estId.localeCompare(b.estId, 'es', { sensitivity: 'base' }));
+
+    return buscarPuesto(promediosPorMateria, String(estudianteObjetivoId));
 }
 
 async function generarBoletinAcumuladoBase64(
