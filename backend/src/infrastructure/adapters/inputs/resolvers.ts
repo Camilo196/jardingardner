@@ -299,25 +299,69 @@ async function calcularPuestoCurso(
     const estudiantesCurso = [...new Set((matriculas as any[]).map((m: any) => String(m.estudianteId)).filter(Boolean))];
     if (!estudiantesCurso.length || !asigIdsCurso.size) return null;
 
+    const idsEstudiantesConsulta = new Map<string, any>();
+    const agregarIdEstudiante = (id: any) => {
+        if (id === undefined || id === null || id === '') return;
+        idsEstudiantesConsulta.set(String(id), id);
+    };
+    estudiantesCurso.forEach(agregarIdEstudiante);
+    estudiantesCurso
+        .filter((id) => mongoose.Types.ObjectId.isValid(id))
+        .forEach((id) => agregarIdEstudiante(new mongoose.Types.ObjectId(id)));
+
+    const documentosEstudiantes = await EstudianteModel.find({
+        $or: [
+            { cedula: { $in: estudiantesCurso } },
+            { _id: { $in: Array.from(idsEstudiantesConsulta.values()) } },
+        ],
+    }).lean().catch(() => []);
+    const estudianteCanonicoPorId = new Map<string, string>();
+    estudiantesCurso.forEach((id) => estudianteCanonicoPorId.set(id, id));
+    for (const estudiante of documentosEstudiantes as any[]) {
+        const cedula = String(estudiante.cedula ?? estudiante._id ?? '');
+        if (!cedula) continue;
+        [estudiante.cedula, estudiante._id, estudiante._id?.toString?.()].forEach((id) => {
+            if (id !== undefined && id !== null) {
+                estudianteCanonicoPorId.set(String(id), cedula);
+                agregarIdEstudiante(id);
+            }
+        });
+    }
+    const estudiantesParaPuesto = [...new Set(
+        estudiantesCurso.map((id) => estudianteCanonicoPorId.get(id) ?? id),
+    )];
+
+    const idsAsignaturasConsulta = new Map<string, any>();
+    const agregarIdAsignatura = (id: any) => {
+        if (id === undefined || id === null || id === '') return;
+        idsAsignaturasConsulta.set(String(id), id);
+    };
+    [...asigIdsCurso].forEach(agregarIdAsignatura);
+    [...asigIdsCurso]
+        .filter((id) => mongoose.Types.ObjectId.isValid(id))
+        .forEach((id) => agregarIdAsignatura(new mongoose.Types.ObjectId(id)));
+
     const calificaciones = await CalificacionModel.find({
-        estudianteId: { $in: estudiantesCurso },
-        asignaturaId: { $in: [...asigIdsCurso] },
+        estudianteId: { $in: Array.from(idsEstudiantesConsulta.values()) },
+        asignaturaId: { $in: Array.from(idsAsignaturasConsulta.values()) },
         nombreActividad: { $ne: '__boletin__' },
     }).lean().catch(() => []);
 
     const periodoObjetivo = parsePeriodo(periodo).numeroPeriodo;
+    const anioObjetivo = parsePeriodo(periodo).anio;
     const estudianteMap: Record<string, Record<string, any[]>> = {};
 
     for (const cal of calificaciones as any[]) {
-        if (String(cal.periodo) !== String(periodo)) continue;
-        const estId = String(cal.estudianteId);
+        const periodoCalificacion = parsePeriodo(String(cal.periodo ?? ''));
+        if (periodoCalificacion.anio !== anioObjetivo || periodoCalificacion.numeroPeriodo !== periodoObjetivo) continue;
+        const estId = estudianteCanonicoPorId.get(String(cal.estudianteId)) ?? String(cal.estudianteId);
         const asigId = String(cal.asignaturaId);
         estudianteMap[estId] ||= {};
         estudianteMap[estId][asigId] ||= [];
         estudianteMap[estId][asigId].push(cal);
     }
 
-    const promedios = estudiantesCurso
+    const promedios = estudiantesParaPuesto
         .map((estId) => {
             const asignaturas = estudianteMap[estId] || {};
             const promediosMaterias = Object.values(asignaturas)

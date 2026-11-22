@@ -385,7 +385,7 @@ export class PDFService {
           const imagenAncho = 1600 * escala;
           const imagenAlto = 900 * escala;
           const areaX = fx + (fw - firmaAncho) / 2;
-          const areaY = y + 28 - alto;
+          const areaY = y + 8;
           doc.save();
           doc.rect(areaX, areaY, firmaAncho, alto).clip();
           doc.image(
@@ -400,19 +400,19 @@ export class PDFService {
         try {
           const base64 = firmaBase64.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
           const areaX = fx + (fw - firmaAncho) / 2;
-          doc.image(Buffer.from(base64, 'base64'), areaX, y - 42, {
+          doc.image(Buffer.from(base64, 'base64'), areaX, y + 8, {
             fit: [firmaAncho, 70],
             align: 'center',
             valign: 'center',
           });
         } catch { /* fallback to the signature line */ }
       }
-      doc.moveTo(lineX1, y + 28).lineTo(lineX2, y + 28)
+      doc.moveTo(lineX1, y + 78).lineTo(lineX2, y + 78)
          .lineWidth(0.8).stroke(C.tintaSuave);
       doc.fillColor(C.tinta).font('Helvetica-Bold').fontSize(8)
-         .text(nombre, fx, y + 32, { width: fw, align: 'center' });
+         .text(nombre, fx, y + 82, { width: fw, align: 'center' });
       doc.fillColor(C.tintaSuave).font('Helvetica').fontSize(8)
-         .text(cargo, fx, y + 43, { width: fw, align: 'center' });
+         .text(cargo, fx, y + 93, { width: fw, align: 'center' });
     });
   }
 
@@ -622,7 +622,7 @@ export class PDFService {
       }
 
       // ── Firmas ─────────────────────────────────────────────────────────────
-      if (y + 55 > doc.page.height - 60) {
+      if (y + 110 > doc.page.height - 60) {
         this.dibujarPie(doc, data, footerLabel);
         doc.addPage();
         y = 100;
@@ -951,7 +951,7 @@ export class PDFService {
       y += 20;
 
       // ── Firmas ─────────────────────────────────────────────────────────────
-      if (y + 55 > doc.page.height - 60) {
+      if (y + 110 > doc.page.height - 60) {
         this.dibujarPie(doc, data, footerLabel);
         doc.addPage();
         y = 100;
