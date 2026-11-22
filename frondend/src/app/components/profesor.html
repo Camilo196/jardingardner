@@ -2066,7 +2066,7 @@ async function cargarIndicadores(periodoForzado){
   const render=()=>{ renderIndLista('saber'); renderIndLista('hacer'); renderIndLista('ser'); };
   try{
     const esPre=esCursoPreescolarNombre(W.cursoNombre);
-    const d=await gql(`query{indicadoresPorAsignatura(asignaturaId:"${W.asigId}",periodo:"${periodo}"${esPre?'':`,estudianteId:"${W.estId}"`}){intro saber hacer ser estudianteIds}}`);
+    const d=await gql(`query{indicadoresPorAsignatura(asignaturaId:"${W.asigId}",periodo:"${periodo}",estudianteId:"${W.estId}"){intro saber hacer ser estudianteIds}}`);
     const ind=d.indicadoresPorAsignatura;
     IND.intro=String(ind?.intro||'');
     IND.saber=normalizarListaIndicadores(ind?.saber);
@@ -2075,25 +2075,15 @@ async function cargarIndicadores(periodoForzado){
     if(esPre){
       W.indSeleccionados=new Set();
       W.indObservaciones={};
-      let comunCargado=false;
       for(const e of (W.indEstudiantes||[])){
         try{
           const ced=String(e.cedula);
           const r=await gql(`query{indicadoresPorAsignatura(asignaturaId:"${W.asigId}",periodo:"${periodo}",estudianteId:"${ced}"){intro saber hacer ser}}`);
           const item=r.indicadoresPorAsignatura;
-          if(item && ((item.saber||[]).length || (item.hacer||[]).length || (item.ser||[]).length)){
-            W.indSeleccionados.add(ced);
-            if(!comunCargado && (item.saber||[]).length){
-              IND.intro=String(item.intro||IND.intro||'');
-              IND.saber=normalizarListaIndicadores(item.saber);
-              IND.hacer=[];
-              comunCargado=true;
-            }
-          }
           W.indObservaciones[ced]=normalizarListaIndicadores(item?.ser).join('\n');
         }catch{}
       }
-      W.indSeleccionados=new Set(W.estId?[String(W.estId)]:[]);
+      W.indSeleccionados=new Set((ind?.estudianteIds?.length?ind.estudianteIds:[W.estId]).filter(Boolean).map(String));
     }else{
       W.indSeleccionados=new Set((ind?.estudianteIds?.length?ind.estudianteIds:[W.estId]).map(String));
     }

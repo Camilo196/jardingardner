@@ -221,21 +221,14 @@ function indicadoresParaEstudiante(ind: any, estudianteId?: string | null) {
         : null;
     const base = ind ?? {};
     const fuente = especifico
-        ? {
-            ...especifico,
-            saber: Array.isArray(especifico.saber) && especifico.saber.length ? especifico.saber : base.saber,
-            hacer: Array.isArray(especifico.hacer) && especifico.hacer.length ? especifico.hacer : base.hacer,
-            ser: Array.isArray(especifico.ser) ? especifico.ser : base.ser,
-            intro: typeof especifico.intro === 'string' && especifico.intro.trim() ? especifico.intro : base.intro,
-        }
+        ? especifico
         : (estId && porEstudiante.length ? {} : base);
-    const estudianteIds = especifico
-        ? [String(especifico.estudianteId)]
-        : porEstudiante
+    const estudianteIds = porEstudiante
             .filter((item: any) =>
                 JSON.stringify(item.saber ?? []) === JSON.stringify(fuente.saber ?? []) &&
                 JSON.stringify(item.hacer ?? []) === JSON.stringify(fuente.hacer ?? []) &&
-                JSON.stringify(item.ser ?? []) === JSON.stringify(fuente.ser ?? []),
+                JSON.stringify(item.ser ?? []) === JSON.stringify(fuente.ser ?? []) &&
+                String(item.intro ?? '') === String(fuente.intro ?? ''),
             )
             .map((item: any) => String(item.estudianteId));
 
@@ -1339,6 +1332,7 @@ export const resolvers = {
                     else actuales.push(item);
                 }
                 (doc as any).porEstudiante = actuales;
+                doc.markModified('porEstudiante');
             } else {
                 doc.saber = saber;
                 doc.hacer = hacer;
